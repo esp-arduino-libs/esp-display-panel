@@ -94,7 +94,7 @@ repos:
         name: Update when configuration files change
         entry: python3 tools/sync_conf_files.py ./
         language: system
-        files: '.*ESP_Panel_(Board_Custom|Board_Supported|Conf)\.h'
+        files: '.*esp_panel_(board_custom|board_supported|conf)\.h'
 
   - repo: local
     hooks:
@@ -102,7 +102,7 @@ repos:
         name: Update when versions change
         entry: python3 tools/check_file_version.py ./
         language: system
-        files: '(.*ESP_Panel_(Board_Custom|Board_Supported|Conf)\.h|library.properties|.*ESP_PanelVersions.h)'
+        files: '(.*esp_panel_(board_custom|board_supported|conf)\.h|library.properties|.*esp_panel_versions.h)'
 
   - repo: local
     hooks:

@@ -5,7 +5,7 @@ import os
 import sys
 import re
 
-internal_version_file = 'src/ESP_PanelVersions.h'
+internal_version_file = 'src/esp_panel_versions.h'
 internal_version_macross = [
     {
         'file': 'library.properties',
@@ -16,7 +16,7 @@ internal_version_macross = [
         },
     },
     {
-        'file': 'ESP_Panel_Conf.h',
+        'file': 'esp_panel_conf.h',
         'macro': {
             'major': 'ESP_PANEL_CONF_VERSION_MAJOR',
             'minor': 'ESP_PANEL_CONF_VERSION_MINOR',
@@ -24,7 +24,7 @@ internal_version_macross = [
         },
     },
     {
-        'file': 'ESP_Panel_Board_Custom.h',
+        'file': 'esp_panel_board_custom.h',
         'macro': {
             'major': 'ESP_PANEL_BOARD_CUSTOM_VERSION_MAJOR',
             'minor': 'ESP_PANEL_BOARD_CUSTOM_VERSION_MINOR',
@@ -32,7 +32,7 @@ internal_version_macross = [
         },
     },
     {
-        'file': 'ESP_Panel_Board_Supported.h',
+        'file': 'esp_panel_board_supported.h',
         'macro': {
             'major': 'ESP_PANEL_BOARD_SUPPORTED_VERSION_MAJOR',
             'minor': 'ESP_PANEL_BOARD_SUPPORTED_VERSION_MINOR',
@@ -42,7 +42,7 @@ internal_version_macross = [
 ]
 file_version_macros = [
     {
-        'file': 'ESP_Panel_Conf.h',
+        'file': 'esp_panel_conf.h',
         'macro': {
             'major': 'ESP_PANEL_CONF_FILE_VERSION_MAJOR',
             'minor': 'ESP_PANEL_CONF_FILE_VERSION_MINOR',
@@ -50,7 +50,7 @@ file_version_macros = [
         },
     },
     {
-        'file': 'ESP_Panel_Board_Custom.h',
+        'file': 'esp_panel_board_custom.h',
         'macro': {
             'major': 'ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR',
             'minor': 'ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR',
@@ -58,7 +58,7 @@ file_version_macros = [
         },
     },
     {
-        'file': 'ESP_Panel_Board_Supported.h',
+        'file': 'esp_panel_board_supported.h',
         'macro': {
             'major': 'ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MAJOR',
             'minor': 'ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MINOR',

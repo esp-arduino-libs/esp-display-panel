@@ -48,7 +48,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 #include <lvgl.h>
 #include <ui.h>
 #include "lvgl_port_v8.h"

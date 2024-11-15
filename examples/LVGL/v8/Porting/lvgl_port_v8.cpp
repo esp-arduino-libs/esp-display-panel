@@ -553,8 +553,8 @@ void rounder_callback(lv_disp_drv_t *drv, lv_area_t *area)
 
 static lv_disp_t *display_init(ESP_PanelLcd *lcd)
 {
-    ESP_PANEL_CHECK_FALSE_RET(lcd != nullptr, nullptr, "Invalid LCD device");
-    ESP_PANEL_CHECK_FALSE_RET(lcd->getHandle() != nullptr, nullptr, "LCD device is not initialized");
+    ESP_UTILS_CHECK_FALSE_RET(lcd != nullptr, nullptr, "Invalid LCD device");
+    ESP_UTILS_CHECK_FALSE_RET(lcd->getHandle() != nullptr, nullptr, "LCD device is not initialized");
 
     static lv_disp_draw_buf_t disp_buf;
     static lv_disp_drv_t disp_drv;
@@ -647,8 +647,8 @@ static void touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
 
 static lv_indev_t *indev_init(ESP_PanelTouch *tp)
 {
-    ESP_PANEL_CHECK_FALSE_RET(tp != nullptr, nullptr, "Invalid touch device");
-    ESP_PANEL_CHECK_FALSE_RET(tp->getHandle() != nullptr, nullptr, "Touch device is not initialized");
+    ESP_UTILS_CHECK_FALSE_RET(tp != nullptr, nullptr, "Invalid touch device");
+    ESP_UTILS_CHECK_FALSE_RET(tp->getHandle() != nullptr, nullptr, "Touch device is not initialized");
 
     static lv_indev_drv_t indev_drv_tp;
 
@@ -675,10 +675,10 @@ static bool tick_init(void)
         .callback = &tick_increment,
         .name = "LVGL tick"
     };
-    ESP_PANEL_CHECK_ERR_RET(
+    ESP_UTILS_CHECK_ERR_RET(
         esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer), false, "Create LVGL tick timer failed"
     );
-    ESP_PANEL_CHECK_ERR_RET(
+    ESP_UTILS_CHECK_ERR_RET(
         esp_timer_start_periodic(lvgl_tick_timer, LVGL_PORT_TICK_PERIOD_MS * 1000), false,
         "Start LVGL tick timer failed"
     );
@@ -688,10 +688,10 @@ static bool tick_init(void)
 
 static bool tick_deinit(void)
 {
-    ESP_PANEL_CHECK_ERR_RET(
+    ESP_UTILS_CHECK_ERR_RET(
         esp_timer_stop(lvgl_tick_timer), false, "Stop LVGL tick timer failed"
     );
-    ESP_PANEL_CHECK_ERR_RET(
+    ESP_UTILS_CHECK_ERR_RET(
         esp_timer_delete(lvgl_tick_timer), false, "Delete LVGL tick timer failed"
     );
     return true;
@@ -728,11 +728,11 @@ IRAM_ATTR bool onDrawBitmapFinishCallback(void *user_data)
 
 bool lvgl_port_init(ESP_PanelLcd *lcd, ESP_PanelTouch *tp)
 {
-    ESP_PANEL_CHECK_FALSE_RET(lcd != nullptr, false, "Invalid LCD device");
+    ESP_UTILS_CHECK_FALSE_RET(lcd != nullptr, false, "Invalid LCD device");
 
     auto bus_type = lcd->getBus()->getType();
 #if LVGL_PORT_AVOID_TEAR
-    ESP_PANEL_CHECK_FALSE_RET(
+    ESP_UTILS_CHECK_FALSE_RET(
         (bus_type == ESP_PANEL_BUS_TYPE_RGB) || (bus_type == ESP_PANEL_BUS_TYPE_MIPI_DSI), false,
         "Avoid tearing function only works with RGB/MIPI-DSI LCD now"
     );
@@ -744,12 +744,12 @@ bool lvgl_port_init(ESP_PanelLcd *lcd, ESP_PanelTouch *tp)
 
     lv_init();
 #if !LV_TICK_CUSTOM
-    ESP_PANEL_CHECK_FALSE_RET(tick_init(), false, "Initialize LVGL tick failed");
+    ESP_UTILS_CHECK_FALSE_RET(tick_init(), false, "Initialize LVGL tick failed");
 #endif
 
     ESP_LOGD(TAG, "Initialize LVGL display driver");
     disp = display_init(lcd);
-    ESP_PANEL_CHECK_NULL_RET(disp, false, "Initialize LVGL display driver failed");
+    ESP_UTILS_CHECK_NULL_RET(disp, false, "Initialize LVGL display driver failed");
     // Record the initial rotation of the display
     lv_disp_set_rotation(disp, LV_DISP_ROT_NONE);
 
@@ -762,7 +762,7 @@ bool lvgl_port_init(ESP_PanelLcd *lcd, ESP_PanelTouch *tp)
     if (tp != nullptr) {
         ESP_LOGD(TAG, "Initialize LVGL input driver");
         indev = indev_init(tp);
-        ESP_PANEL_CHECK_NULL_RET(indev, false, "Initialize LVGL input driver failed");
+        ESP_UTILS_CHECK_NULL_RET(indev, false, "Initialize LVGL input driver failed");
 
 #if LVGL_PORT_ROTATION_DEGREE == 90
         tp->swapXY(!tp->getSwapXYFlag());
@@ -778,13 +778,13 @@ bool lvgl_port_init(ESP_PanelLcd *lcd, ESP_PanelTouch *tp)
 
     ESP_LOGD(TAG, "Create mutex for LVGL");
     lvgl_mux = xSemaphoreCreateRecursiveMutex();
-    ESP_PANEL_CHECK_NULL_RET(lvgl_mux, false, "Create LVGL mutex failed");
+    ESP_UTILS_CHECK_NULL_RET(lvgl_mux, false, "Create LVGL mutex failed");
 
     ESP_LOGD(TAG, "Create LVGL task");
     BaseType_t core_id = (LVGL_PORT_TASK_CORE < 0) ? tskNO_AFFINITY : LVGL_PORT_TASK_CORE;
     BaseType_t ret = xTaskCreatePinnedToCore(lvgl_port_task, "lvgl", LVGL_PORT_TASK_STACK_SIZE, NULL,
                      LVGL_PORT_TASK_PRIORITY, &lvgl_task_handle, core_id);
-    ESP_PANEL_CHECK_FALSE_RET(ret == pdPASS, false, "Create LVGL task failed");
+    ESP_UTILS_CHECK_FALSE_RET(ret == pdPASS, false, "Create LVGL task failed");
 
 #if LVGL_PORT_AVOID_TEAR
     lcd->attachRefreshFinishCallback(onLcdVsyncCallback, (void *)lvgl_task_handle);
@@ -795,7 +795,7 @@ bool lvgl_port_init(ESP_PanelLcd *lcd, ESP_PanelTouch *tp)
 
 bool lvgl_port_lock(int timeout_ms)
 {
-    ESP_PANEL_CHECK_NULL_RET(lvgl_mux, false, "LVGL mutex is not initialized");
+    ESP_UTILS_CHECK_NULL_RET(lvgl_mux, false, "LVGL mutex is not initialized");
 
     const TickType_t timeout_ticks = (timeout_ms < 0) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
     return (xSemaphoreTakeRecursive(lvgl_mux, timeout_ticks) == pdTRUE);
@@ -803,7 +803,7 @@ bool lvgl_port_lock(int timeout_ms)
 
 bool lvgl_port_unlock(void)
 {
-    ESP_PANEL_CHECK_NULL_RET(lvgl_mux, false, "LVGL mutex is not initialized");
+    ESP_UTILS_CHECK_NULL_RET(lvgl_mux, false, "LVGL mutex is not initialized");
 
     xSemaphoreGiveRecursive(lvgl_mux);
 
@@ -813,15 +813,15 @@ bool lvgl_port_unlock(void)
 bool lvgl_port_deinit(void)
 {
 #if !LV_TICK_CUSTOM
-    ESP_PANEL_CHECK_FALSE_RET(tick_deinit(), false, "Deinitialize LVGL tick failed");
+    ESP_UTILS_CHECK_FALSE_RET(tick_deinit(), false, "Deinitialize LVGL tick failed");
 #endif
 
-    ESP_PANEL_CHECK_FALSE_RET(lvgl_port_lock(-1), false, "Lock LVGL failed");
+    ESP_UTILS_CHECK_FALSE_RET(lvgl_port_lock(-1), false, "Lock LVGL failed");
     if (lvgl_task_handle != nullptr) {
         vTaskDelete(lvgl_task_handle);
         lvgl_task_handle = nullptr;
     }
-    ESP_PANEL_CHECK_FALSE_RET(lvgl_port_unlock(), false, "Unlock LVGL failed");
+    ESP_UTILS_CHECK_FALSE_RET(lvgl_port_unlock(), false, "Unlock LVGL failed");
 
 #if LV_ENABLE_GC || !LV_MEM_CUSTOM
     lv_deinit();

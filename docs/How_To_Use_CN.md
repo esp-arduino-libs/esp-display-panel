@@ -78,13 +78,13 @@ idf.py add-dependency "espressif/esp32_display_panel"
 4. 如果有多个工程需要使用相同的配置，用户可以将配置文件放在 [Arduino 库目录](./FAQ_CN.md#arduino-库的目录在哪儿)中，这样所有的工程都可以共享相同的配置。
 
 > [!WARNING]
-> * 同一个目录下可以同时包含 `ESP_Panel_Board_Supported.h` 和 `ESP_Panel_Board_Custom.h` 两种配置文件，但是它们不能同时被使能，即 `ESP_PANEL_USE_SUPPORTED_BOARD` 和 `ESP_PANEL_USE_CUSTOM_BOARD` 最多只能有一个为 `1`。
+> * 同一个目录下可以同时包含 `esp_panel_board_supported.h` 和 `esp_panel_board_custom.h` 两种配置文件，但是它们不能同时被使能，即 `ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED` 和 `ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM` 最多只能有一个为 `1`。
 > * 如果以上两个配置文件都被没有被使能，那么用户就无法使用 `ESP_Panel` 驱动，只能使用其他独立的设备驱动，如 `ESP_PanelBus`, `ESP_PanelLcd` 等。
 > * 由于这些文件内的配置可能会发生变化，比如新增、删除或重命名，为了保证程序的兼容性，库对它们分别进行了独立的版本管理，并在编译时检查用户当前使用的配置文件与库是否兼容。详细的版本信息以及检查规则可以在文件的末尾处找到。
 
 #### 配置驱动
 
-ESP32_Display_Panel 会根据 [ESP_Panel_Conf.h](../ESP_Panel_Conf.h) 文件来配置驱动的功能和参数，用户可以通过修改此文件中的宏定义来更新驱动的行为或默认参数。以使能用于调试的 LOG 输出为例，下面是修改后的 `ESP_Panel_Conf.h` 文件的部分内容：
+ESP32_Display_Panel 会根据 [esp_panel_conf.h](../esp_panel_conf.h) 文件来配置驱动的功能和参数，用户可以通过修改此文件中的宏定义来更新驱动的行为或默认参数。以使能用于调试的 LOG 输出为例，下面是修改后的 `esp_panel_conf.h` 文件的部分内容：
 
 ```c
 ...
@@ -95,19 +95,19 @@ ESP32_Display_Panel 会根据 [ESP_Panel_Conf.h](../ESP_Panel_Conf.h) 文件来�
 
 #### 使用支持的开发板
 
-ESP32_Display_Panel 会根据 [ESP_Panel_Board_Supported.h](../ESP_Panel_Board_Supported.h) 文件来配置 `ESP_Panel` 成为目标开发板的驱动，用户可以通过修改此文件中的宏定义来选择支持的开发板。以使用 *ESP32-S3-BOX-3* 开发板为例，修改步骤如下：
+ESP32_Display_Panel 会根据 [esp_panel_board_supported.h](../esp_panel_board_supported.h) 文件来配置 `ESP_Panel` 成为目标开发板的驱动，用户可以通过修改此文件中的宏定义来选择支持的开发板。以使用 *ESP32-S3-BOX-3* 开发板为例，修改步骤如下：
 
-1. 设置 `ESP_Panel_Board_Supported.h` 文件中的 `ESP_PANEL_USE_SUPPORTED_BOARD` 宏定义为 `1`。
+1. 设置 `esp_panel_board_supported.h` 文件中的 `ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED` 宏定义为 `1`。
 2. 根据目标开发板的型号，取消对应的宏定义的注释。
 
-下面是修改后的 `ESP_Panel_Board_Supported.h` 文件的部分内容：
+下面是修改后的 `esp_panel_board_supported.h` 文件的部分内容：
 
 ```c
 ...
 /* Set to 1 if using a supported board */
-#define ESP_PANEL_USE_SUPPORTED_BOARD       (1)         // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (1)         // 0/1
 
-#if ESP_PANEL_USE_SUPPORTED_BOARD
+#if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
 ...
 // #define BOARD_ESP32_C3_LCDKIT
 // #define BOARD_ESP32_S3_BOX
@@ -119,46 +119,46 @@ ESP32_Display_Panel 会根据 [ESP_Panel_Board_Supported.h](../ESP_Panel_Board_S
 
 #### 使用自定义开发板
 
-ESP32_Display_Panel 会根据 [ESP_Panel_Board_Custom.h](../ESP_Panel_Board_Custom.h) 文件来配置 `ESP_Panel` 成为自定义开发板的驱动，用户需要根据自定义开发板的实际参数对此文件进行修改。以使用 *480x480 RGB ST7701 LCD + I2C GT911 Touch* 的自定义开发板为例，修改步骤如下：
+ESP32_Display_Panel 会根据 [esp_panel_board_custom.h](../esp_panel_board_custom.h) 文件来配置 `ESP_Panel` 成为自定义开发板的驱动，用户需要根据自定义开发板的实际参数对此文件进行修改。以使用 *480x480 RGB ST7701 LCD + I2C GT911 Touch* 的自定义开发板为例，修改步骤如下：
 
-1. 设置 `ESP_Panel_Board_Custom.h` 文件中的 `ESP_PANEL_USE_CUSTOM_BOARD` 宏定义为 `1`。
+1. 设置 `esp_panel_board_custom.h` 文件中的 `ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM` 宏定义为 `1`。
 2. 设置 LCD 相关宏定义：
-  a. 设置 `ESP_PANEL_USE_LCD` 为 `1`
-  b. 设置 `ESP_PANEL_LCD_WIDTH` 和 `ESP_PANEL_LCD_HEIGHT` 为 `480`
-  c. 设置 `ESP_PANEL_LCD_BUS_TYPE` 为 `ESP_PANEL_BUS_TYPE_RGB`。
-  d. 在 `ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB` 下方的宏定义中设置 LCD 的信号引脚和其他参数。
-  e. 根据屏厂提供的初始化命令参数，取消 `ESP_PANEL_LCD_VENDOR_INIT_CMD` 宏定义的注释并修改内容。
+  a. 设置 `ESP_PANEL_BOARD_DEFAULT_USE_LCD` 为 `1`
+  b. 设置 `ESP_PANEL_BOARD_WIDTH` 和 `ESP_PANEL_BOARD_HEIGHT` 为 `480`
+  c. 设置 `ESP_PANEL_BOARD_LCD_BUS_TYPE` 为 `ESP_PANEL_BUS_TYPE_RGB`。
+  d. 在 `ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB` 下方的宏定义中设置 LCD 的信号引脚和其他参数。
+  e. 根据屏厂提供的初始化命令参数，取消 `ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD` 宏定义的注释并修改内容。
   f. 根据需要修改其他 LCD 配置
 2. 设置 Touch 相关宏定义：
-  a. 设置 `ESP_PANEL_USE_TOUCH` 为 `1`
-  b. 在 `ESP_PANEL_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C` 下方的宏定义中设置 Touch 的信号引脚和其他参数。
+  a. 设置 `ESP_PANEL_BOARD_DEFAULT_USE_TOUCH` 为 `1`
+  b. 在 `ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C` 下方的宏定义中设置 Touch 的信号引脚和其他参数。
   c. 根据需要修改其他 Touch 配置
-3. 根据需要使能其他驱动的宏定义，如 `ESP_PANEL_USE_BACKLIGHT`, `ESP_PANEL_USE_EXPANDER` 等。
+3. 根据需要使能其他驱动的宏定义，如 `ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT`, `ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER` 等。
 
-下面是修改后的 `ESP_Panel_Board_Custom.h` 文件的部分内容：
+下面是修改后的 `esp_panel_board_custom.h` 文件的部分内容：
 
 ```c
 ...
 /* Set to 1 if using a custom board */
-#define ESP_PANEL_USE_CUSTOM_BOARD  (1)         // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM  (1)         // 0/1
 
 /* Set to 1 when using an LCD panel */
-#define ESP_PANEL_USE_LCD           (1)     // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_LCD           (1)     // 0/1
 
-#if ESP_PANEL_USE_LCD
+#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
 /**
  * LCD Controller Name
  */
-#define ESP_PANEL_LCD_NAME          ST7701
+#define ESP_PANEL_BOARD_LCD_CONTROLLER          ST7701
 
 /* LCD resolution in pixels */
-#define ESP_PANEL_LCD_WIDTH         (480)
-#define ESP_PANEL_LCD_HEIGHT        (480)
+#define ESP_PANEL_BOARD_WIDTH         (480)
+#define ESP_PANEL_BOARD_HEIGHT        (480)
 ...
 /**
  * LCD Bus Type.
  */
-#define ESP_PANEL_LCD_BUS_TYPE      (ESP_PANEL_BUS_TYPE_RGB)
+#define ESP_PANEL_BOARD_LCD_BUS_TYPE      (ESP_PANEL_BUS_TYPE_RGB)
 /**
  * LCD Bus Parameters.
  *
@@ -166,9 +166,9 @@ ESP32_Display_Panel 会根据 [ESP_Panel_Board_Custom.h](../ESP_Panel_Board_Cust
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
  *
  */
-#if ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
+#if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 ...
-#endif /* ESP_PANEL_LCD_BUS_TYPE */
+#endif /* ESP_PANEL_BOARD_LCD_BUS_TYPE */
 ...
 /**
  * LCD Vendor Initialization Commands.
@@ -182,7 +182,7 @@ ESP32_Display_Panel 会根据 [ESP_Panel_Board_Custom.h](../ESP_Panel_Board_Cust
  *   2. Formatter: ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, { data0, data1, ... }) and
  *                ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command)
  */
-#define ESP_PANEL_LCD_VENDOR_INIT_CMD() \
+#define ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD() \
     { \
         ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xFF, {0x77, 0x01, 0x00, 0x00, 0x10}), \
         ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xC0, {0x3B, 0x00}), \
@@ -193,33 +193,33 @@ ESP32_Display_Panel 会根据 [ESP_Panel_Board_Custom.h](../ESP_Panel_Board_Cust
         ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(120, 0x11), \
     }
 ...
-#endif /* ESP_PANEL_USE_LCD */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_LCD */
 
 /* Set to 1 when using an touch panel */
-#define ESP_PANEL_USE_TOUCH         (1)         // 0/1
-#if ESP_PANEL_USE_TOUCH
+#define ESP_PANEL_BOARD_DEFAULT_USE_TOUCH         (1)         // 0/1
+#if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
 /**
  * Touch controller name
  */
-#define ESP_PANEL_TOUCH_NAME        GT911
+#define ESP_PANEL_BOARD_TOUCH_CONTROLLER        GT911
 ...
 /**
  * Touch panel bus type
  */
-#define ESP_PANEL_TOUCH_BUS_TYPE    (ESP_PANEL_BUS_TYPE_I2C)
+#define ESP_PANEL_BOARD_TOUCH_BUS_TYPE    (ESP_PANEL_BUS_TYPE_I2C)
 /* Touch panel bus parameters */
-#if ESP_PANEL_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
+#if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 ...
-#endif /* ESP_PANEL_TOUCH_BUS_TYPE */
+#endif /* ESP_PANEL_BOARD_TOUCH_BUS_TYPE */
 ...
-#endif /* ESP_PANEL_USE_TOUCH */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_TOUCH */
 ...
-#define ESP_PANEL_USE_BACKLIGHT     (1)         // 0/1
-#if ESP_PANEL_USE_BACKLIGHT
+#define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT     (1)         // 0/1
+#if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
 ...
-#endif /* ESP_PANEL_USE_BACKLIGHT */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT */
 ...
-#endif /* ESP_PANEL_USE_CUSTOM_BOARD */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM */
 ```
 
 ### 示例说明
@@ -348,7 +348,7 @@ SquareLine Studio (v1.4.x) 可以通过图像化编辑的方式快速设计精�
     Arduino
         |-libraries
             |-ESP32_Display_Panel
-            |-ESP_Panel_Conf.h (可选)
+            |-esp_panel_conf.h (可选)
             |-lv_conf.h (可选)
             |-lvgl
             |-ui

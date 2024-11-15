@@ -1,2 +1,2 @@
 [codespell]
-skip = ./src/touch/base/esp_lcd_touch_xpt2046.c
+skip = ./src/touch/port/esp_lcd_touch_xpt2046.c,

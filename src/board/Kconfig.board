@@ -1,29 +1,29 @@
 menu "Board"
     choice
-        prompt "Select the board type"
+        prompt "Select the default board type"
         default ESP_PANEL_IGNORE_BOARD
 
         config ESP_PANEL_IGNORE_BOARD
             bool "None"
             help
-                Enable this option if you are not using a board.
+                Enable this option if not using a board.
 
-        config ESP_PANEL_USE_SUPPORTED_BOARD
+        config ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
             bool "Supported board"
             help
-                Enable this option if you are using a supported board.
+                Enable this option if using a supported board.
 
-        config ESP_PANEL_USE_CUSTOM_BOARD
+        config ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM
             bool "Custom board"
             help
-                Select this option if you are using a custom board.
+                Select this option if using a custom board.
     endchoice
 
-    if ESP_PANEL_USE_SUPPORTED_BOARD
+    if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
         orsource "./Kconfig.board_supported"
     endif
 
-    if ESP_PANEL_USE_CUSTOM_BOARD
+    if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM
         orsource "./Kconfig.board_custom"
     endif
 

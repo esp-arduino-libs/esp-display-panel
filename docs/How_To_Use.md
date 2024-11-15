@@ -78,13 +78,13 @@ Below are detailed instructions on how to configure ESP32_Display_Panel, mainly 
 4. If multiple projects need to use the same configuration, users can place the configuration files in the [Arduino Library Directory](./FAQ.md#where-is-the-directory-for-arduino-libraries), so that all projects can share the same configuration.
 
 > [!WARNING]
-> * The same directory can simultaneously contain both `ESP_Panel_Board_Supported.h` and `ESP_Panel_Board_Custom.h` configuration files, but they cannot be enabled at the same time, meaning `ESP_PANEL_USE_SUPPORTED_BOARD` and `ESP_PANEL_USE_CUSTOM_BOARD` can only have one set to `1`.
+> * The same directory can simultaneously contain both `esp_panel_board_supported.h` and `esp_panel_board_custom.h` configuration files, but they cannot be enabled at the same time, meaning `ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED` and `ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM` can only have one set to `1`.
 > * If neither of the above two configuration files is enabled, users cannot use the `ESP_Panel` driver and can only use other standalone device drivers, such as `ESP_PanelBus`, `ESP_PanelLcd`, etc.
 > * Since the configurations within these files might change, such as adding, deleting, or renaming, to ensure the compatibility of the program, the library manages the versions of these files independently and checks whether the configuration files currently used by the user are compatible with the library during compilation. Detailed version information and checking rules can be found at the end of the file.
 
 #### Configuring Drivers
 
-ESP32_Display_Panel configures driver functionality and parameters based on the [ESP_Panel_Conf.h](../ESP_Panel_Conf.h) file. Users can update the behavior or default parameters of the driver by modifying macro definitions in this file. For example, to enable debug log output, here is a snippet of the modified `ESP_Panel_Conf.h` file:
+ESP32_Display_Panel configures driver functionality and parameters based on the [esp_panel_conf.h](../esp_panel_conf.h) file. Users can update the behavior or default parameters of the driver by modifying macro definitions in this file. For example, to enable debug log output, here is a snippet of the modified `esp_panel_conf.h` file:
 
 ```c
 ...
@@ -95,70 +95,70 @@ ESP32_Display_Panel configures driver functionality and parameters based on the 
 
 #### Using Supported Development Boards
 
-ESP32_Display_Panel configures `ESP_Panel` as the driver for the target development board based on the [ESP_Panel_Board_Supported.h](../ESP_Panel_Board_Supported.h) file. Users can select supported development boards by modifying macro definitions in this file. For example, to use the *ESP32-S3-BOX-3* development board, follow these steps:
+ESP32_Display_Panel configures `ESP_Panel` as the driver for the target development board based on the [esp_panel_board_supported.h](../esp_panel_board_supported.h) file. Users can select supported development boards by modifying macro definitions in this file. For example, to use the *ESP32-S3-BOX-3* development board, follow these steps:
 
-1. Set the `ESP_PANEL_USE_SUPPORTED_BOARD` macro definition in the `ESP_Panel_Board_Supported.h` file to `1`.
+1. Set the `ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED` macro definition in the `esp_panel_board_supported.h` file to `1`.
 2. Uncomment the corresponding macro definition for the target development board model.
 
-Here is a snippet of the modified `ESP_Panel_Board_Supported.h` file:
+Here is a snippet of the modified `esp_panel_board_supported.h` file:
 
 ```c
 ...
 /* Set to 1 if using a supported board */
-#define ESP_PANEL_USE_SUPPORTED_BOARD       (1)         // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (1)         // 0/1
 
-#if ESP_PANEL_USE_SUPPORTED_BOARD
+#if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
 ...
 // #define BOARD_ESP32_C3_LCDKIT
 // #define BOARD_ESP32_S3_BOX
 #define BOARD_ESP32_S3_BOX_3
 // #define BOARD_ESP32_S3_BOX_3_BETA
 ...
-#endif /* ESP_PANEL_USE_SUPPORTED_BOARD */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED */
 ```
 
 #### Using Custom Development Boards
 
-ESP32_Display_Panel configures `ESP_Panel` as the driver for custom development boards based on the [ESP_Panel_Board_Custom.h](../ESP_Panel_Board_Custom.h) file. Users need to modify this file according to the actual parameters of the custom development board. For example, to use a custom development board with a *480x480 RGB ST7701 LCD + I2C GT911 Touch*, follow these steps:
+ESP32_Display_Panel configures `ESP_Panel` as the driver for custom development boards based on the [esp_panel_board_custom.h](../esp_panel_board_custom.h) file. Users need to modify this file according to the actual parameters of the custom development board. For example, to use a custom development board with a *480x480 RGB ST7701 LCD + I2C GT911 Touch*, follow these steps:
 
-1. Set the `ESP_PANEL_USE_CUSTOM_BOARD` macro definition in the `ESP_Panel_Board_Custom.h` file to `1`.
+1. Set the `ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM` macro definition in the `esp_panel_board_custom.h` file to `1`.
 2. Set the LCD-related macro definitions:
-   a. Set `ESP_PANEL_USE_LCD` to `1`.
-   b. Set `ESP_PANEL_LCD_WIDTH` and `ESP_PANEL_LCD_HEIGHT` to `480`.
-   c. Set `ESP_PANEL_LCD_BUS_TYPE` to `ESP_PANEL_BUS_TYPE_RGB`.
-   d. Set LCD signal pins and other parameters below `ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB`.
-   e. Uncomment and modify the `ESP_PANEL_LCD_VENDOR_INIT_CMD` macro definition according to the initialization command parameters provided by the screen vendor.
+   a. Set `ESP_PANEL_BOARD_DEFAULT_USE_LCD` to `1`.
+   b. Set `ESP_PANEL_BOARD_WIDTH` and `ESP_PANEL_BOARD_HEIGHT` to `480`.
+   c. Set `ESP_PANEL_BOARD_LCD_BUS_TYPE` to `ESP_PANEL_BUS_TYPE_RGB`.
+   d. Set LCD signal pins and other parameters below `ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB`.
+   e. Uncomment and modify the `ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD` macro definition according to the initialization command parameters provided by the screen vendor.
    f. Modify other LCD configurations as needed.
 3. Set the Touch-related macro definitions:
-   a. Set `ESP_PANEL_USE_TOUCH` to `1`.
-   b. Set Touch signal pins and other parameters below `ESP_PANEL_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C`.
+   a. Set `ESP_PANEL_BOARD_DEFAULT_USE_TOUCH` to `1`.
+   b. Set Touch signal pins and other parameters below `ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C`.
    c. Modify other Touch configurations as needed.
-4. Enable other driver macro definitions as needed, such as `ESP_PANEL_USE_BACKLIGHT`, `ESP_PANEL_USE_EXPANDER`, etc.
+4. Enable other driver macro definitions as needed, such as `ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT`, `ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER`, etc.
 
-Here is a snippet of the modified `ESP_Panel_Board_Custom.h` file:
+Here is a snippet of the modified `esp_panel_board_custom.h` file:
 
 ```c
 ...
 /* Set to 1 if using a custom board */
-#define ESP_PANEL_USE_CUSTOM_BOARD  (1)         // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM  (1)         // 0/1
 
 /* Set to 1 when using an LCD panel */
-#define ESP_PANEL_USE_LCD           (1)     // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_LCD           (1)     // 0/1
 
-#if ESP_PANEL_USE_LCD
+#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
 /**
  * LCD Controller Name
  */
-#define ESP_PANEL_LCD_NAME          ST7701
+#define ESP_PANEL_BOARD_LCD_CONTROLLER          ST7701
 
 /* LCD resolution in pixels */
-#define ESP_PANEL_LCD_WIDTH         (480)
-#define ESP_PANEL_LCD_HEIGHT        (480)
+#define ESP_PANEL_BOARD_WIDTH         (480)
+#define ESP_PANEL_BOARD_HEIGHT        (480)
 ...
 /**
  * LCD Bus Type.
  */
-#define ESP_PANEL_LCD_BUS_TYPE      (ESP_PANEL_BUS_TYPE_RGB)
+#define ESP_PANEL_BOARD_LCD_BUS_TYPE      (ESP_PANEL_BUS_TYPE_RGB)
 /**
  * LCD Bus Parameters.
  *
@@ -166,9 +166,9 @@ Here is a snippet of the modified `ESP_Panel_Board_Custom.h` file:
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
  *
  */
-#if ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
+#if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 ...
-#endif /* ESP_PANEL_LCD_BUS_TYPE */
+#endif /* ESP_PANEL_BOARD_LCD_BUS_TYPE */
 ...
 /**
  * LCD Vendor Initialization Commands.
@@ -182,7 +182,7 @@ Here is a snippet of the modified `ESP_Panel_Board_Custom.h` file:
  *   2. Formatter: ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, { data0, data1, ... }) and
  *                ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command)
  */
-#define ESP_PANEL_LCD_VENDOR_INIT_CMD() \
+#define ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD() \
     { \
         ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xFF, {0x77, 0x01, 0x00, 0x00, 0x10}), \
         ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xC0, {0x3B, 0x00}), \
@@ -193,33 +193,33 @@ Here is a snippet of the modified `ESP_Panel_Board_Custom.h` file:
         ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(120, 0x11), \
     }
 ...
-#endif /* ESP_PANEL_USE_LCD */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_LCD */
 
 /* Set to 1 when using a touch panel */
-#define ESP_PANEL_USE_TOUCH         (1)         // 0/1
-#if ESP_PANEL_USE_TOUCH
+#define ESP_PANEL_BOARD_DEFAULT_USE_TOUCH         (1)         // 0/1
+#if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
 /**
  * Touch controller name
  */
-#define ESP_PANEL_TOUCH_NAME        GT911
+#define ESP_PANEL_BOARD_TOUCH_CONTROLLER        GT911
 ...
 /**
  * Touch panel bus type
  */
-#define ESP_PANEL_TOUCH_BUS_TYPE    (ESP_PANEL_BUS_TYPE_I2C)
+#define ESP_PANEL_BOARD_TOUCH_BUS_TYPE    (ESP_PANEL_BUS_TYPE_I2C)
 /* Touch panel bus parameters */
-#if ESP_PANEL_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
+#if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 ...
-#endif /* ESP_PANEL_TOUCH_BUS_TYPE */
+#endif /* ESP_PANEL_BOARD_TOUCH_BUS_TYPE */
 ...
-#endif /* ESP_PANEL_USE_TOUCH */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_TOUCH */
 ...
-#define ESP_PANEL_USE_BACKLIGHT     (1)         // 0/1
-#if ESP_PANEL_USE_BACKLIGHT
+#define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT     (1)         // 0/1
+#if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
 ...
-#endif /* ESP_PANEL_USE_BACKLIGHT */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT */
 ...
-#endif /* ESP_PANEL_USE_CUSTOM_BOARD */
+#endif /* ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM */
 ```
 
 ### Usage Examples
@@ -348,7 +348,7 @@ SquareLine Studio (v1.3.x) allows for the rapid design of beautiful UIs through 
     Arduino
         |-libraries
             |-ESP32_Display_Panel
-            |-ESP_Panel_Conf.h (optional)
+            |-esp_panel_conf.h (optional)
             |-lv_conf.h (optional)
             |-lvgl
             |-ui

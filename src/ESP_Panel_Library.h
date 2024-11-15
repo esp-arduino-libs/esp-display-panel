@@ -3,61 +3,16 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/**
+ * This file is just to keep the compatibility with the old version of the library.
+ * Please use the file `esp_io_expander.hpp` instead.
+ *
+ * @TODO: Remove in the next major version
+ *
+ */
 #pragma once
 
-/* Drivers */
-#include "ESP_Panel_Conf_Internal.h"
-#include "ESP_Panel_Board_Internal.h"
-#include "ESP_PanelLog.h"
-#include "ESP_PanelTypes.h"
-#include "ESP_PanelVersions.h"
+#warning "This file is deprecated and will be removed in the next major version. Please use the file `esp_io_expander.hpp` instead."
 
-/* Host */
-#include "host/ESP_PanelHost.h"
-
-/* Bus */
-#include "bus/ESP_PanelBus.h"
-#include "bus/I2C.h"
-#include "bus/SPI.h"
-#include "bus/RGB.h"
-#include "bus/QSPI.h"
-#include "bus/DSI.h"
-
-/* LCD */
-#include "lcd/ESP_PanelLcd.h"
-#include "lcd/EK79007.h"
-#include "lcd/JD9365.h"
-#include "lcd/EK9716B.h"
-#include "lcd/GC9503.h"
-#include "lcd/GC9A01.h"
-#include "lcd/GC9B71.h"
-#include "lcd/ILI9341.h"
-#include "lcd/ILI9881C.h"
-#include "lcd/NV3022B.h"
-#include "lcd/SH8601.h"
-#include "lcd/SPD2010.h"
-#include "lcd/ST7262.h"
-#include "lcd/ST7701.h"
-#include "lcd/ST7789.h"
-#include "lcd/ST77916.h"
-#include "lcd/ST77922.h"
-
-/* Touch */
-#include "touch/ESP_PanelTouch.h"
-#include "touch/CST816S.h"
-#include "touch/FT5x06.h"
-#include "touch/GT1151.h"
-#include "touch/GT911.h"
-#include "touch/ST1633.h"
-#include "touch/ST7123.h"
-#include "touch/TT21100.h"
-#include "touch/XPT2046.h"
-
-/* Backlight */
-#include "backlight/ESP_PanelBacklight.h"
-
-/* 3rd-party Libraries */
-#include "ESP_IOExpander_Library.h"
-
-/* Panel */
-#include "panel/ESP_Panel.h"
+#include "esp_panel_library.hpp"

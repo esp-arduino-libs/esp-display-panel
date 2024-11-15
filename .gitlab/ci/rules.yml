@@ -11,7 +11,7 @@
 # component common files
 .patterns-component_common: &patterns-component_common
   - "CMakeLists.txt"
-  - "ESP_Panel_Conf.h"
+  - "esp_panel_conf.h"
   - "idf_component.yml"
   - "Kconfig"
   - "src/*"
@@ -42,8 +42,8 @@
 
 .patterns-component_bus_3wire_spi_rgb: &patterns-component_bus_3wire_spi_rgb
   - .patterns-component_bus_rgb
-  - "src/bus/base/esp_lcd_panel_io_3wire_spi.c"
-  - "src/bus/base/esp_lcd_panel_io_additions.h"
+  - "src/bus/port/esp_lcd_panel_io_3wire_spi.c"
+  - "src/bus/port/esp_lcd_panel_io_additions.h"
 
 .patterns-component_bus_spi: &patterns-component_bus_spi
   - .patterns-component_bus_common
@@ -55,31 +55,31 @@
 
 # component lcd files
 .patterns-component_lcd_common: &patterns-component_lcd_common
-  - "src/lcd/base/esp_lcd_vendor_types.h"
+  - "src/lcd/port/esp_panel_lcd_vendor_types.h"
   - "src/lcd/ESP_PanelLcd.*"
 
 .patterns-component_lcd_mipi_dsi: &patterns-component_lcd_mipi_dsi
   - .patterns-component_bus_mipi_dsi
   - .patterns-component_lcd_common
-  - "src/lcd/base/esp_lcd_ek79007.*"
+  - "src/lcd/port/esp_lcd_ek79007.*"
   - "src/lcd/EK79007.*"
-  - "src/lcd/base/esp_lcd_ili9881c.*"
+  - "src/lcd/port/esp_lcd_ili9881c.*"
   - "src/lcd/ILI9881C.*"
-  - "src/lcd/base/esp_lcd_jd9365.*"
+  - "src/lcd/port/esp_lcd_jd9365.*"
   - "src/lcd/JD9365.*"
 
 .patterns-component_lcd_qspi: &patterns-component_lcd_qspi
   - .patterns-component_bus_qspi
   - .patterns-component_lcd_common
-  - "src/lcd/base/esp_lcd_gc9b71.*"
+  - "src/lcd/port/esp_lcd_gc9b71.*"
   - "src/lcd/GC9B71.*"
-  - "src/lcd/base/esp_lcd_sh8601.*"
+  - "src/lcd/port/esp_lcd_sh8601.*"
   - "src/lcd/SH8601.*"
-  - "src/lcd/base/esp_lcd_spd2010.*"
+  - "src/lcd/port/esp_lcd_spd2010.*"
   - "src/lcd/SPD2010.*"
-  - "src/lcd/base/esp_lcd_st77916.*"
+  - "src/lcd/port/esp_lcd_st77916.*"
   - "src/lcd/ST77916.*"
-  - "src/lcd/base/esp_lcd_st77922.*"
+  - "src/lcd/port/esp_lcd_st77922.*"
   - "src/lcd/ST77922.*"
 
 .patterns-component_lcd_rgb: &patterns-component_lcd_rgb
@@ -91,56 +91,56 @@
 .patterns-component_lcd_3wire_spi_rgb: &patterns-component_lcd_3wire_spi_rgb
   - .patterns-component_bus_3wire_spi_rgb
   - .patterns-component_lcd_common
-  - "src/lcd/base/esp_lcd_gc9503.*"
+  - "src/lcd/port/esp_lcd_gc9503.*"
   - "src/lcd/GC9503.*"
-  - "src/lcd/base/esp_lcd_st7701.*"
+  - "src/lcd/port/esp_lcd_st7701.*"
   - "src/lcd/ST7701.*"
 
 .patterns-component_lcd_spi: &patterns-component_lcd_spi
   - .patterns-component_bus_spi
   - .patterns-component_lcd_common
-  - "src/lcd/base/esp_lcd_gc9a01.*"
+  - "src/lcd/port/esp_lcd_gc9a01.*"
   - "src/lcd/GC9A01.*"
-  - "src/lcd/base/esp_lcd_gc9b71.*"
+  - "src/lcd/port/esp_lcd_gc9b71.*"
   - "src/lcd/GC9B71.*"
-  - "src/lcd/base/esp_lcd_ILI9341.*"
+  - "src/lcd/port/esp_lcd_ILI9341.*"
   - "src/lcd/ILI9341.*"
-  - "src/lcd/base/esp_lcd_nv3022b.*"
+  - "src/lcd/port/esp_lcd_nv3022b.*"
   - "src/lcd/NV3022B.*"
-  - "src/lcd/base/esp_lcd_sh8601.*"
+  - "src/lcd/port/esp_lcd_sh8601.*"
   - "src/lcd/SH8601.*"
-  - "src/lcd/base/esp_lcd_spd2010.*"
+  - "src/lcd/port/esp_lcd_spd2010.*"
   - "src/lcd/SPD2010.*"
-  - "src/lcd/base/esp_lcd_st7789.*"
+  - "src/lcd/port/esp_lcd_st7789.*"
   - "src/lcd/ST7789.*"
-  - "src/lcd/base/esp_lcd_st77916.*"
+  - "src/lcd/port/esp_lcd_st77916.*"
   - "src/lcd/ST77916.*"
-  - "src/lcd/base/esp_lcd_st77922.*"
+  - "src/lcd/port/esp_lcd_st77922.*"
   - "src/lcd/ST77922.*"
 
 # component touch files
 .patterns-component_touch_common: &patterns-component_touch_common
-  - "src/touch/base/esp_lcd_touch.*"
+  - "src/touch/port/esp_lcd_touch.*"
   - "src/touch/ESP_PanelTouch.*"
 
 .patterns-component_touch_spi: &patterns-component_touch_spi
   - .patterns-component_bus_spi
-  - "src/touch/base/esp_lcd_touch_xpt2046.*"
+  - "src/touch/port/esp_lcd_touch_xpt2046.*"
   - "src/touch/XPT2046.*"
 
 .patterns-component_touch_i2c: &patterns-component_touch_i2c
   - .patterns-component_bus_i2c
-  - "src/touch/base/esp_lcd_touch_cst816s.*"
+  - "src/touch/port/esp_lcd_touch_cst816s.*"
   - "src/touch/CST816S.*"
-  - "src/touch/base/esp_lcd_touch_ft5x06.*"
+  - "src/touch/port/esp_lcd_touch_ft5x06.*"
   - "src/touch/FT5x06.*"
-  - "src/touch/base/esp_lcd_touch_gt911.*"
+  - "src/touch/port/esp_lcd_touch_gt911.*"
   - "src/touch/GT911.*"
-  - "src/touch/base/esp_lcd_touch_gt1151.*"
+  - "src/touch/port/esp_lcd_touch_gt1151.*"
   - "src/touch/GT1151.*"
-  - "src/touch/base/esp_lcd_touch_st7123.*"
+  - "src/touch/port/esp_lcd_touch_st7123.*"
   - "src/touch/ST7123.*"
-  - "src/touch/base/esp_lcd_touch_tt21100.*"
+  - "src/touch/port/esp_lcd_touch_tt21100.*"
   - "src/touch/TT21100.*"
 
 # component panel files

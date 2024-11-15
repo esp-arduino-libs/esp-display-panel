@@ -11,7 +11,7 @@
 #include "esp_timer.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 
 using namespace std;
 

@@ -54,7 +54,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 /* The following default configurations are for the board 'Espressif: Custom, ST77922' */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

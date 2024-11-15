@@ -41,9 +41,9 @@ When encountering screen drift issue when driving RGB LCD with ESP32-S3, you can
 
    - **Step 1**: Download the "high_perf" version of the SDK from [arduino-esp32-sdk](https://github.com/esp-arduino-libs/arduino-esp32-sdk) and replace it in the [installation directory of arduino-esp32](#where-are-the-installation-directory-for-arduino-esp32-and-the-sdk-located).
 
-   - **Step 2**: If you are using supported development boards, usually there's no need to modify the code as they set `ESP_PANEL_LCD_RGB_BOUNCE_BUF_SIZE` to `(ESP_PANEL_LCD_WIDTH * 10)` by default. If the issue persists, refer to the example code below to increase the size of the `Bounce Buffer`.
+   - **Step 2**: If you are using supported development boards, usually there's no need to modify the code as they set `ESP_PANEL_BOARD_LCD_RGB_BOUNCE_BUF_SIZE` to `(ESP_PANEL_BOARD_WIDTH * 10)` by default. If the issue persists, refer to the example code below to increase the size of the `Bounce Buffer`.
 
-   - **Step 3**: If you are using a custom board, confirm in the `ESP_Panel_Board_Custom.h` file whether `ESP_PANEL_LCD_RGB_BOUNCE_BUF_SIZE` is set to non-zero. If the issue persists, increase the size of the `Bounce Buffer`.
+   - **Step 3**: If you are using a custom board, confirm in the `esp_panel_board_custom.h` file whether `ESP_PANEL_BOARD_LCD_RGB_BOUNCE_BUF_SIZE` is set to non-zero. If the issue persists, increase the size of the `Bounce Buffer`.
 
    - **Step 4**: If you are using an independent driver, refer to the example code below to set the size of the `Bounce Buffer`.
 
@@ -60,7 +60,7 @@ When encountering screen drift issue when driving RGB LCD with ESP32-S3, you can
     // Start
     ESP_PanelBus_RGB *rgb_bus = static_cast<ESP_PanelBus_RGB *>(panel->getLcd()->getBus());
     // The size of the bounce buffer must satisfy `width_of_lcd * height_of_lcd = size_of_buffer * N`, where N is an even number.
-    rgb_bus->configRgbBounceBufferSize((ESP_PANEL_LCD_WIDTH * 20));
+    rgb_bus->configRgbBounceBufferSize((ESP_PANEL_BOARD_WIDTH * 20));
     // End
     panel->begin();
     ...

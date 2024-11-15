@@ -6,7 +6,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 #include <lvgl.h>
 
 // *INDENT-OFF*
@@ -15,8 +15,8 @@
  * LVGL related parameters, can be adjusted by users
  *
  */
-#define LVGL_PORT_DISP_WIDTH                    (ESP_PANEL_LCD_WIDTH)   // The width of the display
-#define LVGL_PORT_DISP_HEIGHT                   (ESP_PANEL_LCD_HEIGHT)  // The height of the display
+#define LVGL_PORT_DISP_WIDTH                    (ESP_PANEL_BOARD_WIDTH)   // The width of the display
+#define LVGL_PORT_DISP_HEIGHT                   (ESP_PANEL_BOARD_HEIGHT)  // The height of the display
 #define LVGL_PORT_TICK_PERIOD_MS                (2) // The period of the LVGL tick task, in milliseconds
 
 /**

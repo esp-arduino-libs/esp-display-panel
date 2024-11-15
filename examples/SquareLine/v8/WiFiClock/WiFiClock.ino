@@ -80,7 +80,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 #include <lvgl.h>
 #include <ui.h>
 #include <NTPClient.h>

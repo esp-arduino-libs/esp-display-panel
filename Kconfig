@@ -1,26 +1,22 @@
 menu "ESP Display Panel Configurations"
     config ESP_PANEL_CONF_FILE_SKIP
-        bool "Unckeck this to ignore `ESP_Panel_Conf.h`"
+        bool "Unckeck this to use `esp_panel_conf.h`"
         default y
+        help
+            If want to use `esp_panel_conf.h` to configure the panel, uncheck this option. Otherwise, the configurations in sdkconfig will be used.
 
     config ESP_PANEL_BOARD_FILE_SKIP
-        bool "Unckeck this to ignore `ESP_Panel_Board_*.h`"
+        bool "Unckeck this to use `esp_panel_board_*.h`"
         default y
-
-    config ESP_PANEL_CHECK_RESULT_ASSERT
-        bool "Assert on error"
-        default n
         help
-            If enabled, the driver will assert on error. Otherwise, the driver will return error code on error.
+            If want to use `esp_panel_board_*.h` to configure the panel, uncheck this option. Otherwise, the configurations in sdkconfig will be used.
 
-    config ESP_PANEL_ENABLE_LOG
-        bool "Enable output debug log"
-        default n
-        help
-            If enabled, the driver will output log for debugging.
+    if ESP_PANEL_CONF_FILE_SKIP
+        orsource "./src/panel/Kconfig.panel"
+    endif
 
-    orsource "./src/touch/Kconfig.touch"
-
-    orsource "./src/board/Kconfig.board"
+    if ESP_PANEL_BOARD_FILE_SKIP
+        orsource "./src/board/Kconfig.board"
+    endif
 
 endmenu
