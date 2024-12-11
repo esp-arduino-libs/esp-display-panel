@@ -87,7 +87,7 @@ public:
     };
 
     struct Attributes {
-        std::string name = "Unknown";
+        const char *name = nullptr;
     };
 
     struct State {

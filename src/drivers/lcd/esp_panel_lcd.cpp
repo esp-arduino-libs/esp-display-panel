@@ -14,11 +14,13 @@ namespace esp_panel::drivers {
     {LCD_Factory::Conrtoller::controller, LCD_ ##controller::ATTRIBUTES_DEFAULT.name}
 #define CASE_CONTROLLER(controller) \
     case Conrtoller::controller: \
+    { \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
             (device = esp_utils::make_shared<LCD_ ## controller>(bus, config)), nullptr, "Create %s failed", \
             getControllerNameString(controller).c_str() \
         ); \
-        break
+        break; \
+    } \
 
 const std::map<LCD_Factory::Conrtoller, std::string> LCD_Factory::_controller_name_map = {
     ITEM_CONTROLLER(AXS15231B),

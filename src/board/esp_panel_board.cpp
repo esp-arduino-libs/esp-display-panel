@@ -24,7 +24,7 @@ Board::Board():
     _flags.use_default_config = 1;
 #if ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
     using BacklightConfig = drivers::BacklightCustom::Config;
-    BacklightConfig &config = std::get<BacklightConfig>(_config.backlight.variant_config);
+    BacklightConfig &config = std::get<BacklightConfig>(_config.backlight.config);
     config.user_data = this;
 #endif // ESP_PANEL_BOARD_BACKLIGHT_TYPE
 }

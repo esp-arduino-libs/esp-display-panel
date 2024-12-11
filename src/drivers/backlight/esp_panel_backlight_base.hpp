@@ -22,7 +22,7 @@ public:
      *
      */
     struct Attributes {
-        std::string name = "Unknown"; /*<! The backlight device name. Default is `"Unknown"` */
+        const char *name = nullptr;     /*<! The backlight device name. Default is `nullptr` */
     };
 
     /**

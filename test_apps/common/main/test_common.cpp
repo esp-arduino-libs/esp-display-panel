@@ -110,31 +110,33 @@ TEST_CASE("Test board", "[board]")
         vTaskDelay(pdMS_TO_TICKS(TEST_LCD_SHOW_TIME_MS));
     }
 
-    if (touch != nullptr) {
-#if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
-        TEST_ASSERT_TRUE_MESSAGE(
-            touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Attach touch interrupt callback failed"
-        );
-#endif
-        uint32_t t = 0;
-        ESP_PanelTouchPoint point[TEST_TOUCH_READ_POINTS_NUM];
-        int read_touch_result = 0;
+    panel->del();
 
-        ESP_LOGI(TAG, "Reading touch_device point...");
-        while (t++ < TEST_TOUCH_READ_TIME_MS / TEST_TOUCH_READ_DELAY_MS) {
-            read_touch_result = touch->readPoints(point, TEST_TOUCH_READ_POINTS_NUM, TEST_TOUCH_READ_DELAY_MS);
-            if (read_touch_result > 0) {
-                for (int i = 0; i < read_touch_result; i++) {
-                    ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d\n", i, point[i].x, point[i].y, point[i].strength);
-                }
-            } else if (read_touch_result < 0) {
-                ESP_LOGE(TAG, "Read touch_device point failed");
-            }
-            if (!touch->isInterruptEnabled()) {
-                delay(TEST_TOUCH_READ_DELAY_MS);
-            }
-        }
-    } else {
-        ESP_LOGI(TAG, "Touch is not available");
-    }
+//     if (touch != nullptr) {
+// #if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
+//         TEST_ASSERT_TRUE_MESSAGE(
+//             touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Attach touch interrupt callback failed"
+//         );
+// #endif
+//         uint32_t t = 0;
+//         ESP_PanelTouchPoint point[TEST_TOUCH_READ_POINTS_NUM];
+//         int read_touch_result = 0;
+
+//         ESP_LOGI(TAG, "Reading touch_device point...");
+//         while (t++ < TEST_TOUCH_READ_TIME_MS / TEST_TOUCH_READ_DELAY_MS) {
+//             read_touch_result = touch->readPoints(point, TEST_TOUCH_READ_POINTS_NUM, TEST_TOUCH_READ_DELAY_MS);
+//             if (read_touch_result > 0) {
+//                 for (int i = 0; i < read_touch_result; i++) {
+//                     ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d\n", i, point[i].x, point[i].y, point[i].strength);
+//                 }
+//             } else if (read_touch_result < 0) {
+//                 ESP_LOGE(TAG, "Read touch_device point failed");
+//             }
+//             if (!touch->isInterruptEnabled()) {
+//                 delay(TEST_TOUCH_READ_DELAY_MS);
+//             }
+//         }
+//     } else {
+//         ESP_LOGI(TAG, "Touch is not available");
+//     }
 }

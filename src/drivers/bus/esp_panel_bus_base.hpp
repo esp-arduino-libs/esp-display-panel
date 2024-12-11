@@ -25,7 +25,7 @@ public:
      */
     struct Attributes {
         int type = -1;                  /*<! The bus type. Default is `-1` */
-        std::string name = "Unknown";   /*<! The bus name. Default is `"Unknown"` */
+        const char *name = nullptr;     /*<! The bus name. Default is `nullptr` */
     };
 
     /**

@@ -53,9 +53,9 @@ bool Touch::del(void)
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     if (checkIsBegun()) {
-        ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_lcd_touch_del(touch_handle), false, "Delete touch panel(@%p) failed", touch_handle
-        );
+        // ESP_UTILS_CHECK_ERROR_RETURN(
+        //     esp_lcd_touch_del(touch_handle), false, "Delete touch panel(@%p) failed", touch_handle
+        // );
         ESP_UTILS_LOGD("Touch panel(@%p) deleted", touch_handle);
         touch_handle = nullptr;
     }

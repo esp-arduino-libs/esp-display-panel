@@ -99,7 +99,8 @@ esp_err_t esp_lcd_touch_new_spi_stmpe610(const esp_lcd_panel_io_handle_t io, con
     assert(out_touch != NULL);
 
     /* Prepare main structure */
-    esp_lcd_touch_handle_t esp_lcd_touch_stmpe610 = heap_caps_calloc(1, sizeof(esp_lcd_touch_t), MALLOC_CAP_DEFAULT);
+    // Use `calloc` instead of `heap_caps_calloc` for MicroPython compatibility
+    esp_lcd_touch_handle_t esp_lcd_touch_stmpe610 = calloc(1, sizeof(esp_lcd_touch_t));
     ESP_GOTO_ON_FALSE(esp_lcd_touch_stmpe610, ESP_ERR_NO_MEM, err, TAG, "no mem for STMPE610 controller");
 
     /* Communication interface */

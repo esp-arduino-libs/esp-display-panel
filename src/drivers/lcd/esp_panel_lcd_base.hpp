@@ -92,7 +92,7 @@ public:
         bool disable_display_on_off = 0;
         uint8_t x_coord_align = 1;
         uint8_t y_coord_align = 1;
-        std::string name = "Unknown";
+        const char *name = nullptr;
     };
 
     struct State {
