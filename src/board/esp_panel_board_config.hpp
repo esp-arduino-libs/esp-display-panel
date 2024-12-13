@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <string>
 #include <variant>
 #include "esp_panel_types.h"
 #include "drivers/bus/esp_panel_bus.hpp"
@@ -25,7 +26,6 @@ struct BoardConfig {
 
     /* LCD */
     struct {
-        drivers::LCD_Factory::Conrtoller controller;
         int bus_type;
         std::variant<
             drivers::Bus_SPI::Config,
@@ -37,6 +37,7 @@ struct BoardConfig {
             ,drivers::Bus_DSI::Config
 #endif // SOC_MIPI_DSI_SUPPORTED
         > bus_config;
+        std::string device_name;
         drivers::LCD::Config device_config;
         struct {
             uint8_t invert_color: 1;
@@ -48,12 +49,12 @@ struct BoardConfig {
 
     /* Touch */
     struct {
-        drivers::TouchFactory::Conrtoller controller;
         int bus_type;
         std::variant<
             drivers::Bus_I2C::Config,
             drivers::Bus_SPI::Config
         > bus_config;
+        std::string device_name;
         drivers::Touch::Config device_config;
         struct {
             uint8_t swap_xy: 1;
@@ -77,8 +78,8 @@ struct BoardConfig {
 
     /* IO expander */
     struct {
-        drivers::IO_ExpanderFactory::Chip chip;
-        esp_expander::Base::Config base_config;
+        std::string name;
+        esp_expander::Base::Config config;
     } io_expander = {};
 
     /* Others */

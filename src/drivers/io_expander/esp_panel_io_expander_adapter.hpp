@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <string_view>
 #include "esp_panel_utils.h"
 #include "drivers/host/esp_panel_host_i2c.hpp"
 #include "esp_panel_io_expander_base.hpp"
@@ -16,7 +17,11 @@ class IO_ExpanderAdapter: public IO_Expander, public T {
     static_assert(std::is_base_of<esp_expander::Base, T>::value, "`T` must be derived from `esp_expander::Base`");
 
 public:
-    IO_ExpanderAdapter(const esp_expander::Base::Config &config): IO_Expander(config), T(getBaseConfig(config)) {}
+    IO_ExpanderAdapter(const esp_expander::Base::Config &config, const Attributes &attr):
+        IO_Expander(config, attr),
+        T(getBaseConfig(config))
+    {
+    }
 
     ~IO_ExpanderAdapter() override;
 

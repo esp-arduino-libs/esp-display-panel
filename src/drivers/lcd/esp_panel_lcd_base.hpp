@@ -160,6 +160,7 @@ public:
      *                       ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command)
      *
      * @return true if success, otherwise false
+     *
      */
     bool configVendorCommands(const esp_panel_lcd_vendor_init_cmd_t init_cmd[], uint32_t init_cmd_size);
 
@@ -204,6 +205,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     [[deprecated("Deprecated and will be removed in the next major version. Please use `configEnableIO_Multiplex()` instead")]]
     bool configAutoReleaseBus(bool en)
@@ -224,6 +226,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool configEnableIO_Multiplex(bool en);
 
@@ -233,6 +236,7 @@ public:
      * @note  This function typically calls `esp_lcd_new_panel_*()` to create the LCD panel panel_handle
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool init(void) = 0;
 
@@ -243,6 +247,7 @@ public:
      * @note  This function typically calls `esp_lcd_panel_init()` to initialize the LCD device
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void);
 
@@ -253,6 +258,7 @@ public:
      * @note  This function typically calls `esp_lcd_panel_reset()` to reset the LCD device
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool reset(void);
 
@@ -263,6 +269,7 @@ public:
      * @note  This function typically calls `esp_lcd_panel_del()` to delete the LCD device
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void);
 
@@ -282,6 +289,7 @@ public:
      * @param color_data Pointer of the color data array
      *
      * @return true if success, otherwise false
+     *
      */
     bool drawBitmap(uint16_t x_start, uint16_t y_start, uint16_t width, uint16_t height, const uint8_t *color_data);
 
@@ -316,6 +324,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool mirrorX(bool en);
 
@@ -328,6 +337,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool mirrorY(bool en);
 
@@ -340,6 +350,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool swapXY(bool en);
 
@@ -352,6 +363,7 @@ public:
      * @param gap The gap in pixel
      *
      * @return true if success, otherwise false
+     *
      */
     bool setGapX(uint16_t gap);
 
@@ -364,6 +376,7 @@ public:
      * @param gap The gap in pixel
      *
      * @return true if success, otherwise false
+     *
      */
     bool setGapY(uint16_t gap);
 
@@ -376,6 +389,7 @@ public:
      * @param en true: invert, false: restore
      *
      * @return true if success, otherwise false
+     *
      */
     bool invertColor(bool en);
 
@@ -388,6 +402,7 @@ public:
      * @note  This function typically calls `esp_lcd_panel_disp_on_off()` to control the display
      *
      * @return true if success, otherwise false
+     *
      */
     bool setDisplayOnOff(bool enable_on);
 
@@ -441,6 +456,7 @@ public:
      * @param height The height of the color bar
      *
      * @return true if success, otherwise false
+     *
      */
     bool colorBarTest(uint16_t width, uint16_t height);
 

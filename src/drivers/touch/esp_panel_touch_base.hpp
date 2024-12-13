@@ -157,6 +157,7 @@ public:
      *        blocking reads.
      *
      * @return true if success, otherwise false
+     *
      */
     bool init(void);
 
@@ -164,6 +165,7 @@ public:
      * @brief Startup the touch device
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool begin(void) = 0;
 
@@ -174,6 +176,7 @@ public:
      * @note  This function typically calls `esp_lcd_touch_del()` to delete the touch device
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void);
 
@@ -184,6 +187,7 @@ public:
      * @param user_data The user data which will be passed to the callback function
      *
      * @return true if success, otherwise false
+     *
      */
     bool attachInterruptCallback(InterruptTriggerCallback callback, void *user_data = nullptr);
 
@@ -196,6 +200,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool swapXY(bool en);
 
@@ -208,6 +213,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool mirrorX(bool en);
 
@@ -220,6 +226,7 @@ public:
      * @param en true: enable, false: disable
      *
      * @return true if success, otherwise false
+     *
      */
     bool mirrorY(bool en);
 
@@ -238,6 +245,7 @@ public:
      *                       `-1` if waiting forever
      *
      * @return true if success, otherwise false
+     *
      */
     bool readRawData(uint8_t max_points_num = CONFIG_ESP_LCD_TOUCH_MAX_POINTS, int timeout_ms = 0);
 

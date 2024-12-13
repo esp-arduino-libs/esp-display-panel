@@ -60,7 +60,7 @@ bool Board::init(void)
 //         }
 // #endif
 //         if (!_flags.use_default_config) {
-        lcd_device = drivers::LCD_Factory::create(_config.lcd.controller, lcd_bus, _config.lcd.device_config);
+        lcd_device = drivers::LCD_Factory::create(_config.lcd.device_name, lcd_bus, _config.lcd.device_config);
         ESP_UTILS_CHECK_NULL_RETURN(lcd_device, false, "Create LCD device failed");
         // }
     }
@@ -87,7 +87,7 @@ bool Board::init(void)
 //         if (!_flags.use_default_config) {
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
             (touch_device = drivers::TouchFactory::create(
-                                _config.touch.controller, touch_bus, _config.touch.device_config
+                                _config.touch.device_name, touch_bus, _config.touch.device_config
                             )), false, "Create touch device failed"
         );
         // }
@@ -107,7 +107,7 @@ bool Board::init(void)
     if (_config.flags.use_io_expander) {
         ESP_UTILS_LOGI("Initialize IO Expander");
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (io_expander = drivers::IO_ExpanderFactory::create(_config.io_expander.chip, _config.io_expander.base_config)),
+            (io_expander = drivers::IO_ExpanderFactory::create(_config.io_expander.name, _config.io_expander.config)),
             false, "Create IO expander device failed"
         );
         ESP_UTILS_CHECK_FALSE_RETURN(io_expander->init(), false, "IO expander init failed");

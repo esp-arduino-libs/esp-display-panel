@@ -9,6 +9,11 @@
 #include "esp_panel_board.hpp"
 #include "esp_panel_board_internal.h"
 
+#undef _TO_STR
+#undef TO_STR
+#define _TO_STR(name) #name
+#define TO_STR(name) _TO_STR(name)
+
 // *INDENT-OFF*
 #if ESP_PANEL_BOARD_USE_DEFAULT
 
@@ -72,7 +77,6 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     /* LCD */
 #if ESP_PANEL_BOARD_DEFAULT_USE_LCD
     .lcd = {
-        .controller = drivers::LCD_Factory::Conrtoller::ESP_PANEL_BOARD_LCD_CONTROLLER,
         .bus_type = ESP_PANEL_BOARD_LCD_BUS_TYPE,
     #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
         .bus_config = drivers::Bus_SPI::Config{
@@ -183,6 +187,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .phy_ldo_chan_id = ESP_PANEL_BOARD_LCD_MIPI_DSI_PHY_LDO_ID,
         },
     #endif // ESP_PANEL_BOARD_LCD_BUS_TYPE
+        .device_name = TO_STR(ESP_PANEL_BOARD_LCD_CONTROLLER),
         .device_config = {
             // General
             .panel_reset_gpio_num = ESP_PANEL_BOARD_LCD_RST_IO,
@@ -217,7 +222,6 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     /* Touch */
 #if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
     .touch = {
-        .controller = drivers::TouchFactory::Conrtoller::ESP_PANEL_BOARD_TOUCH_CONTROLLER,
         .bus_type = ESP_PANEL_BOARD_TOUCH_BUS_TYPE,
     #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
         .bus_config = drivers::Bus_I2C::Config{
@@ -255,6 +259,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .use_complete_io_config = true,
         },
     #endif // ESP_PANEL_BOARD_LCD_BUS_TYPE
+        .device_name = TO_STR(ESP_PANEL_BOARD_TOUCH_CONTROLLER),
         .device_config = {
             .x_max = ESP_PANEL_BOARD_WIDTH,
             .y_max = ESP_PANEL_BOARD_HEIGHT,
@@ -306,8 +311,8 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     /* IO expander */
 #if ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER
     .io_expander = {
-        .chip = drivers::IO_ExpanderFactory::Chip::ESP_PANEL_BOARD_EXPANDER_CHIP,
-        .base_config = {
+        .name = TO_STR(ESP_PANEL_BOARD_EXPANDER_CHIP),
+        .config = {
     #if !ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST
             // Host
             .host_id = ESP_PANEL_BOARD_EXPANDER_HOST_ID,

@@ -41,11 +41,11 @@ public:
         {
             return {
                 .line_config = {
-                    .cs_io_type = cs_io_type,
+                    .cs_io_type = static_cast<panel_io_type_t>(cs_io_type),
                     .cs_gpio_num = cs_gpio_num,
-                    .scl_io_type = scl_io_type,
+                    .scl_io_type = static_cast<panel_io_type_t>(scl_io_type),
                     .scl_gpio_num = scl_gpio_num,
-                    .sda_io_type = sda_io_type,
+                    .sda_io_type = static_cast<panel_io_type_t>(sda_io_type),
                     .sda_gpio_num = sda_gpio_num,
                 },
                 .expect_clk_speed = PANEL_IO_SPI_CLK_MAX,
@@ -269,9 +269,9 @@ public:
         }
 
         // 3-wire SPI
-        panel_io_type_t cs_io_type = IO_TYPE_GPIO;
-        panel_io_type_t scl_io_type = IO_TYPE_GPIO;
-        panel_io_type_t sda_io_type = IO_TYPE_GPIO;
+        int cs_io_type = static_cast<int>(IO_TYPE_GPIO);
+        int scl_io_type = static_cast<int>(IO_TYPE_GPIO);
+        int sda_io_type = static_cast<int>(IO_TYPE_GPIO);
         int cs_gpio_num = -1;
         int scl_gpio_num = -1;
         int sda_gpio_num = -1;
@@ -601,6 +601,7 @@ public:
      * @brief Startup the bus.
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 
@@ -608,6 +609,7 @@ public:
      * @brief Delete the bus object, release the resources
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void) override;
 

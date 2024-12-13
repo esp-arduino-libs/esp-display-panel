@@ -45,6 +45,7 @@ public:
      * @note This function typically creates objects for the LCD, Touch, Backlight, and other devices based on the configuration. It then initializes the bus host used by each device.
      *
      * @return true if success, otherwise false
+     *
      */
     bool init(void);
 
@@ -61,6 +62,7 @@ public:
      * @brief Delete the panel device, release the resources. This function should be called after `init()`
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void);
 

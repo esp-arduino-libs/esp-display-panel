@@ -54,6 +54,7 @@ public:
      * @brief Startup the touch device
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 };

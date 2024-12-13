@@ -10,17 +10,19 @@
 
 namespace esp_panel::drivers {
 
-#define ITEM_CONTROLLER(controller) \
-    {TouchFactory::Conrtoller::controller, Touch ##controller::ATTRIBUTES_DEFAULT.name}
-#define CASE_CONTROLLER(controller) \
-    case Conrtoller::controller: \
+#define CREATE_FUNCTION(controller) \
+    [](std::shared_ptr<Bus> bus, const Touch::Config &config) { \
+        std::shared_ptr<Touch> device = nullptr; \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
-            (device = esp_utils::make_shared<Touch ## controller>(bus, config)), nullptr, "Create %s failed", \
-            getControllerNameString(controller).c_str() \
+            (device = esp_utils::make_shared<Touch ## controller>(bus, config)), nullptr, \
+            "Create " #controller " failed" \
         ); \
-        break
+        return device; \
+    }
+#define ITEM_CONTROLLER(controller) \
+    {Touch ##controller::ATTRIBUTES_DEFAULT.name, CREATE_FUNCTION(controller)}
 
-const std::map<TouchFactory::Conrtoller, std::string> TouchFactory::_controller_name_map = {
+const std::unordered_map<std::string, TouchFactory::CreateFunction> TouchFactory::_name_function_map = {
     ITEM_CONTROLLER(AXS15231B),
     ITEM_CONTROLLER(CST816S),
     ITEM_CONTROLLER(FT5x06),
@@ -34,70 +36,18 @@ const std::map<TouchFactory::Conrtoller, std::string> TouchFactory::_controller_
     ITEM_CONTROLLER(XPT2046),
 };
 
-std::shared_ptr<Touch> TouchFactory::create(Conrtoller name, std::shared_ptr<Bus> bus, const Touch::Config &config)
+std::shared_ptr<Touch> TouchFactory::create(std::string name, std::shared_ptr<Bus> bus, const Touch::Config &config)
 {
-    ESP_UTILS_LOG_TRACE_ENTER();
+    ESP_UTILS_LOGD("Param: name(%s), bus(@%p), config(@%p)", name.c_str(), bus, &config);
+    ESP_UTILS_CHECK_FALSE_RETURN(bus != nullptr, nullptr, "Invalid bus");
 
-    ESP_UTILS_LOGD(
-        "Param: name(%d[%s]), bus(@%p), config(@%p)", static_cast<int>(name), getControllerNameString(name).c_str(),
-        bus, &config
-    );
-    ESP_UTILS_CHECK_NULL_RETURN(bus, nullptr, "Invalid bus");
+    auto it = _name_function_map.find(name);
+    ESP_UTILS_CHECK_FALSE_RETURN(it != _name_function_map.end(), nullptr, "Unknown controller: %s", name.c_str());
 
-    std::shared_ptr<Touch> device = nullptr;
-    switch (name) {
-#if ESP_PANEL_CONF_TOUCH_ENABLE_AXS15231B
-        CASE_CONTROLLER(AXS15231B);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_AXS15231B
-#if ESP_PANEL_CONF_TOUCH_ENABLE_CST816S
-        CASE_CONTROLLER(CST816S);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_CST816S
-#if ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
-        CASE_CONTROLLER(FT5x06);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
-#if ESP_PANEL_CONF_TOUCH_ENABLE_GT911
-        CASE_CONTROLLER(GT911);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_GT911
-#if ESP_PANEL_CONF_TOUCH_ENABLE_GT1151
-        CASE_CONTROLLER(GT1151);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_GT1151
-#if ESP_PANEL_CONF_TOUCH_ENABLE_SPD2010
-        CASE_CONTROLLER(SPD2010);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_SPD2010
-#if ESP_PANEL_CONF_TOUCH_ENABLE_ST1633
-        CASE_CONTROLLER(ST1633);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_ST1633
-#if ESP_PANEL_CONF_TOUCH_ENABLE_ST7123
-        CASE_CONTROLLER(ST7123);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_ST7123
-#if ESP_PANEL_CONF_TOUCH_ENABLE_STMPE610
-        CASE_CONTROLLER(STMPE610);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_STMPE610
-#if ESP_PANEL_CONF_TOUCH_ENABLE_TT21100
-        CASE_CONTROLLER(TT21100);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_TT21100
-#if ESP_PANEL_CONF_TOUCH_ENABLE_XPT2046
-        CASE_CONTROLLER(XPT2046);
-#endif // ESP_PANEL_CONF_TOUCH_ENABLE_XPT2046
-    default:
-        ESP_UTILS_CHECK_FALSE_RETURN(
-            false, nullptr, "Touch controller %s is disabled or not supported", getControllerNameString(name).c_str()
-        );
-    }
-
-    ESP_UTILS_LOG_TRACE_EXIT();
+    std::shared_ptr<Touch> device = it->second(bus, config);
+    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device failed");
 
     return device;
-}
-
-std::string TouchFactory::getControllerNameString(Conrtoller name)
-{
-    auto it = _controller_name_map.find(name);
-    if (it == _controller_name_map.end()) {
-        return "Unknown";
-    }
-
-    return it->second;
 }
 
 } // namespace esp_panel::drivers

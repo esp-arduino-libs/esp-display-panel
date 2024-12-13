@@ -67,8 +67,8 @@ TEST_CASE("Test board", "[board]")
 
 // TEST_CASE("Test component common drivers", "[common]")
 // {
-    shared_ptr<esp_panel::Board> panel = make_shared<esp_panel::Board>(esp_panel::BOARD_ESP32_S3_LCD_EV_BOARD_V1_5_CONFIG);
-    // shared_ptr<esp_panel::Board> panel = make_shared<esp_panel::Board>();
+    // shared_ptr<esp_panel::Board> panel = make_shared<esp_panel::Board>(esp_panel::BOARD_ESP32_S3_LCD_EV_BOARD_V1_5_CONFIG);
+    shared_ptr<esp_panel::Board> panel = make_shared<esp_panel::Board>();
     TEST_ASSERT_NOT_NULL_MESSAGE(panel, "Create panel object failed");
 
     ESP_LOGI(TAG, "Initialize display panel");

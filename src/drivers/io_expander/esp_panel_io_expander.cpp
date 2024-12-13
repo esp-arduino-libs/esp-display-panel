@@ -12,35 +12,37 @@
 
 namespace esp_panel::drivers {
 
-std::shared_ptr<IO_Expander> IO_ExpanderFactory::create(Chip name, const esp_expander::Base::Config &config)
-{
-    ESP_UTILS_LOGD(
-        "Param: name(%d[%s]), config(@%p)", static_cast<int>(name), getChipNameString(name).c_str(), &config
-    );
-
-    std::shared_ptr<IO_Expander> device = nullptr;
-    switch (name) {
-    case Chip::TCA95XX_8BIT:
-        ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (device = esp_utils::make_shared<IO_ExpanderAdapter<esp_expander::TCA95XX_8BIT>>(config)), nullptr,
-            "Create %s failed", getChipNameString(name).c_str()
-        );
-        break;
-    default:
-        ESP_UTILS_CHECK_FALSE_RETURN(false, nullptr, "Unknown chip");
+#define CREATE_FUNCTION(chip) \
+    [](const IO_Expander::Config &config) { \
+        std::shared_ptr<IO_Expander> device = nullptr; \
+        ESP_UTILS_CHECK_EXCEPTION_RETURN( \
+            (device = esp_utils::make_shared<IO_ExpanderAdapter<esp_expander::chip>>( \
+                config, IO_Expander::Attributes{#chip} \
+            )), nullptr,  "Create " #chip " failed" \ \
+        ); \
+        return device; \
     }
+#define ITEM_CONTROLLER(chip) \
+    {#chip, CREATE_FUNCTION(chip)}
+
+const std::unordered_map<std::string, IO_ExpanderFactory::CreateFunction> IO_ExpanderFactory::_name_function_map = {
+    ITEM_CONTROLLER(CH422G),
+    ITEM_CONTROLLER(HT8574),
+    ITEM_CONTROLLER(TCA95XX_8BIT),
+    ITEM_CONTROLLER(TCA95XX_16BIT),
+};
+
+std::shared_ptr<IO_Expander> IO_ExpanderFactory::create(std::string name, const IO_Expander::Config &config)
+{
+    ESP_UTILS_LOGD("Param: name(%s), config(@%p)", name.c_str(), &config);
+
+    auto it = _name_function_map.find(name);
+    ESP_UTILS_CHECK_FALSE_RETURN(it != _name_function_map.end(), nullptr, "Unknown controller: %s", name.c_str());
+
+    std::shared_ptr<IO_Expander> device = it->second(config);
+    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device failed");
 
     return device;
-}
-
-std::string IO_ExpanderFactory::getChipNameString(Chip name)
-{
-    switch (name) {
-    case Chip::TCA95XX_8BIT:
-        return "TCA95XX_8BIT";
-    default:
-        return "Unknown";
-    }
 }
 
 } // namespace esp_panel::drivers

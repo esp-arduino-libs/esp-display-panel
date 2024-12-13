@@ -44,7 +44,7 @@ public:
                 .sda_pullup_en = sda_pullup_en,
                 .scl_pullup_en = scl_pullup_en,
                 .master = {
-                    .clk_speed = clk_speed,
+                    .clk_speed = static_cast<uint32_t>(clk_speed),
                 },
                 .clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
             };
@@ -77,7 +77,7 @@ public:
         int scl_io_num = -1;
         bool sda_pullup_en = GPIO_PULLUP_ENABLE;
         bool scl_pullup_en = GPIO_PULLUP_ENABLE;
-        uint32_t clk_speed = 400000;
+        int clk_speed = 400000;
         // Panel IO
         esp_lcd_panel_io_i2c_config_t io_config = {};
         // Extra
@@ -160,6 +160,7 @@ public:
      * @note  This function should be called after `init()`
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 
@@ -167,6 +168,7 @@ public:
      * @brief Delete the bus object, release the resources
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void) override;
 

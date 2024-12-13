@@ -28,8 +28,8 @@ public:
     constexpr static int HOST_ID_DEFAULT = 0;
     constexpr static int PHY_LDO_VOLTAGE_MV_DEFAULT = 2500;
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
-        .type = ESP_PANEL_BUS_TYPE_I2C,
-        .name = "I2C",
+        .type = ESP_PANEL_BUS_TYPE_MIPI_DSI,
+        .name = "MIPI-DSI",
     };
 
 // *INDENT-OFF*
@@ -195,6 +195,7 @@ public:
      * @brief Startup the bus
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 
@@ -202,6 +203,7 @@ public:
      * @brief Delete the bus object, release the resources
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void) override;
 

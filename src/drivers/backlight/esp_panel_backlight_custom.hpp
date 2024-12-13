@@ -81,6 +81,8 @@ public:
     /**
      * @brief Delete the device, release the resources
      *
+     * @note  After calling this function, users should call `begin()` to re-init the device
+     *
      * @return true if success, otherwise false
      *
      */

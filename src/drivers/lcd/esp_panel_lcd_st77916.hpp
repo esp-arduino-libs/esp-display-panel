@@ -61,6 +61,7 @@ public:
      * @note  This function typically calls `esp_lcd_new_panel_*()` to create the LCD panel handle
      *
      * @return true if success, otherwise false
+     *
      */
     bool init(void) override;
 };

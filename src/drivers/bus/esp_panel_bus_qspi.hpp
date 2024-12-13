@@ -60,7 +60,7 @@ public:
                 .cs_gpio_num = cs_gpio_num,
                 .dc_gpio_num = -1,
                 .spi_mode = spi_mode,
-                .pclk_hz = pclk_hz,
+                .pclk_hz = static_cast<unsigned int>(pclk_hz),
                 .trans_queue_depth = 10,
                 .on_color_trans_done = nullptr,
                 .user_ctx = nullptr,
@@ -113,7 +113,7 @@ public:
         // Panel IO
         int cs_gpio_num = -1;
         int spi_mode = 0;
-        uint32_t pclk_hz = SPI_MASTER_FREQ_40M;
+        int pclk_hz = SPI_MASTER_FREQ_40M;
         int lcd_cmd_bits = 8;
         int lcd_param_bits = 8;
         // Extra
@@ -194,6 +194,7 @@ public:
      * @brief Startup the bus
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 
@@ -201,6 +202,7 @@ public:
      * @brief Delete the bus object, release the resources
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void) override;
 

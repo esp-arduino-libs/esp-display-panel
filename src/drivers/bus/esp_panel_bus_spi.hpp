@@ -63,7 +63,7 @@ public:
                 .cs_gpio_num = partial_io_config.cs_gpio_num,
                 .dc_gpio_num = partial_io_config.dc_gpio_num,
                 .spi_mode = partial_io_config.spi_mode,
-                .pclk_hz = partial_io_config.pclk_hz,
+                .pclk_hz = static_cast<unsigned int>(partial_io_config.pclk_hz),
                 .trans_queue_depth = 10,
                 .on_color_trans_done = nullptr,
                 .user_ctx = nullptr,
@@ -149,7 +149,7 @@ public:
                 int cs_gpio_num = -1;
                 int dc_gpio_num = -1;
                 int spi_mode = 0;
-                uint32_t pclk_hz = SPI_MASTER_FREQ_40M;
+                int pclk_hz = SPI_MASTER_FREQ_40M;
                 int lcd_cmd_bits = 8;
                 int lcd_param_bits = 8;
             } partial_io_config;
@@ -261,6 +261,7 @@ public:
      * @brief Startup the bus
      *
      * @return true if success, otherwise false
+     *
      */
     bool begin(void) override;
 
@@ -268,6 +269,7 @@ public:
      * @brief Delete the bus object, release the resources
      *
      * @return true if success, otherwise false
+     *
      */
     bool del(void) override;
 

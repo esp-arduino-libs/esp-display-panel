@@ -6,8 +6,8 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <string>
-#include <map>
 #include "drivers/bus/esp_panel_bus_base.hpp"
 #include "esp_panel_lcd_base.hpp"
 #include "esp_panel_lcd_axs15231b.hpp"
@@ -37,28 +37,15 @@ namespace esp_panel::drivers {
 
 class LCD_Factory {
 public:
-    enum class Conrtoller {
-        AXS15231B,
-        EK9716B, EK79007,
-        GC9A01, GC9B71, GC9503,
-        HX8399,
-        ILI9881C, ILI9341,
-        JD9165, JD9365,
-        NV3022B,
-        SH8601,
-        SPD2010,
-        ST7262, ST7701, ST7703, ST7789, ST7796, ST77903, ST77916, ST77922,
-    };
+    using CreateFunction = std::shared_ptr<LCD> (*)(std::shared_ptr<Bus> bus, const LCD::Config &config);
 
     LCD_Factory() = default;
     ~LCD_Factory() = default;
 
-    static std::shared_ptr<LCD> create(Conrtoller name, std::shared_ptr<Bus> bus, const LCD::Config &config);
-
-    static std::string getControllerNameString(Conrtoller name);
+    static std::shared_ptr<LCD> create(std::string name, std::shared_ptr<Bus> bus, const LCD::Config &config);
 
 private:
-    static const std::map<Conrtoller, std::string> _controller_name_map;
+    static const std::unordered_map<std::string, CreateFunction> _name_function_map;
 };
 
 } // namespace esp_panel::drivers

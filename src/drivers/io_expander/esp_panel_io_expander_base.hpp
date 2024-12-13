@@ -12,7 +12,14 @@ namespace esp_panel::drivers {
 
 class IO_Expander {
 public:
-    IO_Expander(const esp_expander::Base::Config &config)
+    struct Attributes {
+        const char *name = nullptr;
+    };
+
+    using Config = esp_expander::Base::Config;
+
+    IO_Expander(const esp_expander::Base::Config &config, Attributes attr):
+        _attritues(attr)
     {
         _flags.skip_init_host = config.skip_init_host;
     }
@@ -23,6 +30,11 @@ public:
     virtual bool begin(void) = 0;
     virtual bool del(void) = 0;
     virtual esp_expander::Base *getAdaptee(void) = 0;
+
+    const Attributes &getAttributes(void)
+    {
+        return _attritues;
+    }
 
 protected:
     bool checkIsSkipInitHost(void)
@@ -42,6 +54,7 @@ private:
     struct {
         uint8_t skip_init_host: 1;
     } _flags = {};
+    Attributes _attritues = {};
 };
 
 } // namespace esp_panel::drivers

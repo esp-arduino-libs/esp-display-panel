@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <string>
 #include "drivers/bus/esp_panel_bus_base.hpp"
 #include "esp_panel_touch_base.hpp"
@@ -26,27 +27,15 @@ namespace esp_panel::drivers {
 
 class TouchFactory {
 public:
-    enum class Conrtoller {
-        AXS15231B,
-        CST816S,
-        FT5x06,
-        GT911, GT1151,
-        SPD2010,
-        ST1633, ST7123,
-        STMPE610,
-        TT21100,
-        XPT2046,
-    };
+    using CreateFunction = std::shared_ptr<Touch> (*)(std::shared_ptr<Bus> bus, const Touch::Config &config);
 
     TouchFactory() = default;
     ~TouchFactory() = default;
 
-    static std::shared_ptr<Touch> create(Conrtoller name, std::shared_ptr<Bus> bus, const Touch::Config &config);
-
-    static std::string getControllerNameString(Conrtoller name);
+    static std::shared_ptr<Touch> create(std::string name, std::shared_ptr<Bus> bus, const Touch::Config &config);
 
 private:
-    static const std::map<Conrtoller, std::string> _controller_name_map;
+    static const std::unordered_map<std::string, CreateFunction> _name_function_map;
 };
 
 } // namespace esp_panel::drivers

@@ -13,9 +13,10 @@
 namespace esp_panel::drivers {
 
 /**
- * @brief Bus object class
+ * @brief bus class
  *
  * @note  This class is a base class for all types of bus. Due to it is a virtual class, users cannot use it directly
+ *
  */
 class Bus {
 public:
@@ -29,14 +30,15 @@ public:
     };
 
     /**
-     * @brief Construct a new bus object, the `begin()` function should be called after this function
+     * @brief Construct a new bus
      *
-     * @param attr Bus configuration
+     * @param[in] attr The bus attributes
+     *
      */
     Bus(const Attributes &attr): _attributes(attr) {}
 
     /**
-     * @brief Destroy the bus object
+     * @brief Destroy the bus
      *
      */
     virtual ~Bus() = default;
@@ -45,6 +47,7 @@ public:
      * @brief Initialize the bus
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool init(void)
     {
@@ -55,60 +58,73 @@ public:
      * @brief Startup the bus
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool begin(void) = 0;
 
     /**
-     * @brief Delete the bus object, release the resources
+     * @brief Delete the bus, release the resources
+     *
+     * @note  This function typically call `esp_lcd_panel_io_del()` to delete the IO handle
+     * @note  After calling this function, users should call `init()` to re-init the bus
      *
      * @return true if success, otherwise false
+     *
      */
     virtual bool del(void);
 
     /**
      * @brief Read the register data
      *
-     * @param address   The address of the register
-     * @param data      The buffer to store the register data
-     * @param data_size The size of the data (in bytes)
+     * @param[in]  address   The address of the register
+     * @param[out] data      The buffer to store the register data
+     * @param[in]  data_size The size of the data (in bytes)
      *
      * @return true if success, otherwise false
+     *
      */
     bool readRegisterData(uint32_t address, void *data, uint32_t data_size);
 
     /**
      * @brief Write the register data
      *
-     * @param address   The address of the register
-     * @param data      The buffer to store the register data
-     * @param data_size The size of the data (in bytes)
+     * @param[in] address   The address of the register
+     * @param[in] data      The buffer to store the register data
+     * @param[in] data_size The size of the data (in bytes)
      *
      * @return true if success, otherwise false
+     *
      */
     bool writeRegisterData(uint32_t address, const void *data, uint32_t data_size);
 
     /**
      * @brief Write the color data
      *
-     * @param address   The address of the register
-     * @param data      The buffer to store the color data
-     * @param data_size The size of the data (in bytes)
+     * @param[in] address   The address of the register
+     * @param[in] data      The buffer to store the color data
+     * @param[in] data_size The size of the data (in bytes)
      *
      * @return true if success, otherwise false
+     *
      */
     bool writeColorData(uint32_t address, const void *color, uint32_t color_size);
 
+    /**
+     * @brief Get the bus attributes
+     *
+     * @return The bus attributes
+     *
+     */
     const Attributes &getAttributes(void)
     {
         return _attributes;
     }
 
     /**
-     * @brief Get the IO handle
+     * @brief Get the IO handle. Users can use this handle to call low-level functions (esp_lcd_panel_io_*()).
      *
-     * @return
-     *      - NULL:   if fail
-     *      - Others: the handle of bus
+     * @return Handle if success, otherwise nullptr
+     *
      */
     esp_lcd_panel_io_handle_t getIO_Handle(void)
     {
@@ -124,6 +140,12 @@ public:
         io_handle = nullptr;
     }
 
+    /**
+     * @deprecated Deprecated and will be removed in the next major version. Please use `getAttributes().type` instead.
+     *
+     * @TODO: Remove in the next major version
+     *
+     */
     [[deprecated("Deprecated and will be removed in the next major version. Please use `getAttributes().type` instead.")]]
     int getType(void)
     {
@@ -131,12 +153,18 @@ public:
     }
 
 protected:
+    /**
+     * @brief Check if the IO handle is valid
+     *
+     * @return true if the IO handle is valid, otherwise false
+     *
+     */
     bool checkIO_HandleValid(void)
     {
         return (io_handle != nullptr);
     }
 
-    esp_lcd_panel_io_handle_t io_handle = nullptr;
+    esp_lcd_panel_io_handle_t io_handle = nullptr;  /*<! Low-level handle, which will be created by the derived class */
 
 private:
     Attributes _attributes = {};
