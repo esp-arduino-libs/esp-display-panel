@@ -6,8 +6,6 @@
 #pragma once
 
 #include <string>
-#include <variant>
-#include "esp_panel_types.h"
 #include "drivers/bus/esp_panel_bus.hpp"
 #include "drivers/lcd/esp_panel_lcd.hpp"
 #include "drivers/touch/esp_panel_touch.hpp"
@@ -54,11 +52,7 @@ struct BoardConfig {
     /* Backlight */
     struct {
         int type;
-        std::variant<
-            drivers::BacklightSwitchGPIO::Config,
-            drivers::BacklightPWM_LEDC::Config,
-            drivers::BacklightCustom::Config
-        > config;
+        drivers::BacklightFactory::Config config;
         struct {
             int idle_off: 1;
         } pre_process;

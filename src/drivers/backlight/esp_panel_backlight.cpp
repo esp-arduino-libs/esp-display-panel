@@ -10,11 +10,14 @@
 namespace esp_panel::drivers {
 
 #define CREATE_FUNCTION(type_name) \
-    [](const void *config) { \
+    [](const Config &config) { \
         std::shared_ptr<Backlight> device = nullptr; \
+        ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<Backlight ##type_name::Config>(config), device, \
+            "Config is not a " #type_name " config" \
+        ); \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
             (device = esp_utils::make_shared<Backlight ##type_name>( \
-                *static_cast<const Backlight ##type_name::Config *>(config)) \
+                std::get<Backlight ##type_name::Config>(config)) \
             ), nullptr, "Create " #type_name " failed" \
         ); \
         return device; \
@@ -32,7 +35,7 @@ BacklightFactory::_type_name_function_map = {
     ITEM_CONTROLLER(Custom),
 };
 
-std::shared_ptr<Backlight> BacklightFactory::create(int type, const void *config)
+std::shared_ptr<Backlight> BacklightFactory::create(int type, const Config &config)
 {
     ESP_UTILS_LOGD("Param: name(%d), config(@%p)", type, &config);
 

@@ -23,7 +23,9 @@ namespace esp_panel::drivers {
 class BusFactory {
 public:
     using Config = std::variant <
-                   BusI2C::Config, BusSPI::Config, BusQSPI::Config
+                   BusI2C::Config,
+                   BusSPI::Config,
+                   BusQSPI::Config
 #if SOC_LCD_RGB_SUPPORTED
                    , BusRGB::Config
 #endif // SOC_LCD_RGB_SUPPORTED

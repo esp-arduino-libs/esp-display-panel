@@ -187,13 +187,15 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .scl_io_num = ESP_PANEL_BOARD_TOUCH_I2C_IO_SCL,
             .sda_pullup_en = ESP_PANEL_BOARD_TOUCH_I2C_SDA_PULLUP,
             .scl_pullup_en = ESP_PANEL_BOARD_TOUCH_I2C_SCL_PULLUP,
-            .clk_speed = 400000,
+            .clk_speed = ESP_PANEL_BOARD_TOUCH_I2C_CLK_HZ,
         #endif // ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
             // Panel IO
         #if ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS == 0
             .io_config = ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG(ESP_PANEL_BOARD_TOUCH_CONTROLLER),
         #else
-            .io_config = ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(ESP_PANEL_BOARD_TOUCH_CONTROLLER, ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS),
+            .io_config = ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(
+                ESP_PANEL_BOARD_TOUCH_CONTROLLER, ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS
+            ),
         #endif // ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS
             // Extra
             .skip_init_host = ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST,
@@ -208,7 +210,9 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .sclk_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_SCK,
         #endif // ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Panel IO
-            .io_config = ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(ESP_PANEL_BOARD_TOUCH_CONTROLLER, ESP_PANEL_BOARD_TOUCH_SPI_IO_CS),
+            .io_config = ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(
+                ESP_PANEL_BOARD_TOUCH_CONTROLLER, ESP_PANEL_BOARD_TOUCH_SPI_IO_CS
+            ),
             // Extra
             .skip_init_host = ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST,
             .use_complete_io_config = true,
@@ -253,7 +257,8 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
         },
     #elif ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
         .config = drivers::BacklightCustom::Config{
-            .callback = [](uint8_t percent, void *user_data) ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data),
+            .callback = [](uint8_t percent, void *user_data)
+                ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data),
             .user_data = nullptr,
         },
     #endif // ESP_PANEL_BOARD_BACKLIGHT_TYPE
