@@ -11,7 +11,7 @@
 #include "esp_timer.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 
 using namespace std;
 
@@ -21,12 +21,12 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define TEST_LCD_WIDTH                  (1024)
 #define TEST_LCD_HEIGHT                 (600)
-#define TEST_LCD_COLOR_BITS             (ESP_PANEL_LCD_RGB888_COLOR_BITS_24)
+#define TEST_LCD_COLOR_BITS             (ESP_PANEL_LCD_COLOR_BITS_RGB888)
 #define TEST_LCD_DSI_PHY_LDO_ID         (3)
 #define TEST_LCD_DSI_LANE_NUM           (2)
 #define TEST_LCD_DSI_LANE_RATE_MBPS     (1000)
 #define TEST_LCD_DPI_CLK_MHZ            (52)
-#define TEST_LCD_DPI_COLOR_BITS         (ESP_PANEL_LCD_RGB888_COLOR_BITS_24)
+#define TEST_LCD_DPI_COLOR_BITS         (ESP_PANEL_LCD_COLOR_BITS_RGB888)
 #define TEST_LCD_DPI_HPW                (10)
 #define TEST_LCD_DPI_HBP                (160)
 #define TEST_LCD_DPI_HFP                (160)
@@ -83,12 +83,12 @@ const esp_lcd_panel_vendor_init_cmd_t lcd_init_cmd[] = {
 
 static const char *TAG = "test_spi_lcd";
 
-static shared_ptr<ESP_PanelBacklight> init_backlight(void)
+static shared_ptr<esp_panel::BacklightPWM_LEDC> init_backlight(void)
 {
 #if TEST_LCD_PIN_NUM_BK_LIGHT >= 0
     ESP_LOGI(TAG, "Initialize backlight control pin and turn it on");
-    shared_ptr<ESP_PanelBacklight> backlight = make_shared<ESP_PanelBacklight>(
-                TEST_LCD_PIN_NUM_BK_LIGHT, TEST_LCD_BK_LIGHT_ON_LEVEL, true
+    shared_ptr<esp_panel::BacklightPWM_LEDC> backlight = make_shared<esp_panel::BacklightPWM_LEDC>(
+                TEST_LCD_PIN_NUM_BK_LIGHT, TEST_LCD_BK_LIGHT_ON_LEVEL
             );
     TEST_ASSERT_NOT_NULL_MESSAGE(backlight, "Create backlight object failed");
 
@@ -101,16 +101,16 @@ static shared_ptr<ESP_PanelBacklight> init_backlight(void)
 #endif
 }
 
-static shared_ptr<ESP_PanelBus_DSI> init_panel_bus(void)
+static shared_ptr<ESP_PanelBusDSI> init_panel_bus(void)
 {
     ESP_LOGI(TAG, "Create LCD bus");
-    shared_ptr<ESP_PanelBus_DSI> panel_bus = make_shared<ESP_PanelBus_DSI>(
-                TEST_LCD_DSI_LANE_NUM, TEST_LCD_DSI_LANE_RATE_MBPS,
-                TEST_LCD_DPI_CLK_MHZ, TEST_LCD_DPI_COLOR_BITS, TEST_LCD_WIDTH, TEST_LCD_HEIGHT,
-                TEST_LCD_DPI_HPW, TEST_LCD_DPI_HBP, TEST_LCD_DPI_HFP,
-                TEST_LCD_DPI_VPW, TEST_LCD_DPI_VBP, TEST_LCD_DPI_VFP,
-                TEST_LCD_DSI_PHY_LDO_ID
-            );
+    shared_ptr<ESP_PanelBusDSI> panel_bus = make_shared<ESP_PanelBusDSI>(
+            TEST_LCD_DSI_LANE_NUM, TEST_LCD_DSI_LANE_RATE_MBPS,
+            TEST_LCD_DPI_CLK_MHZ, TEST_LCD_DPI_COLOR_BITS, TEST_LCD_WIDTH, TEST_LCD_HEIGHT,
+            TEST_LCD_DPI_HPW, TEST_LCD_DPI_HBP, TEST_LCD_DPI_HFP,
+            TEST_LCD_DPI_VPW, TEST_LCD_DPI_VBP, TEST_LCD_DPI_VFP,
+            TEST_LCD_DSI_PHY_LDO_ID
+                                            );
     TEST_ASSERT_NOT_NULL_MESSAGE(panel_bus, "Create panel bus object failed");
 
     TEST_ASSERT_TRUE_MESSAGE(panel_bus->begin(), "Panel bus begin failed");
@@ -226,8 +226,8 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
 #define CREATE_TEST_CASE(name) \
     TEST_CASE("Test LCD (" #name ") to draw color bar", "[spi_lcd][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBacklight> backlight = init_backlight(); \
-        shared_ptr<ESP_PanelBus_DSI> panel_bus = init_panel_bus(); \
+        shared_ptr<esp_panel::BacklightPWM_LEDC> backlight = init_backlight(); \
+        shared_ptr<ESP_PanelBusDSI> panel_bus = init_panel_bus(); \
         shared_ptr<ESP_PanelLcd> lcd = CREATE_LCD(name, panel_bus.get()); \
         run_test(lcd); \
     }

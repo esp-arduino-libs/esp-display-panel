@@ -39,7 +39,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your touch spec ////////////////////////////
@@ -93,16 +93,16 @@ void setup()
 
     Serial.println("Create I2C bus");
 #if EXAMPLE_TOUCH_ADDRESS == 0
-    ESP_PanelBus_I2C *touch_bus = new ESP_PanelBus_I2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
+    ESP_PanelBusI2C *touch_bus = new ESP_PanelBusI2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
                                                        ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG(EXAMPLE_TOUCH_NAME));
     // Taking GT911 as an example, the following is the code after macro expansion:
-    // ESP_PanelBus_I2C *touch_bus = new ESP_PanelBus_I2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
+    // ESP_PanelBusI2C *touch_bus = new ESP_PanelBusI2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
     //                                                    ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG());
 #else
-    ESP_PanelBus_I2C *touch_bus = new ESP_PanelBus_I2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
+    ESP_PanelBusI2C *touch_bus = new ESP_PanelBusI2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
                             ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(EXAMPLE_TOUCH_NAME, EXAMPLE_TOUCH_ADDRESS));
     // Taking GT911 as an example, the following is the code after macro expansion:
-    // ESP_PanelBus_I2C *touch_bus = new ESP_PanelBus_I2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
+    // ESP_PanelBusI2C *touch_bus = new ESP_PanelBusI2C(EXAMPLE_TOUCH_PIN_NUM_I2C_SCL, EXAMPLE_TOUCH_PIN_NUM_I2C_SDA,
     //                                                    ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG_WITH_ADDR(EXAMPLE_TOUCH_ADDRESS));
 #endif
     touch_bus->configI2cFreqHz(EXAMPLE_TOUCH_I2C_FREQ_HZ);

@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 
 #define TEST_LCD_ENABLE_ATTACH_CALLBACK     (0)
 #define TEST_LCD_SHOW_TIME_MS               (5000)
@@ -35,7 +35,7 @@ IRAM_ATTR static bool onLcdRefreshFinishCallback(void *user_data)
 }
 #endif
 
-#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_TOUCH_IO_INT >= 0)
+#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
 IRAM_ATTR static bool onTouchInterruptCallback(void *user_data)
 {
     esp_rom_printf("Touch interrupt callback\n");
@@ -89,7 +89,7 @@ TEST_CASE("Test panel to draw color bar and read touch", "[panel]")
     }
 
     if (touch != nullptr) {
-#if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_TOUCH_IO_INT >= 0)
+#if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
         TEST_ASSERT_TRUE_MESSAGE(
             touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Attach touch interrupt callback failed"
         );

@@ -80,7 +80,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 #include <lvgl.h>
 #include <ui.h>
 #include <NTPClient.h>
@@ -803,7 +803,7 @@ void setup()
     panel->init();
 #if LVGL_PORT_AVOID_TEAR
     // When avoid tearing function is enabled, configure the RGB bus according to the LVGL configuration
-    ESP_PanelBus_RGB *rgb_bus = static_cast<ESP_PanelBus_RGB *>(panel->getLcd()->getBus());
+    ESP_PanelBusRGB *rgb_bus = static_cast<ESP_PanelBusRGB *>(panel->getLcd()->getBus());
     rgb_bus->configRgbFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);
     rgb_bus->configRgbBounceBufferSize(LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE);
 #endif

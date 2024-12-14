@@ -11,7 +11,7 @@
 #include "esp_timer.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 
 using namespace std;
 
@@ -97,10 +97,10 @@ static shared_ptr<ESP_PanelBacklight> init_backlight(void)
 #endif
 }
 
-static shared_ptr<ESP_PanelBus_RGB> init_panel_bus(void)
+static shared_ptr<ESP_PanelBusRGB> init_panel_bus(void)
 {
     ESP_LOGI(TAG, "Create LCD bus");
-    shared_ptr<ESP_PanelBus_RGB> panel_bus = make_shared<ESP_PanelBus_RGB>(
+    shared_ptr<ESP_PanelBusRGB> panel_bus = make_shared<ESP_PanelBusRGB>(
 #if TEST_LCD_RGB_DATA_WIDTH == 8
                 TEST_LCD_WIDTH, TEST_LCD_HEIGHT,
                 TEST_LCD_PIN_NUM_RGB_DATA0, TEST_LCD_PIN_NUM_RGB_DATA1, TEST_LCD_PIN_NUM_RGB_DATA2, TEST_LCD_PIN_NUM_RGB_DATA3,
@@ -202,7 +202,7 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
     TEST_CASE("Test LCD (" #name ") to draw color bar", "[rgb_lcd][" #name "]") \
     { \
         shared_ptr<ESP_PanelBacklight> backlight = init_backlight(); \
-        shared_ptr<ESP_PanelBus_RGB> panel_bus = init_panel_bus(); \
+        shared_ptr<ESP_PanelBusRGB> panel_bus = init_panel_bus(); \
         shared_ptr<ESP_PanelLcd> lcd = CREATE_LCD(name, panel_bus.get()); \
         run_test(lcd); \
     }

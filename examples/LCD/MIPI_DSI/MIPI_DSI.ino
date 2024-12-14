@@ -65,7 +65,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 /* The following default configurations are for the board 'Espressif: ESP32-P4-Function-EV-Board, EK79007' */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,8 +80,8 @@
 #define EXAMPLE_LCD_NAME                EK79007
 #define EXAMPLE_LCD_WIDTH               (1024)
 #define EXAMPLE_LCD_HEIGHT              (600)
-#define EXAMPLE_LCD_COLOR_BITS          (ESP_PANEL_LCD_RGB888_COLOR_BITS_24)
-                                                // or `ESP_PANEL_LCD_RGB565_COLOR_BITS_16`
+#define EXAMPLE_LCD_COLOR_BITS          (ESP_PANEL_LCD_COLOR_BITS_RGB888)
+                                                // or `ESP_PANEL_LCD_COLOR_BITS_RGB565`
 #define EXAMPLE_LCD_DSI_PHY_LDO_ID      (3)     // -1 if not used
 #define EXAMPLE_LCD_DSI_LANE_NUM        (2)     // ESP32-P4 supports 1 or 2 lanes
 #define EXAMPLE_LCD_DSI_LANE_RATE_MBPS  (1000)  /* Single lane bit rate, should consult the LCD supplier or check the
@@ -194,7 +194,7 @@ void setup()
 #endif
 
     Serial.println("Create MIPI-DSI LCD bus");
-    ESP_PanelBus_DSI *panel_bus = new ESP_PanelBus_DSI(
+    ESP_PanelBusDSI *panel_bus = new ESP_PanelBusDSI(
         EXAMPLE_LCD_DSI_LANE_NUM, EXAMPLE_LCD_DSI_LANE_RATE_MBPS,
         EXAMPLE_LCD_DPI_CLK_MHZ, EXAMPLE_LCD_DPI_COLOR_BITS, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT,
         EXAMPLE_LCD_DPI_HPW, EXAMPLE_LCD_DPI_HBP, EXAMPLE_LCD_DPI_HFP,

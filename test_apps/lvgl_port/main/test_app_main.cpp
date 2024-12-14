@@ -11,9 +11,9 @@
 #include "unity_test_runner.h"
 
 // Some resources are lazy allocated in the LCD driver, the threadhold is left for that case
-#if ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
+#if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
 #define TEST_MEMORY_LEAK_THRESHOLD (-800)
-#elif ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
+#elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 #define TEST_MEMORY_LEAK_THRESHOLD (-500)
 #else
 #define TEST_MEMORY_LEAK_THRESHOLD (-300)

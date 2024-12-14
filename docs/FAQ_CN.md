@@ -41,9 +41,9 @@ arduino-esp32 v3.x.x 版本的 SDK 位于默认安装路径下的 `tools > esp32
 
    - **Step1**：从 [arduino-esp32-sdk](https://github.com/esp-arduino-libs/arduino-esp32-sdk) 下载 "high_perf" 版本的 SDK，并将其替换到 [arduino-esp32 的安装目录](#arduino-eps32-的安装目录以及-sdk-的目录在哪儿)中。
 
-   - **Step2**：如果您使用的是支持的开发板，则通常无需修改代码，因为它们默认设置了 `ESP_PANEL_LCD_RGB_BOUNCE_BUF_SIZE` 为 `(ESP_PANEL_LCD_WIDTH * 10)`。如果问题仍然存在，请参考下面的示例代码来增大 `Bounce Buffer` 的大小。
+   - **Step2**：如果您使用的是支持的开发板，则通常无需修改代码，因为它们默认设置了 `ESP_PANEL_BOARD_LCD_RGB_BOUNCE_BUF_SIZE` 为 `(ESP_PANEL_BOARD_WIDTH * 10)`。如果问题仍然存在，请参考下面的示例代码来增大 `Bounce Buffer` 的大小。
 
-   - **Step3**：如果您使用的是自定义的开发板，请在 `ESP_Panel_Board_Custom.h` 文件中确认 `ESP_PANEL_LCD_RGB_BOUNCE_BUF_SIZE` 是否设置为非 0。如果问题仍然存在，请增大 `Bounce Buffer` 的大小。
+   - **Step3**：如果您使用的是自定义的开发板，请在 `esp_panel_board_custom.h` 文件中确认 `ESP_PANEL_BOARD_LCD_RGB_BOUNCE_BUF_SIZE` 是否设置为非 0。如果问题仍然存在，请增大 `Bounce Buffer` 的大小。
 
    - **Step4**：如果您使用的是独立的驱动，请参考下面的示例代码来设置 `Bounce Buffer` 的大小。
 
@@ -58,9 +58,9 @@ arduino-esp32 v3.x.x 版本的 SDK 位于默认安装路径下的 `tools > esp32
     ESP_Panel *panel = new ESP_Panel();
     panel->init();
     // Start
-    ESP_PanelBus_RGB *rgb_bus = static_cast<ESP_PanelBus_RGB *>(panel->getLcd()->getBus());
+    ESP_PanelBusRGB *rgb_bus = static_cast<ESP_PanelBusRGB *>(panel->getLcd()->getBus());
     // The size of the bounce buffer must satisfy `width_of_lcd * height_of_lcd = size_of_buffer * N`, where N is an even number.
-    rgb_bus->configRgbBounceBufferSize((ESP_PANEL_LCD_WIDTH * 20));
+    rgb_bus->configRgbBounceBufferSize((ESP_PANEL_BOARD_WIDTH * 20));
     // End
     panel->begin();
     ...
@@ -70,7 +70,7 @@ arduino-esp32 v3.x.x 版本的 SDK 位于默认安装路径下的 `tools > esp32
 
     ```c
     ...
-    ESP_PanelBus_RGB *lcd_bus = new ESP_PanelBus_RGB(...);
+    ESP_PanelBusRGB *lcd_bus = new ESP_PanelBusRGB(...);
     // Start
     // The size of the bounce buffer must satisfy `width_of_lcd * height_of_lcd = size_of_buffer * N`, where N is an even number.
     lcd_bus->configRgbBounceBufferSize(EXAMPLE_LCD_WIDTH * 10);

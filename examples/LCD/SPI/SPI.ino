@@ -54,7 +54,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
@@ -155,7 +155,7 @@ void setup()
 #endif
 
     Serial.println("Create SPI LCD bus");
-    ESP_PanelBus_SPI *panel_bus = new ESP_PanelBus_SPI(EXAMPLE_LCD_PIN_NUM_SPI_CS, EXAMPLE_LCD_PIN_NUM_SPI_DC,
+    ESP_PanelBusSPI *panel_bus = new ESP_PanelBusSPI(EXAMPLE_LCD_PIN_NUM_SPI_CS, EXAMPLE_LCD_PIN_NUM_SPI_DC,
                                                        EXAMPLE_LCD_PIN_NUM_SPI_SCK, EXAMPLE_LCD_PIN_NUM_SPI_SDA,
                                                        EXAMPLE_LCD_PIN_NUM_SPI_SDO);
     panel_bus->configSpiFreqHz(EXAMPLE_LCD_SPI_FREQ_HZ);

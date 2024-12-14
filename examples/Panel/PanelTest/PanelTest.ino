@@ -41,7 +41,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 #define EXAMPLE_LCD_ENABLE_ATTACH_CALLBACK    (0)
 #define EXAMPLE_TOUCH_ENABLE_ATTACH_CALLBACK  (0)
@@ -61,7 +61,7 @@ IRAM_ATTR bool onRefreshFinishCallback(void *user_data)
 }
 #endif
 
-#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_TOUCH_IO_INT >= 0)
+#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
 IRAM_ATTR bool onTouchInterruptCallback(void *user_data)
 {
     esp_rom_printf("Touch interrupt callback\n");

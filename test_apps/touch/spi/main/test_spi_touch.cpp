@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 
 using namespace std;
 
@@ -80,9 +80,9 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 #define CREATE_TOUCH_BUS(name) \
     ({ \
         ESP_LOGI(TAG, "Create touch bus"); \
-        shared_ptr<ESP_PanelBus_SPI> touch_bus = make_shared<ESP_PanelBus_SPI>( \
+        shared_ptr<ESP_PanelBusSPI> touch_bus = make_shared<ESP_PanelBusSPI>( \
                     TEST_TOUCH_PIN_NUM_SPI_SCK, TEST_TOUCH_PIN_NUM_SPI_MOSI, TEST_TOUCH_PIN_NUM_SPI_MISO, \
-                    (esp_lcd_panel_io_spi_config_t)ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS) \
+                    (esp_lcd_panel_io_spi_config_t)ESP_PANEL_BOARD_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS) \
                 ); \
         TEST_ASSERT_NOT_NULL_MESSAGE(touch_bus, "Create panel bus object failed"); \
         touch_bus->configSpiFreqHz(TEST_TOUCH_SPI_FREQ_HZ); \
@@ -101,7 +101,7 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 #define CREATE_TEST_CASE(name) \
     TEST_CASE("Test touch (" #name ") to draw color bar", "[spi_touch][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBus_SPI> touch_bus = CREATE_TOUCH_BUS(name); \
+        shared_ptr<ESP_PanelBusSPI> touch_bus = CREATE_TOUCH_BUS(name); \
         shared_ptr<ESP_PanelTouch> touch_device = CREATE_TOUCH(name, touch_bus.get()); \
         run_test(touch_device); \
     }

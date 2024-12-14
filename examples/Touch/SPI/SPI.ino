@@ -39,7 +39,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your touch spec ////////////////////////////
@@ -84,11 +84,11 @@ void setup()
     Serial.println("SPI touch example start");
 
     Serial.println("Create SPI bus");
-    ESP_PanelBus_SPI *touch_bus = new ESP_PanelBus_SPI(
+    ESP_PanelBusSPI *touch_bus = new ESP_PanelBusSPI(
                         EXAMPLE_TOUCH_PIN_NUM_SPI_SCK, EXAMPLE_TOUCH_PIN_NUM_SPI_MOSI, EXAMPLE_TOUCH_PIN_NUM_SPI_MISO,
                         ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(EXAMPLE_TOUCH_NAME, EXAMPLE_TOUCH_PIN_NUM_SPI_CS));
     // Taking XPT2046 as an example, the following is the code after macro expansion:
-    // ESP_PanelBus_SPI *touch_bus = new ESP_PanelBus_SPI(
+    // ESP_PanelBusSPI *touch_bus = new ESP_PanelBusSPI(
     //                  EXAMPLE_TOUCH_PIN_NUM_SPI_SCK, EXAMPLE_TOUCH_PIN_NUM_SPI_MOSI, EXAMPLE_TOUCH_PIN_NUM_SPI_MISO,
     //                  ESP_LCD_TOUCH_IO_SPI_XPT2046_CONFIG(EXAMPLE_TOUCH_PIN_NUM_SPI_CS));
     touch_bus->configSpiFreqHz(EXAMPLE_TOUCH_SPI_FREQ_HZ);

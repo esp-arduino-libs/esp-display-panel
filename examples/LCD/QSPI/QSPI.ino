@@ -54,7 +54,7 @@
  */
 
 #include <Arduino.h>
-#include <ESP_Panel_Library.h>
+#include <esp_panel_library.hpp>
 
 /* The following default configurations are for the board 'Espressif: Custom, ST77922' */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ void setup()
 #endif
 
     Serial.println("Create QSPI LCD bus");
-    ESP_PanelBus_QSPI *panel_bus = new ESP_PanelBus_QSPI(
+    ESP_PanelBusQSPI *panel_bus = new ESP_PanelBusQSPI(
         EXAMPLE_LCD_PIN_NUM_SPI_CS, EXAMPLE_LCD_PIN_NUM_SPI_SCK, EXAMPLE_LCD_PIN_NUM_SPI_DATA0,
         EXAMPLE_LCD_PIN_NUM_SPI_DATA1, EXAMPLE_LCD_PIN_NUM_SPI_DATA2, EXAMPLE_LCD_PIN_NUM_SPI_DATA3
     );

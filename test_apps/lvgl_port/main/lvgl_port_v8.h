@@ -6,7 +6,7 @@
 #pragma once
 
 #include "sdkconfig.h"
-#include "ESP_Panel_Library.h"
+#include "esp_panel_library.hpp"
 #include "lvgl.h"
 
 // *INDENT-OFF*
@@ -15,8 +15,8 @@
  * LVGL related parameters, can be adjusted by users
  *
  */
-#define LVGL_PORT_DISP_WIDTH                    (ESP_PANEL_LCD_WIDTH)   // The width of the display
-#define LVGL_PORT_DISP_HEIGHT                   (ESP_PANEL_LCD_HEIGHT)  // The height of the display
+#define LVGL_PORT_DISP_WIDTH                    (ESP_PANEL_BOARD_WIDTH)   // The width of the display
+#define LVGL_PORT_DISP_HEIGHT                   (ESP_PANEL_BOARD_HEIGHT)  // The height of the display
 #define LVGL_PORT_TICK_PERIOD_MS                (2) // The period of the LVGL tick task, in milliseconds
 
 /**
@@ -73,7 +73,7 @@
 #define LVGL_PORT_AVOID_TEARING_MODE            (CONFIG_LVGL_PORT_AVOID_TEARING_MODE)
 
 #if LVGL_PORT_AVOID_TEARING_MODE != 0
-#if ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
+#if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 /**
  * As the anti-tearing feature typically consumes more PSRAM bandwidth, for the ESP32-S3, we need to utilize the Bounce
  * buffer functionality to enhance the RGB data bandwidth.
