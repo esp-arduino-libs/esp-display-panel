@@ -22,11 +22,6 @@ Board::Board():
     Board(BOARD_DEFAULT_CONFIG)
 {
     _flags.use_default_config = 1;
-#if ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
-    using BacklightConfig = drivers::BacklightCustom::Config;
-    BacklightConfig &config = std::get<BacklightConfig>(_config.backlight.config);
-    config.user_data = this;
-#endif // ESP_PANEL_BOARD_BACKLIGHT_TYPE
 }
 #else
 Board::Board()
@@ -46,7 +41,7 @@ bool Board::init(void)
         ESP_UTILS_LOGI("Initialize LCD");
         std::shared_ptr<drivers::Bus> lcd_bus = nullptr;
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (lcd_bus = drivers::BusFactory::create(_config.lcd.bus_type, &_config.lcd.bus_config)),
+            (lcd_bus = drivers::BusFactory::create(_config.lcd.bus_type, _config.lcd.bus_config)),
             false, "Create LCD bus failed"
         );
         ESP_UTILS_CHECK_FALSE_RETURN(lcd_bus->init(), false, "LCD bus init failed");
@@ -70,9 +65,8 @@ bool Board::init(void)
         ESP_UTILS_LOGI("Initialize touch");
         std::shared_ptr<drivers::Bus> touch_bus = nullptr;
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (touch_bus = drivers::BusFactory::create(
-                             _config.touch.bus_type, &_config.touch.bus_config
-                         )), false, "Create touch bus failed"
+            (touch_bus = drivers::BusFactory::create(_config.touch.bus_type, _config.touch.bus_config)),
+            false, "Create touch bus failed"
         );
         ESP_UTILS_CHECK_FALSE_RETURN(touch_bus->init(), false, "Touch bus init failed");
 // #if ESP_PANEL_BOARD_USE_DEFAULT && defined(ESP_PANEL_BOARD_TOUCH_CONTROLLER)
@@ -96,6 +90,15 @@ bool Board::init(void)
     std::shared_ptr<drivers::Backlight> backlight = nullptr;
     if (_config.flags.use_backlight) {
         ESP_UTILS_LOGI("Initialize Backlight");
+#if ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
+        using BacklightConfig = drivers::BacklightCustom::Config;
+        ESP_UTILS_CHECK_FALSE_RETURN(
+            std::holds_alternative<BacklightConfig>(_config.backlight.config), false,
+            "Backlight config is not a custom backlight config"
+        );
+        auto &config = std::get<BacklightConfig>(_config.backlight.config);
+        config.user_data = this;
+#endif // ESP_PANEL_BOARD_BACKLIGHT_TYPE
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
             (backlight = drivers::BacklightFactory::create(
                              _config.backlight.type, &_config.backlight.config

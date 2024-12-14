@@ -21,7 +21,7 @@ namespace esp_panel {
 
 #ifdef ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD
 static const esp_panel_lcd_vendor_init_cmd_t lcd_vendor_init_cmds[] = ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD();
-#endif
+#endif // ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD
 
 const BoardConfig BOARD_DEFAULT_CONFIG = {
 

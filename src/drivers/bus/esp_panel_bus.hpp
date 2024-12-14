@@ -8,6 +8,8 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <variant>
+#include "soc/soc_caps.h"
 #include "esp_panel_types.h"
 #include "esp_panel_bus_base.hpp"
 #include "esp_panel_bus_dsi.hpp"
@@ -20,12 +22,21 @@ namespace esp_panel::drivers {
 
 class BusFactory {
 public:
-    using CreateFunction = std::shared_ptr<Bus> (*)(const void *config);
+    using Config = std::variant <
+                   BusI2C::Config, BusSPI::Config, BusQSPI::Config
+#if SOC_LCD_RGB_SUPPORTED
+                   , BusRGB::Config
+#endif // SOC_LCD_RGB_SUPPORTED
+#if SOC_MIPI_DSI_SUPPORTED
+                   , BusDSI::Config
+#endif // SOC_MIPI_DSI_SUPPORTED
+                   >;
+    using CreateFunction = std::shared_ptr<Bus> (*)(const Config &config);
 
     BusFactory() = default;
     ~BusFactory() = default;
 
-    static std::shared_ptr<Bus> create(int type, const void *config);
+    static std::shared_ptr<Bus> create(int type, const Config &config);
     static std::string getTypeNameString(int type);
 
 private:

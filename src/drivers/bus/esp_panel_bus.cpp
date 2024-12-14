@@ -11,11 +11,14 @@
 namespace esp_panel::drivers {
 
 #define CREATE_FUNCTION(type_name) \
-    [](const void *config) { \
+    [](const BusFactory::Config &config) { \
         std::shared_ptr<Bus> device = nullptr; \
+        ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<Bus ##type_name::Config>(config), device, \
+            "Config is not a " #type_name " config" \
+        ); \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
             (device = esp_utils::make_shared<Bus ##type_name>( \
-                *static_cast<const Bus ##type_name::Config *>(config)) \
+                std::get<Bus ##type_name::Config>(config)) \
             ), nullptr, "Create " #type_name " failed" \
         ); \
         return device; \
@@ -39,7 +42,7 @@ BusFactory::_type_name_function_map = {
 #endif // SOC_MIPI_DSI_SUPPORTED
 };
 
-std::shared_ptr<Bus> BusFactory::create(int type, const void *config)
+std::shared_ptr<Bus> BusFactory::create(int type, const Config &config)
 {
     ESP_UTILS_LOGD("Param: name(%d), config(@%p)", type, &config);
 

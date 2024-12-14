@@ -27,16 +27,7 @@ struct BoardConfig {
     /* LCD */
     struct {
         int bus_type;
-        std::variant<
-            drivers::BusSPI::Config,
-            drivers::BusQSPI::Config
-#if SOC_LCD_RGB_SUPPORTED
-            ,drivers::BusRGB::Config
-#endif // SOC_LCD_RGB_SUPPORTED
-#if SOC_MIPI_DSI_SUPPORTED
-            ,drivers::BusDSI::Config
-#endif // SOC_MIPI_DSI_SUPPORTED
-        > bus_config;
+        drivers::BusFactory::Config bus_config;
         std::string device_name;
         drivers::LCD::Config device_config;
         struct {
@@ -50,10 +41,7 @@ struct BoardConfig {
     /* Touch */
     struct {
         int bus_type;
-        std::variant<
-            drivers::BusI2C::Config,
-            drivers::BusSPI::Config
-        > bus_config;
+        drivers::BusFactory::Config bus_config;
         std::string device_name;
         drivers::Touch::Config device_config;
         struct {
