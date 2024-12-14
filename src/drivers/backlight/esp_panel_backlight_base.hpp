@@ -22,6 +22,7 @@ public:
      *
      */
     struct Attributes {
+        int type = -1;                  /*<! The backlight device type. Default is `-1` */
         const char *name = nullptr;     /*<! The backlight device name. Default is `nullptr` */
     };
 

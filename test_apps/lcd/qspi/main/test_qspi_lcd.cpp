@@ -89,10 +89,10 @@ static shared_ptr<ESP_PanelBacklight> init_backlight(void)
 #endif
 }
 
-static shared_ptr<ESP_PanelBus_QSPI> init_panel_bus(void)
+static shared_ptr<ESP_PanelBusQSPI> init_panel_bus(void)
 {
     ESP_LOGI(TAG, "Create LCD bus");
-    shared_ptr<ESP_PanelBus_QSPI> panel_bus = make_shared<ESP_PanelBus_QSPI>(
+    shared_ptr<ESP_PanelBusQSPI> panel_bus = make_shared<ESP_PanelBusQSPI>(
                 TEST_LCD_PIN_NUM_SPI_CS, TEST_LCD_PIN_NUM_SPI_SCK,
                 TEST_LCD_PIN_NUM_SPI_DATA0, TEST_LCD_PIN_NUM_SPI_DATA1,
                 TEST_LCD_PIN_NUM_SPI_DATA2, TEST_LCD_PIN_NUM_SPI_DATA3
@@ -148,7 +148,7 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
     TEST_CASE("Test LCD (" #name ") to draw color bar", "[qspi_lcd][" #name "]") \
     { \
         shared_ptr<ESP_PanelBacklight> backlight = init_backlight(); \
-        shared_ptr<ESP_PanelBus_QSPI> panel_bus = init_panel_bus(); \
+        shared_ptr<ESP_PanelBusQSPI> panel_bus = init_panel_bus(); \
         shared_ptr<ESP_PanelLcd> lcd = CREATE_LCD(name, panel_bus.get()); \
         run_test(lcd); \
     }

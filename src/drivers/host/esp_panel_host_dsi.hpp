@@ -18,21 +18,21 @@ namespace esp_panel::drivers {
  * @brief The MIPI-DSI bus host class
  *
  */
-class BusHost_DSI : public BusHost<BusHost_DSI, esp_lcd_dsi_bus_config_t, MIPI_DSI_LL_NUM_BUS> {
+class HostDSI : public Host<HostDSI, esp_lcd_dsi_bus_config_t, MIPI_DSI_LL_NUM_BUS> {
 public:
     /* Add friend class to allow them to access the private member */
-    // To access `BusHost_DSI()`
+    // To access `HostDSI()`
     template <typename U>
     friend struct esp_utils::GeneralMemoryAllocator;
     // To accdess `del()`, `calibrateConfig()`
     template <class Instance, typename Config, int N>
-    friend class BusHost;
+    friend class Host;
 
     /**
      * @brief Destroy the host
      *
      */
-    ~BusHost_DSI() override;
+    ~HostDSI() override;
 
     /**
      * @brief Startup the host
@@ -55,8 +55,8 @@ public:
 
 private:
     /* Make constructor private to prevent users from constructing it directly */
-    BusHost_DSI(int id, const esp_lcd_dsi_bus_config_t &config):
-        BusHost<BusHost_DSI, esp_lcd_dsi_bus_config_t, MIPI_DSI_LL_NUM_BUS>(id, config) {}
+    HostDSI(int id, const esp_lcd_dsi_bus_config_t &config):
+        Host<HostDSI, esp_lcd_dsi_bus_config_t, MIPI_DSI_LL_NUM_BUS>(id, config) {}
 
     /**
      * @brief Calibrate the configuration when the host is already exist

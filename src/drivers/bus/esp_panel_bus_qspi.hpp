@@ -15,14 +15,14 @@
 namespace esp_panel::drivers {
 
 // Forward declaration
-class BusHost_SPI;
+class HostSPI;
 
 /**
  * @brief QSPI bus object class
  *
  * @note  This class is a derived class of `Bus`, user can use it directly
  */
-class Bus_QSPI: public Bus {
+class BusQSPI: public Bus {
 public:
     constexpr static int HOST_ID_DEFAULT = static_cast<int>(SPI2_HOST);
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
@@ -135,7 +135,7 @@ public:
      * @param d2_io   QSPI D2 pin
      * @param d3_io   QSPI D3 pin
      */
-    Bus_QSPI(int cs_io, int sck_io, int d0_io, int d1_io, int d2_io, int d3_io):
+    BusQSPI(int cs_io, int sck_io, int d0_io, int d1_io, int d2_io, int d3_io):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(cs_io, sck_io, d0_io, d1_io, d2_io, d3_io);
@@ -154,7 +154,7 @@ public:
      *
      * @param cs_io QSPI CS pin
      */
-    Bus_QSPI(int cs_io):
+    BusQSPI(int cs_io):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(cs_io);
@@ -164,7 +164,7 @@ public:
         _io_config = config.getIO_Config();
     }
 
-    Bus_QSPI(const Config &config):
+    BusQSPI(const Config &config):
         Bus({ESP_PANEL_BUS_TYPE_QSPI})
     {
         _flags.skip_init_host = config.skip_init_host;
@@ -178,7 +178,7 @@ public:
      * @brief Destroy the QSPI bus object
      *
      */
-    ~Bus_QSPI() override;
+    ~BusQSPI() override;
 
     /**
      * @brief Here are some functions to configure the QSPI bus object. These functions should be called before `begin()`
@@ -218,21 +218,21 @@ private:
     } _flags = {};
     int _host_id = HOST_ID_DEFAULT;
     spi_bus_config_t _host_config = {};
-    std::shared_ptr<BusHost_SPI> _host = nullptr;
+    std::shared_ptr<HostSPI> _host = nullptr;
     esp_lcd_panel_io_spi_config_t _io_config = {};
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_QSPI` instead.
+ * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusQSPI` instead.
  *
  * Example of migration:
  *
  * Old:
- *  ESP_PanelBus_QSPI bus;
+ *  ESP_PanelBusQSPI bus;
  *
  * New:
- *  esp_panel::drivers::Bus_QSPI bus;
+ *  esp_panel::drivers::BusQSPI bus;
  */
-typedef esp_panel::drivers::Bus_QSPI ESP_PanelBus_QSPI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_QSPI` instead.")));
+typedef esp_panel::drivers::BusQSPI ESP_PanelBusQSPI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusQSPI` instead.")));

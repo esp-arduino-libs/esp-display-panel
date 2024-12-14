@@ -146,7 +146,7 @@ void setup()
 #endif
 
     Serial.println("Create RGB LCD bus");
-    ESP_PanelBus_RGB *panel_bus = new ESP_PanelBus_RGB(
+    ESP_PanelBusRGB *panel_bus = new ESP_PanelBusRGB(
 #if EXAMPLE_LCD_RGB_DATA_WIDTH == 8
         EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT,
         EXAMPLE_LCD_PIN_NUM_RGB_DATA0, EXAMPLE_LCD_PIN_NUM_RGB_DATA1, EXAMPLE_LCD_PIN_NUM_RGB_DATA2,

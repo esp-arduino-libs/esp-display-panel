@@ -58,7 +58,7 @@ When encountering screen drift issue when driving RGB LCD with ESP32-S3, you can
     ESP_Panel *panel = new ESP_Panel();
     panel->init();
     // Start
-    ESP_PanelBus_RGB *rgb_bus = static_cast<ESP_PanelBus_RGB *>(panel->getLcd()->getBus());
+    ESP_PanelBusRGB *rgb_bus = static_cast<ESP_PanelBusRGB *>(panel->getLcd()->getBus());
     // The size of the bounce buffer must satisfy `width_of_lcd * height_of_lcd = size_of_buffer * N`, where N is an even number.
     rgb_bus->configRgbBounceBufferSize((ESP_PANEL_BOARD_WIDTH * 20));
     // End
@@ -70,7 +70,7 @@ When encountering screen drift issue when driving RGB LCD with ESP32-S3, you can
 
     ```c
     ...
-    ESP_PanelBus_RGB *lcd_bus = new ESP_PanelBus_RGB(...);
+    ESP_PanelBusRGB *lcd_bus = new ESP_PanelBusRGB(...);
     // Start
     // The size of the bounce buffer must satisfy `width_of_lcd * height_of_lcd = size_of_buffer * N`, where N is an even number.
     lcd_bus->configRgbBounceBufferSize(EXAMPLE_LCD_WIDTH * 10);

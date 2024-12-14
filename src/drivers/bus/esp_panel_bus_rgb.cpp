@@ -15,7 +15,7 @@
 
 namespace esp_panel::drivers {
 
-Bus_RGB::~Bus_RGB()
+BusRGB::~BusRGB()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -24,7 +24,7 @@ Bus_RGB::~Bus_RGB()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool Bus_RGB::configRgbTimingFreqHz(uint32_t hz)
+bool BusRGB::configRgbTimingFreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -38,7 +38,7 @@ bool Bus_RGB::configRgbTimingFreqHz(uint32_t hz)
     return true;
 }
 
-bool Bus_RGB::configRgbTimingPorch(
+bool BusRGB::configRgbTimingPorch(
     uint16_t hpw, uint16_t hbp, uint16_t hfp, uint16_t vpw, uint16_t vbp, uint16_t vfp
 )
 {
@@ -59,7 +59,7 @@ bool Bus_RGB::configRgbTimingPorch(
     return true;
 }
 
-bool Bus_RGB::configRgbTimingFlags(
+bool BusRGB::configRgbTimingFlags(
     bool hsync_idle_low, bool vsync_idle_low, bool de_idle_high, bool pclk_active_neg, bool pclk_idle_high
 )
 {
@@ -82,7 +82,7 @@ bool Bus_RGB::configRgbTimingFlags(
     return true;
 }
 
-bool Bus_RGB::configRgbFrameBufferNumber(uint8_t num)
+bool BusRGB::configRgbFrameBufferNumber(uint8_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -96,7 +96,7 @@ bool Bus_RGB::configRgbFrameBufferNumber(uint8_t num)
     return true;
 }
 
-bool Bus_RGB::configRgbBounceBufferSize(uint32_t size_in_pixel)
+bool BusRGB::configRgbBounceBufferSize(uint32_t size_in_pixel)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -110,7 +110,7 @@ bool Bus_RGB::configRgbBounceBufferSize(uint32_t size_in_pixel)
     return true;
 }
 
-bool Bus_RGB::configRgbFlagDispActiveLow(void)
+bool BusRGB::configRgbFlagDispActiveLow(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -123,7 +123,7 @@ bool Bus_RGB::configRgbFlagDispActiveLow(void)
     return true;
 }
 
-bool Bus_RGB::configSpiLine(
+bool BusRGB::configSpiLine(
     bool cs_use_expaneer, bool sck_use_expander, bool sda_use_expander, esp_expander::Base *io_expander
 )
 {
@@ -160,7 +160,7 @@ bool Bus_RGB::configSpiLine(
     return true;
 }
 
-bool Bus_RGB::configSPI_IO_Expander(esp_io_expander_t *expander_handle)
+bool BusRGB::configSPI_IO_Expander(esp_io_expander_t *expander_handle)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -175,7 +175,7 @@ bool Bus_RGB::configSPI_IO_Expander(esp_io_expander_t *expander_handle)
     return true;
 }
 
-bool Bus_RGB::configSPI_SCL_ActiveFallingEdge(bool enable)
+bool BusRGB::configSPI_SCL_ActiveFallingEdge(bool enable)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -189,7 +189,7 @@ bool Bus_RGB::configSPI_SCL_ActiveFallingEdge(bool enable)
     return true;
 }
 
-bool Bus_RGB::begin(void)
+bool BusRGB::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -207,7 +207,7 @@ bool Bus_RGB::begin(void)
     return true;
 }
 
-bool Bus_RGB::del(void)
+bool BusRGB::del(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 

@@ -241,6 +241,7 @@
         #define ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION( percent, user_data )  \
             {  \
                 esp_panel::Board *board = static_cast<esp_panel::Board *>(user_data);  \
+                ESP_UTILS_LOGI("Run custom backlight control function (%d)", percent);  \
                 return true; \
             }
 

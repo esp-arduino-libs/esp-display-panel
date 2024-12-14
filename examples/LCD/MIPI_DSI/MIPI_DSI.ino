@@ -194,7 +194,7 @@ void setup()
 #endif
 
     Serial.println("Create MIPI-DSI LCD bus");
-    ESP_PanelBus_DSI *panel_bus = new ESP_PanelBus_DSI(
+    ESP_PanelBusDSI *panel_bus = new ESP_PanelBusDSI(
         EXAMPLE_LCD_DSI_LANE_NUM, EXAMPLE_LCD_DSI_LANE_RATE_MBPS,
         EXAMPLE_LCD_DPI_CLK_MHZ, EXAMPLE_LCD_DPI_COLOR_BITS, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT,
         EXAMPLE_LCD_DPI_HPW, EXAMPLE_LCD_DPI_HBP, EXAMPLE_LCD_DPI_HFP,

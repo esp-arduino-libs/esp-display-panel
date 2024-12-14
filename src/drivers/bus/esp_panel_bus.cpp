@@ -3,73 +3,63 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+#include "soc/soc_caps.h"
 #include "esp_panel_utils.h"
 #include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
 
-std::shared_ptr<Bus> BusFactory::create(int type, const void *config)
-{
-    ESP_UTILS_LOG_TRACE_ENTER();
+#define CREATE_FUNCTION(type_name) \
+    [](const void *config) { \
+        std::shared_ptr<Bus> device = nullptr; \
+        ESP_UTILS_CHECK_EXCEPTION_RETURN( \
+            (device = esp_utils::make_shared<Bus ##type_name>( \
+                *static_cast<const Bus ##type_name::Config *>(config)) \
+            ), nullptr, "Create " #type_name " failed" \
+        ); \
+        return device; \
+    }
+#define ITEM_CONTROLLER(type_name) \
+    { \
+        Bus ##type_name::ATTRIBUTES_DEFAULT.type, \
+        {Bus ##type_name::ATTRIBUTES_DEFAULT.name, CREATE_FUNCTION(type_name)} \
+    }
 
-    ESP_UTILS_LOGD("Param: type(%d[%s]), config(@%p)", type, getTypeString(type).c_str(), config);
-    ESP_UTILS_CHECK_FALSE_RETURN(config != nullptr, nullptr, "Invalid config");
-
-    std::shared_ptr<Bus> bus = nullptr;
-    switch (type) {
-    case ESP_PANEL_BUS_TYPE_I2C:
-        ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (bus = esp_utils::make_shared<Bus_I2C>(*static_cast<const Bus_I2C::Config *>(config))), nullptr,
-            "Create %s bus failed", getTypeString(type).c_str()
-        );
-        break;
-    case ESP_PANEL_BUS_TYPE_SPI:
-        ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (bus = esp_utils::make_shared<Bus_SPI>(*static_cast<const Bus_SPI::Config *>(config))), nullptr,
-            "Create %s bus failed", getTypeString(type).c_str()
-        );
-        break;
+const std::unordered_map<int, std::pair<std::string, BusFactory::CreateFunction>>
+BusFactory::_type_name_function_map = {
+    ITEM_CONTROLLER(I2C),
+    ITEM_CONTROLLER(SPI),
+    ITEM_CONTROLLER(QSPI),
 #if SOC_LCD_RGB_SUPPORTED
-    case ESP_PANEL_BUS_TYPE_RGB:
-        ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (bus = esp_utils::make_shared<Bus_RGB>(*static_cast<const Bus_RGB::Config *>(config))), nullptr,
-            "Create %s bus failed", getTypeString(type).c_str()
-        );
-        break;
+    ITEM_CONTROLLER(RGB),
 #endif // SOC_LCD_RGB_SUPPORTED
 #if SOC_MIPI_DSI_SUPPORTED
-    case ESP_PANEL_BUS_TYPE_MIPI_DSI:
-        ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (bus = esp_utils::make_shared<Bus_DSI>(*static_cast<const Bus_DSI::Config *>(config))), nullptr,
-            "Create %s bus failed", getTypeString(type).c_str()
-        );
-        break;
+    ITEM_CONTROLLER(DSI),
 #endif // SOC_MIPI_DSI_SUPPORTED
-    default:
-        ESP_UTILS_CHECK_FALSE_RETURN(false, nullptr, "Unknown type");
-    }
+};
 
-    ESP_UTILS_LOG_TRACE_EXIT();
+std::shared_ptr<Bus> BusFactory::create(int type, const void *config)
+{
+    ESP_UTILS_LOGD("Param: name(%d), config(@%p)", type, &config);
 
-    return bus;
+    auto it = _type_name_function_map.find(type);
+    ESP_UTILS_CHECK_FALSE_RETURN(it != _type_name_function_map.end(), nullptr, "Unsupported type: %d", type);
+
+    std::shared_ptr<Bus> device = it->second.second(config);
+    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device(%s) failed", it->second.first.c_str());
+
+    return device;
 }
 
-std::string BusFactory::getTypeString(int type)
+std::string BusFactory::getTypeNameString(int type)
 {
-    switch (type) {
-    case ESP_PANEL_BUS_TYPE_I2C:
-        return "I2C";
-    case ESP_PANEL_BUS_TYPE_SPI:
-        return "SPI";
-    case ESP_PANEL_BUS_TYPE_QSPI:
-        return "QSPI";
-    case ESP_PANEL_BUS_TYPE_RGB:
-        return "RGB";
-    case ESP_PANEL_BUS_TYPE_MIPI_DSI:
-        return "MIPI-DSI";
-    default:
-        return "Unknown";
+    auto it = _type_name_function_map.find(type);
+    if (it != _type_name_function_map.end()) {
+        return it->second.first;
     }
+
+    return "Unknown";
 }
 
 } // namespace esp_panel::drivers

@@ -28,10 +28,10 @@ using namespace std;
  *
  */
 #define _CREATE_BUS_INIT_HOST(name, host_config, io_config, host_id) \
-                                                    make_shared<ESP_PanelBus_##name>(host_config, io_config, host_id)
+                                                    make_shared<ESP_PanelBus##name>(host_config, io_config, host_id)
 #define CREATE_BUS_INIT_HOST(name, host_config, io_config, host_id) \
                                                         _CREATE_BUS_INIT_HOST(name, host_config, io_config, host_id)
-#define _CREATE_BUS_SKIP_HOST(name, io_config, host_id) make_shared<ESP_PanelBus_##name>(io_config, host_id)
+#define _CREATE_BUS_SKIP_HOST(name, io_config, host_id) make_shared<ESP_PanelBus##name>(io_config, host_id)
 #define CREATE_BUS_SKIP_HOST(name, io_config, host_id)  _CREATE_BUS_SKIP_HOST(name, io_config, host_id)
 /**
  * Macros for configuration of panel IO
@@ -519,7 +519,7 @@ bool ESP_Panel::begin(void)
 #if ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER && ((ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER) || (ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER) || \
                                (ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER))
     if (_lcd_bus_ptr->getType() == ESP_PANEL_BUS_TYPE_RGB) {
-        shared_ptr<ESP_PanelBus_RGB> lcd_bus_ptr = std::static_pointer_cast<ESP_PanelBus_RGB>(_lcd_bus_ptr);
+        shared_ptr<ESP_PanelBusRGB> lcd_bus_ptr = std::static_pointer_cast<ESP_PanelBusRGB>(_lcd_bus_ptr);
         lcd_bus_ptr->configSpiLine(
             ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER, ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER,
             ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER, _expander_ptr.get()

@@ -10,7 +10,7 @@
 
 namespace esp_panel::drivers {
 
-Bus_QSPI::~Bus_QSPI()
+BusQSPI::~BusQSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -19,7 +19,7 @@ Bus_QSPI::~Bus_QSPI()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_QSPI::configQspiMode(uint8_t mode)
+void BusQSPI::configQspiMode(uint8_t mode)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -31,7 +31,7 @@ void Bus_QSPI::configQspiMode(uint8_t mode)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_QSPI::configQspiFreqHz(uint32_t hz)
+void BusQSPI::configQspiFreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -43,7 +43,7 @@ void Bus_QSPI::configQspiFreqHz(uint32_t hz)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_QSPI::configQspiTransQueueDepth(uint8_t depth)
+void BusQSPI::configQspiTransQueueDepth(uint8_t depth)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -55,14 +55,14 @@ void Bus_QSPI::configQspiTransQueueDepth(uint8_t depth)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool Bus_QSPI::init(void)
+bool BusQSPI::init(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
 
     if (!_flags.skip_init_host) {
-        _host = BusHost_SPI::getInstance(_host_id, _host_config);
+        _host = HostSPI::getInstance(_host_id, _host_config);
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get SPI host(%d) instance failed", _host_id);
         ESP_UTILS_LOGD("Get SPI host(%d) instance", _host_id);
     }
@@ -74,7 +74,7 @@ bool Bus_QSPI::init(void)
     return true;
 }
 
-bool Bus_QSPI::begin(void)
+bool BusQSPI::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -100,7 +100,7 @@ bool Bus_QSPI::begin(void)
     return true;
 }
 
-bool Bus_QSPI::del(void)
+bool BusQSPI::del(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -112,7 +112,7 @@ bool Bus_QSPI::del(void)
         if (_host != nullptr) {
             _host = nullptr;
             ESP_UTILS_CHECK_FALSE_RETURN(
-                BusHost_SPI::tryReleaseInstance(_host_id), false, "Release SPI host(%d) failed", _host_id
+                HostSPI::tryReleaseInstance(_host_id), false, "Release SPI host(%d) failed", _host_id
             );
         }
         _flags.is_init = false;

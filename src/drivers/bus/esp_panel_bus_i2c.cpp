@@ -9,7 +9,7 @@
 
 namespace esp_panel::drivers {
 
-Bus_I2C::~Bus_I2C()
+BusI2C::~BusI2C()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -18,7 +18,7 @@ Bus_I2C::~Bus_I2C()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cPullupEnable(bool sda_pullup_en, bool scl_pullup_en)
+void BusI2C::configI2cPullupEnable(bool sda_pullup_en, bool scl_pullup_en)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -31,7 +31,7 @@ void Bus_I2C::configI2cPullupEnable(bool sda_pullup_en, bool scl_pullup_en)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cFreqHz(uint32_t hz)
+void BusI2C::configI2cFreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -43,7 +43,7 @@ void Bus_I2C::configI2cFreqHz(uint32_t hz)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cAddress(uint32_t address)
+void BusI2C::configI2cAddress(uint32_t address)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -55,7 +55,7 @@ void Bus_I2C::configI2cAddress(uint32_t address)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cCtrlPhaseBytes(uint32_t num)
+void BusI2C::configI2cCtrlPhaseBytes(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -67,7 +67,7 @@ void Bus_I2C::configI2cCtrlPhaseBytes(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cDcBitOffset(uint32_t num)
+void BusI2C::configI2cDcBitOffset(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -79,7 +79,7 @@ void Bus_I2C::configI2cDcBitOffset(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cCommandBits(uint32_t num)
+void BusI2C::configI2cCommandBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -91,7 +91,7 @@ void Bus_I2C::configI2cCommandBits(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cParamBits(uint32_t num)
+void BusI2C::configI2cParamBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -103,7 +103,7 @@ void Bus_I2C::configI2cParamBits(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_I2C::configI2cFlags(bool dc_low_on_data, bool disable_control_phase)
+void BusI2C::configI2cFlags(bool dc_low_on_data, bool disable_control_phase)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -116,14 +116,14 @@ void Bus_I2C::configI2cFlags(bool dc_low_on_data, bool disable_control_phase)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool Bus_I2C::init(void)
+bool BusI2C::init(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
 
     if (!_flags.skip_init_host) {
-        _host = BusHost_I2C::getInstance(_host_id, _host_config);
+        _host = HostI2C::getInstance(_host_id, _host_config);
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get I2C host(%d) instance failed", _host_id);
         ESP_UTILS_LOGD("Get I2C host(%d) instance", _host_id);
     }
@@ -135,7 +135,7 @@ bool Bus_I2C::init(void)
     return true;
 }
 
-bool Bus_I2C::begin(void)
+bool BusI2C::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -168,7 +168,7 @@ bool Bus_I2C::begin(void)
     return true;
 }
 
-bool Bus_I2C::del(void)
+bool BusI2C::del(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -180,7 +180,7 @@ bool Bus_I2C::del(void)
         if (_host != nullptr) {
             _host = nullptr;
             ESP_UTILS_CHECK_FALSE_RETURN(
-                BusHost_I2C::tryReleaseInstance(_host_id), false, "Release I2C host(%d) failed", _host_id
+                HostI2C::tryReleaseInstance(_host_id), false, "Release I2C host(%d) failed", _host_id
             );
         }
         _flags.is_init = false;

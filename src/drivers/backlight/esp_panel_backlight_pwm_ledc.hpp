@@ -7,6 +7,7 @@
 
 #include "driver/ledc.h"
 #include "esp_idf_version.h"
+#include "esp_panel_types.h"
 #include "esp_panel_backlight_base.hpp"
 
 namespace esp_panel::drivers {
@@ -24,6 +25,7 @@ public:
      *
      */
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
+        .type = ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC,
         .name = "PWM(LEDC)",
     };
 

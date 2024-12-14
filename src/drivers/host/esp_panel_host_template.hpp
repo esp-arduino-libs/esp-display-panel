@@ -18,17 +18,17 @@ namespace esp_panel::drivers {
  *
  */
 template <class Derived, typename Config, int N>
-class BusHost {
+class Host {
 public:
     /* Remove copy constructor and copy assignment operator */
-    BusHost(const BusHost &) = delete;
-    BusHost &operator=(const BusHost &) = delete;
+    Host(const Host &) = delete;
+    Host &operator=(const Host &) = delete;
 
     /**
      * @brief Destroy the host
      *
      */
-    virtual ~BusHost() = default;
+    virtual ~Host() = default;
 
     /**
      * @brief Startup the host
@@ -73,7 +73,7 @@ public:
 
 protected:
     /* Only derived class can construct the base host */
-    BusHost(int id, const Config &config): config(config), _id(id) {}
+    Host(int id, const Config &config): config(config), _id(id) {}
 
     /**
      * @brief Check if the device is already begun
@@ -99,10 +99,10 @@ private:
 };
 
 template <class Derived, typename Config, int N>
-std::array<std::shared_ptr<Derived>, N> BusHost<Derived, Config, N>::_instance_array = {};
+std::array<std::shared_ptr<Derived>, N> Host<Derived, Config, N>::_instance_array = {};
 
 template <class Derived, typename Config, int N>
-bool BusHost<Derived, Config, N>::tryReleaseInstance(int id)
+bool Host<Derived, Config, N>::tryReleaseInstance(int id)
 {
     ESP_UTILS_LOG_TRACE_ENTER();
 
@@ -120,7 +120,7 @@ bool BusHost<Derived, Config, N>::tryReleaseInstance(int id)
 }
 
 template <class Derived, typename Config, int N>
-std::shared_ptr<Derived> BusHost<Derived, Config, N>::getInstance(int id, const Config &config)
+std::shared_ptr<Derived> Host<Derived, Config, N>::getInstance(int id, const Config &config)
 {
     ESP_UTILS_LOG_TRACE_ENTER();
 

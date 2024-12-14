@@ -16,14 +16,14 @@
 namespace esp_panel::drivers {
 
 // Forward declaration
-class BusHost_DSI;
+class HostDSI;
 
 /**
  * @brief MIPI-DSI bus object class
  *
  * @note  This class is a derived class of `Bus`, user can use it directly
  */
-class Bus_DSI: public Bus {
+class BusDSI: public Bus {
 public:
     constexpr static int HOST_ID_DEFAULT = 0;
     constexpr static int PHY_LDO_VOLTAGE_MV_DEFAULT = 2500;
@@ -143,7 +143,7 @@ public:
      *
      * @param ldo_chan_id  MIPI-DSI CS pin
      */
-    Bus_DSI(
+    BusDSI(
         /* DSI */
         int lane_num, int lane_rate_mbps,
         /* DPI */
@@ -167,7 +167,7 @@ public:
         _phy_ldo_config = config.getPHY_LDO_Config();
     }
 
-    Bus_DSI(const Config &config):
+    BusDSI(const Config &config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         _host_config = config.getHostConfig();
@@ -181,7 +181,7 @@ public:
      * @brief Destroy the MIPI-DSI bus object
      *
      */
-    ~Bus_DSI() override;
+    ~BusDSI() override;
 
     /**
      * @brief Here are some functions to configure the MIPI-DSI bus object. These functions should be called before `begin()`
@@ -212,7 +212,7 @@ public:
         return _flags.is_init;
     }
 
-    /* Not implement the function here to avoid error: invalid use of incomplete type `BusHost_DSI` */
+    /* Not implement the function here to avoid error: invalid use of incomplete type `HostDSI` */
     esp_lcd_dsi_bus_handle_t getDSI_Handle(void);
 
     const esp_lcd_dsi_bus_config_t *getHostConfig(void)
@@ -246,22 +246,22 @@ private:
     esp_lcd_dpi_panel_config_t _panel_config = {};
     esp_ldo_channel_config_t _phy_ldo_config = {};
     esp_ldo_channel_handle_t _phy_ldo_handle = nullptr;
-    std::shared_ptr<BusHost_DSI> _host = nullptr;
+    std::shared_ptr<HostDSI> _host = nullptr;
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_DSI` instead.
+ * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusDSI` instead.
  *
  * Example of migration:
  *
  * Old:
- *  ESP_PanelBus_DSI bus;
+ *  ESP_PanelBusDSI bus;
  *
  * New:
- *  esp_panel::drivers::Bus_DSI bus;
+ *  esp_panel::drivers::BusDSI bus;
  */
-typedef esp_panel::drivers::Bus_DSI ESP_PanelBus_DSI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_DSI` instead.")));
+typedef esp_panel::drivers::BusDSI ESP_PanelBusDSI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusDSI` instead.")));
 
 #endif /* SOC_MIPI_DSI_SUPPORTED */

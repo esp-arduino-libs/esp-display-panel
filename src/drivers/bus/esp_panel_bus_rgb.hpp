@@ -29,7 +29,7 @@ namespace esp_panel::drivers {
  *
  * @note  This class is a derived class of `Bus`, user can use it directly
  */
-class Bus_RGB: public Bus {
+class BusRGB: public Bus {
 public:
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BUS_TYPE_RGB,
@@ -329,7 +329,7 @@ public:
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
      */
-    Bus_RGB(
+    BusRGB(
         /* 3-wire SPI IOs */
         int cs_io, int sck_io, int sda_io,
         /* 16-bit RGB IOs */
@@ -377,7 +377,7 @@ public:
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
      */
-    Bus_RGB(
+    BusRGB(
         /* 16-bit RGB IOs */
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int d8_io, int d9_io, int d10_io, int d11_io, int d12_io, int d13_io, int d14_io, int d15_io,
@@ -423,7 +423,7 @@ public:
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
      */
-    Bus_RGB(
+    BusRGB(
         /* 3-wire SPI IOs */
         int cs_io, int sck_io, int sda_io,
         /* 8-bit RGB IOs */
@@ -469,7 +469,7 @@ public:
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
      */
-    Bus_RGB(
+    BusRGB(
         /* 8-bit RGB IOs */
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int hsync_io, int vsync_io, int pclk_io, int de_io, int disp_io,
@@ -495,7 +495,7 @@ public:
      *
      * @param[in] config Bus configuration
      */
-    Bus_RGB(const Config &config):
+    BusRGB(const Config &config):
         Bus(ATTRIBUTES_DEFAULT),
         _flags({config.use_spi_interface}),
         _io_config(config.getIO_Config()),
@@ -505,14 +505,14 @@ public:
 // *INDENT-OFF*
 
     [[deprecated("Deprecated and will be removed in the next major version. Use other constructors instead.")]]
-    Bus_RGB(
+    BusRGB(
         uint16_t width, uint16_t height,
         int cs_io, int sck_io, int sda_io,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int d8_io, int d9_io, int d10_io, int d11_io, int d12_io, int d13_io, int d14_io, int d15_io,
         int hsync_io, int vsync_io, int pclk_io, int de_io, int disp_io = -1
     ):
-        Bus_RGB(
+        BusRGB(
             cs_io, sck_io, sda_io,
             d0_io, d1_io, d2_io, d3_io, d4_io, d5_io, d6_io, d7_io,
             d8_io, d9_io, d10_io, d11_io, d12_io, d13_io, d14_io, d15_io,
@@ -523,13 +523,13 @@ public:
     }
 
     [[deprecated("Deprecated and will be removed in the next major version. Use other constructors instead.")]]
-    Bus_RGB(
+    BusRGB(
         uint16_t width, uint16_t height,
         int cs_io, int sck_io, int sda_io,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int hsync_io, int vsync_io, int pclk_io, int de_io, int disp_io = -1
     ):
-        Bus_RGB(
+        BusRGB(
             cs_io, sck_io, sda_io,
             d0_io, d1_io, d2_io, d3_io, d4_io, d5_io, d6_io, d7_io,
             hsync_io, vsync_io, pclk_io, de_io, disp_io,
@@ -539,13 +539,13 @@ public:
     }
 
     [[deprecated("Deprecated and will be removed in the next major version. Use other constructors instead.")]]
-    Bus_RGB(
+    BusRGB(
         uint16_t width, uint16_t height,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int d8_io, int d9_io, int d10_io, int d11_io, int d12_io, int d13_io, int d14_io, int d15_io,
         int hsync_io, int vsync_io, int pclk_io, int de_io, int disp_io = -1
     ):
-        Bus_RGB(
+        BusRGB(
             d0_io, d1_io, d2_io, d3_io, d4_io, d5_io, d6_io, d7_io,
             d8_io, d9_io, d10_io, d11_io, d12_io, d13_io, d14_io, d15_io,
             hsync_io, vsync_io, pclk_io, de_io, disp_io,
@@ -555,12 +555,12 @@ public:
     }
 
     [[deprecated("Deprecated and will be removed in the next major version. Use other constructors instead.")]]
-    Bus_RGB(
+    BusRGB(
         uint16_t width, uint16_t height,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
         int hsync_io, int vsync_io, int pclk_io, int de_io, int disp_io = -1
     ):
-        Bus_RGB(
+        BusRGB(
             d0_io, d1_io, d2_io, d3_io, d4_io, d5_io, d6_io, d7_io,
             hsync_io, vsync_io, pclk_io, de_io, disp_io,
             8, width, height, 10, 10, 20, 10, 10, 10
@@ -572,7 +572,7 @@ public:
      * @brief Destroy the RGB bus object
      *
      */
-    ~Bus_RGB() override;
+    ~BusRGB() override;
 
     /**
      * @brief Here are some functions to configure the RGB bus object
@@ -640,16 +640,16 @@ private:
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_RGB` instead.
+ * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusRGB` instead.
  *
  * Example of migration:
  *
  * Old:
- *  ESP_PanelBus_RGB bus;
+ *  ESP_PanelBusRGB bus;
  *
  * New:
- *  esp_panel::drivers::Bus_RGB bus;
+ *  esp_panel::drivers::BusRGB bus;
  */
-typedef esp_panel::drivers::Bus_RGB ESP_PanelBus_RGB __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_RGB` instead.")));
+typedef esp_panel::drivers::BusRGB ESP_PanelBusRGB __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusRGB` instead.")));
 
 #endif // SOC_LCD_RGB_SUPPORTED

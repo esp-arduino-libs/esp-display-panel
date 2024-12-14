@@ -14,14 +14,14 @@
 namespace esp_panel::drivers {
 
 // Forward declaration
-class BusHost_I2C;
+class HostI2C;
 
 /**
  * @brief I2C bus object class
  *
  * @note  This class is a derived class of `Bus`, user can use it directly
  */
-class Bus_I2C: public Bus {
+class BusI2C: public Bus {
 public:
     constexpr static int HOST_ID_DEFAULT = static_cast<int>(I2C_NUM_0);
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
@@ -96,7 +96,7 @@ public:
      * @param sda_io    I2C SDA pin
      * @param io_config I2C panel IO configuration
      */
-    Bus_I2C(int scl_io, int sda_io, const esp_lcd_panel_io_i2c_config_t &io_config):
+    BusI2C(int scl_io, int sda_io, const esp_lcd_panel_io_i2c_config_t &io_config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(scl_io, sda_io, io_config);
@@ -115,7 +115,7 @@ public:
      * @param io_config I2C panel IO configuration
      * @param host_id   I2C host ID, default is `HOST_ID_DEFAULT`
      */
-    Bus_I2C(const esp_lcd_panel_io_i2c_config_t &io_config):
+    BusI2C(const esp_lcd_panel_io_i2c_config_t &io_config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(io_config);
@@ -124,7 +124,7 @@ public:
         _io_config = config.getIO_Config();
     }
 
-    Bus_I2C(const Config &config):
+    BusI2C(const Config &config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         _flags.skip_init_host = config.skip_init_host;
@@ -137,7 +137,7 @@ public:
      * @brief Destroy the I2C bus object
      *
      */
-    ~Bus_I2C() override;
+    ~BusI2C() override;
 
     /**
      * @brief Here are some functions to configure the I2C bus object. These functions should be called before `begin()`
@@ -189,21 +189,21 @@ private:
     } _flags = {};
     int _host_id = HOST_ID_DEFAULT;
     i2c_config_t _host_config = {};
-    std::shared_ptr<BusHost_I2C> _host = nullptr;
+    std::shared_ptr<HostI2C> _host = nullptr;
     esp_lcd_panel_io_i2c_config_t _io_config = {};
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_I2C` instead.
+ * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusI2C` instead.
  *
  * Example of migration:
  *
  * Old:
- *  ESP_PanelBus_I2C bus;
+ *  ESP_PanelBusI2C bus;
  *
  * New:
- *  esp_panel::drivers::Bus_I2C bus;
+ *  esp_panel::drivers::BusI2C bus;
  */
-typedef esp_panel::drivers::Bus_I2C ESP_PanelBus_I2C __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_I2C` instead.")));
+typedef esp_panel::drivers::BusI2C ESP_PanelBusI2C __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusI2C` instead.")));

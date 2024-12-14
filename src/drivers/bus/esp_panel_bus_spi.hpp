@@ -14,14 +14,14 @@
 namespace esp_panel::drivers {
 
 // Forward declaration
-class BusHost_SPI;
+class HostSPI;
 
 /**
  * @brief SPI bus object class
  *
  * @note  This class is a derived class of `Bus`, user can use it directly
  */
-class Bus_SPI: public Bus {
+class BusSPI: public Bus {
 public:
     constexpr static int HOST_ID_DEFAULT = static_cast<int>(SPI2_HOST);
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
@@ -174,7 +174,7 @@ public:
      * @param sda_io SPI MOSI pin
      * @param sdo_io SPI MISO pin, default is `-1`
      */
-    Bus_SPI(int cs_io, int dc_io, int sck_io, int sda_io, int sdo_io = -1):
+    BusSPI(int cs_io, int dc_io, int sck_io, int sda_io, int sdo_io = -1):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(cs_io, dc_io, sck_io, sda_io, sdo_io);
@@ -194,7 +194,7 @@ public:
      * @param cs_io SPI CS pin
      * @param dc_io SPI DC pin
      */
-    Bus_SPI(int cs_io, int dc_io):
+    BusSPI(int cs_io, int dc_io):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(cs_io, dc_io);
@@ -203,7 +203,7 @@ public:
         _io_config = config.getIO_Config();
     }
 
-    Bus_SPI(int sck_io, int sda_io, int sdo_io, const esp_lcd_panel_io_spi_config_t &io_config):
+    BusSPI(int sck_io, int sda_io, int sdo_io, const esp_lcd_panel_io_spi_config_t &io_config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(sck_io, sda_io, sdo_io, io_config);
@@ -213,7 +213,7 @@ public:
         _io_config = config.getIO_Config();
     }
 
-    Bus_SPI(const esp_lcd_panel_io_spi_config_t &io_config):
+    BusSPI(const esp_lcd_panel_io_spi_config_t &io_config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         auto config = Config::create(io_config);
@@ -229,7 +229,7 @@ public:
      *
      * @param config SPI bus configuration
      */
-    Bus_SPI(const Config &config):
+    BusSPI(const Config &config):
         Bus(ATTRIBUTES_DEFAULT)
     {
         _flags.skip_init_host = config.skip_init_host;
@@ -243,7 +243,7 @@ public:
      * @brief Destroy the SPI bus object
      *
      */
-    ~Bus_SPI() override;
+    ~BusSPI() override;
 
     /**
      * @brief Here are some functions to configure the SPI bus object. These functions should be called before `begin()`
@@ -286,20 +286,20 @@ private:
     int _host_id = HOST_ID_DEFAULT;
     spi_bus_config_t _host_config = {};
     esp_lcd_panel_io_spi_config_t _io_config = {};
-    std::shared_ptr<BusHost_SPI> _host = nullptr;
+    std::shared_ptr<HostSPI> _host = nullptr;
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_SPI` instead.
+ * @deprecated This type is deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusSPI` instead.
  *
  * Example of migration:
  *
  * Old:
- *  ESP_PanelBus_SPI bus;
+ *  ESP_PanelBusSPI bus;
  *
  * New:
- *  esp_panel::drivers::Bus_SPI bus;
+ *  esp_panel::drivers::BusSPI bus;
  */
-typedef esp_panel::drivers::Bus_SPI ESP_PanelBus_SPI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Bus_SPI` instead.")));
+typedef esp_panel::drivers::BusSPI ESP_PanelBusSPI __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::BusSPI` instead.")));

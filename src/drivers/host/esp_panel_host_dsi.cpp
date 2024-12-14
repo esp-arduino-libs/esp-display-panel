@@ -12,7 +12,7 @@
 
 namespace esp_panel::drivers {
 
-BusHost_DSI::~BusHost_DSI()
+HostDSI::~HostDSI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -34,7 +34,7 @@ end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool BusHost_DSI::begin(void)
+bool HostDSI::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -58,7 +58,7 @@ end:
     return true;
 }
 
-bool BusHost_DSI::calibrateConfig(const esp_lcd_dsi_bus_config_t &config)
+bool HostDSI::calibrateConfig(const esp_lcd_dsi_bus_config_t &config)
 {
     if (memcmp(&config, &this->config, sizeof(esp_lcd_dsi_bus_config_t))) {
         ESP_UTILS_LOGD(

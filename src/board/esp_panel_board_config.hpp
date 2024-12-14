@@ -21,29 +21,29 @@ struct BoardConfig {
     using CallbackFunction = bool (*)(void *);
 
     /* General */
-    uint16_t width = 0;
-    uint16_t height = 0;
+    int width = 0;
+    int height = 0;
 
     /* LCD */
     struct {
         int bus_type;
         std::variant<
-            drivers::Bus_SPI::Config,
-            drivers::Bus_QSPI::Config
+            drivers::BusSPI::Config,
+            drivers::BusQSPI::Config
 #if SOC_LCD_RGB_SUPPORTED
-            ,drivers::Bus_RGB::Config
+            ,drivers::BusRGB::Config
 #endif // SOC_LCD_RGB_SUPPORTED
 #if SOC_MIPI_DSI_SUPPORTED
-            ,drivers::Bus_DSI::Config
+            ,drivers::BusDSI::Config
 #endif // SOC_MIPI_DSI_SUPPORTED
         > bus_config;
         std::string device_name;
         drivers::LCD::Config device_config;
         struct {
-            uint8_t invert_color: 1;
-            uint8_t swap_xy: 1;
-            uint8_t mirror_x: 1;
-            uint8_t mirror_y: 1;
+            int invert_color: 1;
+            int swap_xy: 1;
+            int mirror_x: 1;
+            int mirror_y: 1;
         } pre_process;
     } lcd = {};
 
@@ -51,28 +51,28 @@ struct BoardConfig {
     struct {
         int bus_type;
         std::variant<
-            drivers::Bus_I2C::Config,
-            drivers::Bus_SPI::Config
+            drivers::BusI2C::Config,
+            drivers::BusSPI::Config
         > bus_config;
         std::string device_name;
         drivers::Touch::Config device_config;
         struct {
-            uint8_t swap_xy: 1;
-            uint8_t mirror_x: 1;
-            uint8_t mirror_y: 1;
+            int swap_xy: 1;
+            int mirror_x: 1;
+            int mirror_y: 1;
         } pre_process;
     } touch = {};
 
     /* Backlight */
     struct {
-        drivers::BacklightFactory::Type type;
+        int type;
         std::variant<
             drivers::BacklightSwitchGPIO::Config,
             drivers::BacklightPWM_LEDC::Config,
             drivers::BacklightCustom::Config
         > config;
         struct {
-            uint8_t idle_off: 1;
+            int idle_off: 1;
         } pre_process;
     } backlight = {};
 
@@ -96,10 +96,10 @@ struct BoardConfig {
         CallbackFunction post_backlight_begin;
     } callbacks = {};
     struct {
-        uint8_t use_lcd: 1;
-        uint8_t use_touch: 1;
-        uint8_t use_backlight: 1;
-        uint8_t use_io_expander: 1;
+        int use_lcd: 1;
+        int use_touch: 1;
+        int use_backlight: 1;
+        int use_io_expander: 1;
     } flags = {};
 };
 

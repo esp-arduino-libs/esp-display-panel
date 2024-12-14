@@ -9,48 +9,40 @@
 
 namespace esp_panel::drivers {
 
-#define ITEM_TYPE(type) \
-    {BacklightFactory::Type::type, Backlight ##type::ATTRIBUTES_DEFAULT.name}
-#define CASE_TYPE(type) \
-    case Type::type: \
+#define CREATE_FUNCTION(type_name) \
+    [](const void *config) { \
+        std::shared_ptr<Backlight> device = nullptr; \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
-            (backlight = esp_utils::make_shared<Backlight ##type>( \
-                             *static_cast<const Backlight ##type::Config *>(config)) \
-            ), nullptr, "Create %s failed", getTypeString(type).c_str() \
+            (device = esp_utils::make_shared<Backlight ##type_name>( \
+                *static_cast<const Backlight ##type_name::Config *>(config)) \
+            ), nullptr, "Create " #type_name " failed" \
         ); \
-        break
+        return device; \
+    }
+#define ITEM_CONTROLLER(type_name) \
+    { \
+        Backlight ##type_name::ATTRIBUTES_DEFAULT.type, \
+        {Backlight ##type_name::ATTRIBUTES_DEFAULT.name, CREATE_FUNCTION(type_name)} \
+    }
 
-const std::map<BacklightFactory::Type, std::string> BacklightFactory::_type_name_map = {
-    ITEM_TYPE(SwitchGPIO),
-    ITEM_TYPE(PWM_LEDC),
-    ITEM_TYPE(Custom),
+const std::unordered_map<int, std::pair<std::string, BacklightFactory::CreateFunction>>
+BacklightFactory::_type_name_function_map = {
+    ITEM_CONTROLLER(SwitchGPIO),
+    ITEM_CONTROLLER(PWM_LEDC),
+    ITEM_CONTROLLER(Custom),
 };
 
-std::shared_ptr<Backlight> BacklightFactory::create(Type type, const void *config)
+std::shared_ptr<Backlight> BacklightFactory::create(int type, const void *config)
 {
-    ESP_UTILS_LOGD("Param: type(%d[%s]), config(@%p)", type, getTypeString(type).c_str(), config);
-    ESP_UTILS_CHECK_FALSE_RETURN(config != nullptr, nullptr, "Invalid config");
+    ESP_UTILS_LOGD("Param: name(%d), config(@%p)", type, &config);
 
-    std::shared_ptr<Backlight> backlight = nullptr;
-    switch (type) {
-        CASE_TYPE(SwitchGPIO);
-        CASE_TYPE(PWM_LEDC);
-        CASE_TYPE(Custom);
-    default:
-        ESP_UTILS_CHECK_FALSE_RETURN(false, nullptr, "Unknown type");
-    }
+    auto it = _type_name_function_map.find(type);
+    ESP_UTILS_CHECK_FALSE_RETURN(it != _type_name_function_map.end(), nullptr, "Unsupported type: %d", type);
 
-    return backlight;
-}
+    std::shared_ptr<Backlight> device = it->second.second(config);
+    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device(%s) failed", it->second.first.c_str());
 
-std::string BacklightFactory::getTypeString(Type type)
-{
-    auto it = _type_name_map.find(type);
-    if (it == _type_name_map.end()) {
-        return "Unknown";
-    }
-
-    return it->second;
+    return device;
 }
 
 } // namespace esp_panel::drivers

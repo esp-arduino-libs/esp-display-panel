@@ -29,7 +29,7 @@ bool TouchGT911::begin(void)
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsBegun(), false, "Already begun");
 
     esp_lcd_touch_io_gt911_config_t tp_gt911_config = {
-        .dev_addr = std::static_pointer_cast<Bus_I2C>(bus)->getI2cAddress(),
+        .dev_addr = std::static_pointer_cast<BusI2C>(bus)->getI2cAddress(),
     };
     touch_config.driver_data = (void *)&tp_gt911_config;
     ESP_UTILS_CHECK_ERROR_RETURN(

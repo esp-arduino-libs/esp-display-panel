@@ -162,7 +162,7 @@ bool Board::begin(void)
         // When using "3-wire SPI + RGB" LCD, the IO expander should be configured first
         if ((lcd_bus->getType() == ESP_PANEL_BUS_TYPE_RGB) && (_io_expander != nullptr)) {
             ESP_UTILS_CHECK_FALSE_RETURN(
-                static_cast<drivers::Bus_RGB *>(lcd_bus)->configSPI_IO_Expander(getIO_Expander()->getDeviceHandle()),
+                static_cast<drivers::BusRGB *>(lcd_bus)->configSPI_IO_Expander(getIO_Expander()->getDeviceHandle()),
                 false, "\"3-wire SPI + RGB \" LCD bus config IO expander failed"
             );
         }

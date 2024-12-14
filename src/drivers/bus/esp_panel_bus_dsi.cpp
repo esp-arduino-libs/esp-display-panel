@@ -14,7 +14,7 @@
 
 namespace esp_panel::drivers {
 
-Bus_DSI::~Bus_DSI()
+BusDSI::~BusDSI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -23,7 +23,7 @@ Bus_DSI::~Bus_DSI()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_DSI::configDpiFrameBufferNumber(uint8_t num)
+void BusDSI::configDpiFrameBufferNumber(uint8_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -35,13 +35,13 @@ void Bus_DSI::configDpiFrameBufferNumber(uint8_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool Bus_DSI::init(void)
+bool BusDSI::init(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
 
-    _host = BusHost_DSI::getInstance(_host_config.bus_id, _host_config);
+    _host = HostDSI::getInstance(_host_config.bus_id, _host_config);
     ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get DSI host(%d) instance failed", _host_config.bus_id);
     ESP_UTILS_LOGD("Get DSI host(%d) instance", _host_config.bus_id);
 
@@ -52,7 +52,7 @@ bool Bus_DSI::init(void)
     return true;
 }
 
-bool Bus_DSI::begin(void)
+bool BusDSI::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -86,7 +86,7 @@ bool Bus_DSI::begin(void)
     return true;
 }
 
-bool Bus_DSI::del(void)
+bool BusDSI::del(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -97,7 +97,7 @@ bool Bus_DSI::del(void)
     if (_host != nullptr) {
         _host = nullptr;
         ESP_UTILS_CHECK_FALSE_RETURN(
-            BusHost_DSI::tryReleaseInstance(_host_config.bus_id), false, "Release DSI host(%d) failed",
+            HostDSI::tryReleaseInstance(_host_config.bus_id), false, "Release DSI host(%d) failed",
             _host_config.bus_id
         );
     }
@@ -115,8 +115,8 @@ bool Bus_DSI::del(void)
     return true;
 }
 
-/* Implement the function here to avoid error: invalid use of incomplete type `BusHost_DSI` */
-esp_lcd_dsi_bus_handle_t Bus_DSI::getDSI_Handle(void)
+/* Implement the function here to avoid error: invalid use of incomplete type `HostDSI` */
+esp_lcd_dsi_bus_handle_t BusDSI::getDSI_Handle(void)
 {
     return (_host == nullptr) ? nullptr : _host->getHandle();
 }

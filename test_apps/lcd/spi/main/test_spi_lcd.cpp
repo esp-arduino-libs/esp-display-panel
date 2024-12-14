@@ -100,13 +100,12 @@ static shared_ptr<ESP_PanelBacklight> init_backlight(void)
 #endif
 }
 
-static shared_ptr<ESP_PanelBus_SPI> init_panel_bus(void)
+static shared_ptr<ESP_PanelBusSPI> init_panel_bus(void)
 {
     ESP_LOGI(TAG, "Create LCD bus");
-    shared_ptr<ESP_PanelBus_SPI> panel_bus = make_shared<ESP_PanelBus_SPI>(
-                TEST_LCD_PIN_NUM_SPI_CS, TEST_LCD_PIN_NUM_SPI_DC, TEST_LCD_PIN_NUM_SPI_SCK,
-                TEST_LCD_PIN_NUM_SPI_MOSI, TEST_LCD_PIN_NUM_SPI_MISO
-            );
+    shared_ptr<ESP_PanelBusSPI> panel_bus = make_shared<ESP_PanelBusSPI>(
+            TEST_LCD_PIN_NUM_SPI_CS, TEST_LCD_PIN_NUM_SPI_DC, TEST_LCD_PIN_NUM_SPI_SCK,
+            TEST_LCD_PIN_NUM_SPI_MOSI, TEST_LCD_PIN_NUM_SPI_MISO);
     TEST_ASSERT_NOT_NULL_MESSAGE(panel_bus, "Create panel bus object failed");
 
     panel_bus->configSpiFreqHz(TEST_LCD_SPI_FREQ_HZ);
@@ -162,7 +161,7 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
     TEST_CASE("Test LCD (" #name ") to draw color bar", "[spi_lcd][" #name "]") \
     { \
         shared_ptr<ESP_PanelBacklight> backlight = init_backlight(); \
-        shared_ptr<ESP_PanelBus_SPI> panel_bus = init_panel_bus(); \
+        shared_ptr<ESP_PanelBusSPI> panel_bus = init_panel_bus(); \
         shared_ptr<ESP_PanelLcd> lcd = CREATE_LCD(name, panel_bus.get()); \
         run_test(lcd); \
     }

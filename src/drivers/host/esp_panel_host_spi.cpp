@@ -9,7 +9,7 @@
 
 namespace esp_panel::drivers {
 
-BusHost_SPI::~BusHost_SPI()
+HostSPI::~HostSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -31,7 +31,7 @@ end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool BusHost_SPI::begin(void)
+bool HostSPI::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -56,7 +56,7 @@ end:
     return true;
 }
 
-bool BusHost_SPI::calibrateConfig(const spi_bus_config_t &config)
+bool HostSPI::calibrateConfig(const spi_bus_config_t &config)
 {
     spi_bus_config_t temp_config = config;
 

@@ -34,7 +34,7 @@ public:
     }
 
 public:
-    std::shared_ptr<BusHost_I2C> _host = nullptr;
+    std::shared_ptr<HostI2C> _host = nullptr;
 };
 
 template <class T>
@@ -56,7 +56,7 @@ bool IO_ExpanderAdapter<T>::init(void)
 
     if (!this->IO_Expander::checkIsSkipInitHost()) {
         int host_id = static_cast<int>(this->getHostID());
-        _host = BusHost_I2C::getInstance(host_id, this->getHostConfig());
+        _host = HostI2C::getInstance(host_id, this->getHostConfig());
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get I2C host(%d) instance failed", host_id);
         ESP_UTILS_LOGD("Get I2C host(%d) instance", host_id);
     }
@@ -99,7 +99,7 @@ bool IO_ExpanderAdapter<T>::del(void)
             _host = nullptr;
             int host_id = static_cast<int>(this->getHostID());
             ESP_UTILS_CHECK_FALSE_RETURN(
-                BusHost_I2C::tryReleaseInstance(host_id), false, "Release I2C host(%d) failed", host_id
+                HostI2C::tryReleaseInstance(host_id), false, "Release I2C host(%d) failed", host_id
             );
         }
     }

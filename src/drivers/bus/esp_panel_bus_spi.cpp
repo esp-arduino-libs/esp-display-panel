@@ -10,7 +10,7 @@
 
 namespace esp_panel::drivers {
 
-Bus_SPI::~Bus_SPI()
+BusSPI::~BusSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -19,7 +19,7 @@ Bus_SPI::~Bus_SPI()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_SPI::configSpiMode(uint8_t mode)
+void BusSPI::configSpiMode(uint8_t mode)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -31,7 +31,7 @@ void Bus_SPI::configSpiMode(uint8_t mode)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_SPI::configSpiFreqHz(uint32_t hz)
+void BusSPI::configSpiFreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -43,7 +43,7 @@ void Bus_SPI::configSpiFreqHz(uint32_t hz)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_SPI::configSpiCommandBits(uint32_t num)
+void BusSPI::configSpiCommandBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -55,7 +55,7 @@ void Bus_SPI::configSpiCommandBits(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_SPI::configSpiParamBits(uint32_t num)
+void BusSPI::configSpiParamBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -67,7 +67,7 @@ void Bus_SPI::configSpiParamBits(uint32_t num)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void Bus_SPI::configSpiTransQueueDepth(uint8_t depth)
+void BusSPI::configSpiTransQueueDepth(uint8_t depth)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -79,14 +79,14 @@ void Bus_SPI::configSpiTransQueueDepth(uint8_t depth)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool Bus_SPI::init(void)
+bool BusSPI::init(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
 
     if (!_flags.skip_init_host) {
-        _host = BusHost_SPI::getInstance(_host_id, _host_config);
+        _host = HostSPI::getInstance(_host_id, _host_config);
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get SPI host(%d) instance failed", _host_id);
         ESP_UTILS_LOGD("Get SPI host(%d) instance", _host_id);
     }
@@ -98,7 +98,7 @@ bool Bus_SPI::init(void)
     return true;
 }
 
-bool Bus_SPI::begin(void)
+bool BusSPI::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -124,7 +124,7 @@ bool Bus_SPI::begin(void)
     return true;
 }
 
-bool Bus_SPI::del(void)
+bool BusSPI::del(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -136,7 +136,7 @@ bool Bus_SPI::del(void)
         if (_host != nullptr) {
             _host = nullptr;
             ESP_UTILS_CHECK_FALSE_RETURN(
-                BusHost_SPI::tryReleaseInstance(_host_id), false, "Release SPI host(%d) failed", _host_id
+                HostSPI::tryReleaseInstance(_host_id), false, "Release SPI host(%d) failed", _host_id
             );
         }
         _flags.is_init = false;

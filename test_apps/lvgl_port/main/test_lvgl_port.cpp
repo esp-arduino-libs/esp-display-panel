@@ -34,10 +34,10 @@ TEST_CASE("Test panel lvgl port to show demo", "[panel][lvgl]")
     // When avoid tearing function is enabled, configure the bus according to the LVGL configuration
     ESP_PanelBus *lcd_bus = panel->getLcd()->getBus();
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
-    static_cast<ESP_PanelBus_RGB *>(lcd_bus)->configRgbBounceBufferSize(LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE);
-    static_cast<ESP_PanelBus_RGB *>(lcd_bus)->configRgbFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);
+    static_cast<ESP_PanelBusRGB *>(lcd_bus)->configRgbBounceBufferSize(LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE);
+    static_cast<ESP_PanelBusRGB *>(lcd_bus)->configRgbFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);
 #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
-    static_cast<ESP_PanelBus_DSI *>(lcd_bus)->configDpiFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);
+    static_cast<ESP_PanelBusDSI *>(lcd_bus)->configDpiFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);
 #endif
 #endif
     TEST_ASSERT_TRUE_MESSAGE(panel->begin(), "Panel begin failed");

@@ -9,7 +9,7 @@
 
 namespace esp_panel::drivers {
 
-BusHost_I2C::~BusHost_I2C()
+HostI2C::~HostI2C()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -31,7 +31,7 @@ end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool BusHost_I2C::begin(void)
+bool HostI2C::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -58,7 +58,7 @@ end:
     return true;
 }
 
-bool BusHost_I2C::calibrateConfig(const i2c_config_t &config)
+bool HostI2C::calibrateConfig(const i2c_config_t &config)
 {
     if (memcmp(&config, &this->config, sizeof(i2c_config_t))) {
         ESP_UTILS_LOGD(

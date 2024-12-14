@@ -75,7 +75,7 @@ bool LCD::configMirrorByCommand(bool en)
     ESP_UTILS_CHECK_FALSE_RETURN(checkBusIsValid(), false, "Invalid bus");
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "This function should be called before `init()`");
     ESP_UTILS_CHECK_FALSE_RETURN(
-        (bus->getType() == ESP_PANEL_BUS_TYPE_RGB) && (std::static_pointer_cast<Bus_RGB>(bus)->checkUseSPI_Interface()), false,
+        (bus->getType() == ESP_PANEL_BUS_TYPE_RGB) && (std::static_pointer_cast<BusRGB>(bus)->checkUseSPI_Interface()), false,
         "This function is only for \"3-wire SPI + RGB\" interface"
     );
 
@@ -98,7 +98,7 @@ bool LCD::configEnableIO_Multiplex(bool en)
     ESP_UTILS_CHECK_FALSE_RETURN(checkBusIsValid(), false, "Invalid bus");
     ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "This function should be called before `init()`");
     ESP_UTILS_CHECK_FALSE_RETURN(
-        (bus->getType() == ESP_PANEL_BUS_TYPE_RGB) && (std::static_pointer_cast<Bus_RGB>(bus)->checkUseSPI_Interface()), false,
+        (bus->getType() == ESP_PANEL_BUS_TYPE_RGB) && (std::static_pointer_cast<BusRGB>(bus)->checkUseSPI_Interface()), false,
         "This function is only for \"3-wire SPI + RGB\" interface"
     );
 
@@ -144,7 +144,7 @@ bool LCD::begin(void)
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
         rgb_event_cb.on_frame_buf_complete = (esp_lcd_rgb_panel_frame_buf_complete_cb_t)onRefreshFinish;
 #else
-        const esp_lcd_rgb_panel_config_t *rgb_config = std::static_pointer_cast<Bus_RGB>(bus)->getPanelConfig();
+        const esp_lcd_rgb_panel_config_t *rgb_config = std::static_pointer_cast<BusRGB>(bus)->getPanelConfig();
         if (rgb_config->bounce_buffer_size_px == 0) {
             // When bounce buffer is disabled, use `on_vsync` callback to notify draw bitmap finish
             rgb_event_cb.on_vsync = (esp_lcd_rgb_panel_vsync_cb_t)onRefreshFinish;
@@ -588,7 +588,7 @@ int LCD::getColorBits(void)
     switch (bus->getType()) {
 #if SOC_LCD_RGB_SUPPORTED
     case ESP_PANEL_BUS_TYPE_RGB: {
-        const esp_lcd_rgb_panel_config_t *rgb_config = std::static_pointer_cast<Bus_RGB>(bus)->getPanelConfig();
+        const esp_lcd_rgb_panel_config_t *rgb_config = std::static_pointer_cast<BusRGB>(bus)->getPanelConfig();
         ESP_UTILS_CHECK_NULL_RETURN(rgb_config, -1, "Invalid RGB config");
         bits_per_pixel = rgb_config->bits_per_pixel;
         break;
@@ -596,7 +596,7 @@ int LCD::getColorBits(void)
 #endif // SOC_LCD_RGB_SUPPORTED
 #if SOC_MIPI_DSI_SUPPORTED
     case ESP_PANEL_BUS_TYPE_MIPI_DSI: {
-        const esp_lcd_dpi_panel_config_t *dpi_config = std::static_pointer_cast<Bus_DSI>(bus)->getPanelConfig();
+        const esp_lcd_dpi_panel_config_t *dpi_config = std::static_pointer_cast<BusDSI>(bus)->getPanelConfig();
         ESP_UTILS_CHECK_NULL_RETURN(dpi_config, -1, "Invalid MIPI DPI config");
         switch (dpi_config->pixel_format) {
         case LCD_COLOR_PIXEL_FORMAT_RGB565:
@@ -657,7 +657,7 @@ void *LCD::getFrameBufferByIndex(uint8_t index)
     default:
         ESP_UTILS_CHECK_FALSE_RETURN(
             false, nullptr, "The Bus(%d[%s]) doesn't support this function", bus_type,
-            BusFactory::getTypeString(bus_type).c_str()
+            BusFactory::getTypeNameString(bus_type).c_str()
         );
         break;
     }
@@ -686,7 +686,7 @@ bool LCD::loadVendorConfigFromBus(void)
     /* Retrieve RGB configuration from the bus and register it into the vendor configuration */
     case ESP_PANEL_BUS_TYPE_RGB:
         vendor_config.flags.use_rgb_interface = 1;
-        vendor_config.rgb_config = std::static_pointer_cast<Bus_RGB>(bus)->getPanelConfig();
+        vendor_config.rgb_config = std::static_pointer_cast<BusRGB>(bus)->getPanelConfig();
         break;
 #endif
 #if SOC_MIPI_DSI_SUPPORTED
@@ -694,16 +694,16 @@ bool LCD::loadVendorConfigFromBus(void)
     case ESP_PANEL_BUS_TYPE_MIPI_DSI:
         vendor_config.flags.use_mipi_interface = 1;
         vendor_config.mipi_config = {
-            .lane_num = std::static_pointer_cast<Bus_DSI>(bus)->getHostConfig()->num_data_lanes,
-            .dsi_bus = std::static_pointer_cast<Bus_DSI>(bus)->getDSI_Handle(),
-            .dpi_config = std::static_pointer_cast<Bus_DSI>(bus)->getPanelConfig(),
+            .lane_num = std::static_pointer_cast<BusDSI>(bus)->getHostConfig()->num_data_lanes,
+            .dsi_bus = std::static_pointer_cast<BusDSI>(bus)->getDSI_Handle(),
+            .dpi_config = std::static_pointer_cast<BusDSI>(bus)->getPanelConfig(),
         };
         break;
 #endif
     default:
         ESP_UTILS_CHECK_FALSE_RETURN(
             false, false, "The Bus(%d[%s]) doesn't support this function", bus_type,
-            BusFactory::getTypeString(bus_type).c_str()
+            BusFactory::getTypeNameString(bus_type).c_str()
         );
         break;
     }

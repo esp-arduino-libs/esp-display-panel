@@ -6,6 +6,7 @@
 #pragma once
 
 #include "driver/gpio.h"
+#include "esp_panel_types.h"
 #include "esp_panel_backlight_base.hpp"
 
 namespace esp_panel::drivers {
@@ -23,6 +24,7 @@ public:
      *
      */
     constexpr static Attributes ATTRIBUTES_DEFAULT = {
+        .type = ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO,
         .name = "switch(GPIO)",
     };
 

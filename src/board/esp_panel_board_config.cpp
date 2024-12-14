@@ -23,51 +23,6 @@ namespace esp_panel {
 static const esp_panel_lcd_vendor_init_cmd_t lcd_vendor_init_cmds[] = ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD();
 #endif
 
-#ifdef ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION
-static bool backlight_set_brightness(uint8_t percent, void *user_data) \
-                                            ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data)
-#endif // ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION
-static bool pre_board_begin(void *p)        ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION
-static bool pre_expander_begin(void *p)     ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION
-static bool post_expander_begin(void *p)    ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION
-static bool pre_lcd_begin(void *p)          ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION
-static bool post_lcd_begin(void *p)         ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION
-static bool pre_touch_begin(void *p)        ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION
-static bool post_touch_begin(void *p)       ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION
-static bool pre_backlight_begin(void *p)    ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION
-static bool post_backlight_begin(void *p)   ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION
-
-#ifdef ESP_PANEL_BOARD_POST_BEGIN_FUNCTION
-static bool post_board_begin(void *p)       ESP_PANEL_BOARD_POST_BEGIN_FUNCTION(p)
-#endif // ESP_PANEL_BOARD_POST_BEGIN_FUNCTION
-
 const BoardConfig BOARD_DEFAULT_CONFIG = {
 
     /* General */
@@ -79,7 +34,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     .lcd = {
         .bus_type = ESP_PANEL_BOARD_LCD_BUS_TYPE,
     #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
-        .bus_config = drivers::Bus_SPI::Config{
+        .bus_config = drivers::BusSPI::Config{
             .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
             // Host
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
@@ -101,7 +56,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .use_complete_io_config = false,
         },
     #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_QSPI
-        .bus_config = drivers::Bus_QSPI::Config{
+        .bus_config = drivers::BusQSPI::Config{
             .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Host
@@ -121,7 +76,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .skip_init_host = ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST,
         },
     #elif (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB) && SOC_LCD_RGB_SUPPORTED
-        .bus_config = drivers::Bus_RGB::Config{
+        .bus_config = drivers::BusRGB::Config{
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // 3-wire SPI
             .cs_io_type = ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
@@ -168,7 +123,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .use_spi_interface = !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST,
         },
     #elif (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI) && SOC_MIPI_DSI_SUPPORTED
-        .bus_config = drivers::Bus_DSI::Config{
+        .bus_config = drivers::BusDSI::Config{
             // Host
             .host_num_data_lanes = ESP_PANEL_BOARD_LCD_MIPI_DSI_LANE_NUM,
             .host_lane_bit_rate_mbps = ESP_PANEL_BOARD_LCD_MIPI_DSI_LANE_RATE_MBPS,
@@ -224,7 +179,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     .touch = {
         .bus_type = ESP_PANEL_BOARD_TOUCH_BUS_TYPE,
     #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
-        .bus_config = drivers::Bus_I2C::Config{
+        .bus_config = drivers::BusI2C::Config{
             .host_id = ESP_PANEL_BOARD_TOUCH_BUS_HOST_ID,
             // Host
         #if !ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
@@ -244,7 +199,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
             .skip_init_host = ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST,
         },
     #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
-        .bus_config = drivers::Bus_SPI::Config{
+        .bus_config = drivers::BusSPI::Config{
             .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
             // Host
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
@@ -285,7 +240,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     /* Backlight */
 #if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
     .backlight = {
-        .type = static_cast<drivers::BacklightFactory::Type>(ESP_PANEL_BOARD_BACKLIGHT_TYPE),
+        .type = ESP_PANEL_BOARD_BACKLIGHT_TYPE,
     #if ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO
         .config = drivers::BacklightSwitchGPIO::Config{
             .io_num = ESP_PANEL_BOARD_BACKLIGHT_IO,
@@ -298,7 +253,7 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
         },
     #elif ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
         .config = drivers::BacklightCustom::Config{
-            .callback = backlight_set_brightness,
+            .callback = [](uint8_t percent, void *user_data) ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data),
             .user_data = nullptr,
         },
     #endif // ESP_PANEL_BOARD_BACKLIGHT_TYPE
@@ -333,34 +288,34 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
     /* Others */
     .callbacks = {
 #ifdef ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION
-        .pre_board_begin = pre_board_begin,
+        .pre_board_begin = [](void *p) ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_POST_BEGIN_FUNCTION
-        .post_board_begin = post_board_begin,
+        .post_board_begin = [](void *p) ESP_PANEL_BOARD_POST_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_POST_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION
-        .pre_expander_begin = pre_expander_begin,
+        .pre_expander_begin = [](void *p) ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION
-        .post_expander_begin = post_expander_begin,
+        .post_expander_begin = [](void *p) ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION
-        .pre_lcd_begin = pre_lcd_begin,
+        .pre_lcd_begin = [](void *p) ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION
-        .post_lcd_begin = post_lcd_begin,
+        .post_lcd_begin = [](void *p) ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION
-        .pre_touch_begin = pre_touch_begin,
+        .pre_touch_begin = [](void *p) ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION
-        .post_touch_begin = post_touch_begin,
+        .post_touch_begin = [](void *p) ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION
-        .pre_backlight_begin = pre_backlight_begin,
+        .pre_backlight_begin = [](void *p) ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION
 #ifdef ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION
-        .post_backlight_begin = post_backlight_begin,
+        .post_backlight_begin = [](void *p) ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION(p),
 #endif // ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION
     },
     .flags = {

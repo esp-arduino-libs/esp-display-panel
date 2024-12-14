@@ -84,7 +84,7 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 #define CREATE_TOUCH_BUS(name) \
     ({ \
         ESP_LOGI(TAG, "Create touch bus"); \
-        shared_ptr<ESP_PanelBus_I2C> touch_bus = make_shared<ESP_PanelBus_I2C>( \
+        shared_ptr<ESP_PanelBusI2C> touch_bus = make_shared<ESP_PanelBusI2C>( \
             TEST_TOUCH_PIN_NUM_I2C_SCL, TEST_TOUCH_PIN_NUM_I2C_SDA, \
             (esp_lcd_panel_io_i2c_config_t)ESP_PANEL_BOARD_TOUCH_I2C_PANEL_IO_CONFIG(name) \
                 ); \
@@ -105,7 +105,7 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 #define CREATE_TEST_CASE(name) \
     TEST_CASE("Test touch (" #name ") to draw color bar", "[i2c_touch][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBus_I2C> touch_bus = CREATE_TOUCH_BUS(name); \
+        shared_ptr<ESP_PanelBusI2C> touch_bus = CREATE_TOUCH_BUS(name); \
         shared_ptr<ESP_PanelTouch> touch_device = CREATE_TOUCH(name, touch_bus.get()); \
         run_test(touch_device); \
     }

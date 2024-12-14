@@ -15,21 +15,21 @@ namespace esp_panel::drivers {
  * @brief The I2C bus host class
  *
  */
-class BusHost_I2C : public BusHost<BusHost_I2C, i2c_config_t, static_cast<int>(I2C_NUM_MAX)> {
+class HostI2C : public Host<HostI2C, i2c_config_t, static_cast<int>(I2C_NUM_MAX)> {
 public:
     /* Add friend class to allow them to access the private member */
-    // To access `BusHost_I2C()`
+    // To access `HostI2C()`
     template <typename U>
     friend struct esp_utils::GeneralMemoryAllocator;
     // To accdess `del()`, `calibrateConfig()`
     template <class Instance, typename Config, int N>
-    friend class BusHost;
+    friend class Host;
 
     /**
      * @brief Destroy the host
      *
      */
-    ~BusHost_I2C() override;
+    ~HostI2C() override;
 
     /**
      * @brief Startup the host
@@ -41,8 +41,8 @@ public:
 
 private:
     /* Make constructor private to prevent users from constructing it directly */
-    BusHost_I2C(int id, const i2c_config_t &config):
-        BusHost<BusHost_I2C, i2c_config_t, static_cast<int>(I2C_NUM_MAX)>(id, config) {}
+    HostI2C(int id, const i2c_config_t &config):
+        Host<HostI2C, i2c_config_t, static_cast<int>(I2C_NUM_MAX)>(id, config) {}
 
     /**
      * @brief Calibrate the configuration when the host is already exist
