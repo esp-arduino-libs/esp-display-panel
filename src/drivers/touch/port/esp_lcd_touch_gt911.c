@@ -20,6 +20,7 @@
 #include "esp_lcd_touch_gt911.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 
 static const char *TAG = "GT911";
 

@@ -22,6 +22,7 @@
 #include "esp_lcd_ili9881c.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define ILI9881C_CMD_CNDBKxSEL                (0xFF)

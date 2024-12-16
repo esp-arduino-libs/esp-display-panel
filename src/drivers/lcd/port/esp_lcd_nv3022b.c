@@ -22,6 +22,7 @@
 #include "esp_lcd_nv3022b.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 static const char *TAG = "lcd_panel.nv3022b";

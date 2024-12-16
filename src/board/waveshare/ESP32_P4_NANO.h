@@ -30,7 +30,6 @@
  * It is useful if other devices use the same host. Please ensure that the host is initialized only once.
  *
  * Note: This macro is not useful for the MIPI-DSI bus.
- *
  */
 #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST    (0)     // 0/1
 /**
@@ -42,7 +41,6 @@
  *
  * Please refer to https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/lcd.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
 
@@ -50,7 +48,7 @@
     #define ESP_PANEL_BOARD_LCD_MIPI_DSI_LANE_RATE_MBPS   (1000)  // Single lane bit rate, should consult the LCD supplier or check the
                                                             // LCD drive IC datasheet for the supported lane rate.
                                                             // ESP32-P4 supports max 1500Mbps
-    #define ESP_PANEL_BOARD_LCD_MIPI_DSI_PHY_LDO_ID       (3)     // -1 if not used
+    #define ESP_PANEL_BOARD_LCD_MIPI_PHY_LDO_ID       (3)     // -1 if not used
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_CLK_MHZ          (60)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_PIXEL_BITS       (ESP_PANEL_LCD_COLOR_BITS_RGB565)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_HPW              (20)
@@ -214,7 +212,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. Even if the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 0
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 3

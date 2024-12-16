@@ -29,6 +29,7 @@
 #include "esp_lcd_st77903_rgb.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define ST77903_CMD_BPC             (0xB5)

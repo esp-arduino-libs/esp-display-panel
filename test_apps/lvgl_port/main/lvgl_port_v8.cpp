@@ -75,7 +75,6 @@ static inline void copy_pixel_24bpp(uint8_t *to, const uint8_t *from)
  *
  * @note  ESP32-P4 1024x600 full-screen: 738ms -> 34ms
  * @note  ESP32-S3 480x480  full-screen: 380ms -> 37ms
- *
  */
 #define ROTATE_90_OPTIMIZED_16BPP(block_w, block_h) \
     { \
@@ -232,7 +231,6 @@ typedef enum {
  * @brief Probe dirty area to copy
  *
  * @note This function is used to avoid tearing effect, and only work with LVGL direct-mode.
- *
  */
 static lv_port_flush_probe_t flush_copy_probe(lv_disp_drv_t *drv)
 {
@@ -276,7 +274,6 @@ static inline void *flush_get_next_buf(ESP_PanelLcd *lcd)
  * @brief Copy dirty area
  *
  * @note This function is used to avoid tearing effect, and only work with LVGL direct-mode.
- *
  */
 static void flush_dirty_copy(void *dst, void *src, lv_port_dirty_area_t *dirty_area)
 {

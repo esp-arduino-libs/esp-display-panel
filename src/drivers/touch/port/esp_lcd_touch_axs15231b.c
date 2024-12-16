@@ -19,6 +19,7 @@
 #include "esp_lcd_touch_axs15231b.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 
 /*max point num*/
 #define AXS_MAX_TOUCH_NUMBER                (1)

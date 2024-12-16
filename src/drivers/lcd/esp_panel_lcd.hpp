@@ -1,12 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
 
-#include <memory>
 #include <unordered_map>
+#include <memory>
 #include <string>
 #include "drivers/bus/esp_panel_bus_base.hpp"
 #include "esp_panel_lcd_base.hpp"
@@ -37,15 +37,25 @@ namespace esp_panel::drivers {
 
 class LCD_Factory {
 public:
-    using CreateFunction = std::shared_ptr<LCD> (*)(std::shared_ptr<Bus> bus, const LCD::Config &config);
+    /**
+     * @brief The constructor function to create the LCD device
+     */
+    using FunctionDeviceConstructor = std::shared_ptr<LCD> (*)(std::shared_ptr<Bus> bus, const LCD::Config &config);
 
     LCD_Factory() = default;
     ~LCD_Factory() = default;
 
+    /**
+     * @brief Create a new LCD device with configuration.
+     *
+     * @param config The LCD configuration
+     *
+     * @return The shared pointer to the device if success, otherwise return `nullptr`
+     */
     static std::shared_ptr<LCD> create(std::string name, std::shared_ptr<Bus> bus, const LCD::Config &config);
 
 private:
-    static const std::unordered_map<std::string, CreateFunction> _name_function_map;
+    static const std::unordered_map<std::string, FunctionDeviceConstructor> _name_function_map;
 };
 
 } // namespace esp_panel::drivers

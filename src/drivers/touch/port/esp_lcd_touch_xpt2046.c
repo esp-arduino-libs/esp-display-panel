@@ -21,6 +21,7 @@
 #include "sdkconfig.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_touch_xpt2046.h"
 
 static const char *TAG = "xpt2046";

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -30,13 +30,11 @@ class ESP_Panel {
 public:
     /**
      * @brief Construct a new panel device
-     *
      */
     ESP_Panel();
 
     /**
      * @brief Destroy the panel device
-     *
      */
     ~ESP_Panel();
 
@@ -44,7 +42,6 @@ public:
      * @brief Configure the IO expander from the outside. This function should be called before `init()`
      *
      * @param expander Pointer of IO expander
-     *
      */
     void configExpander(ESP_IOExpander *expander);
 
@@ -75,7 +72,6 @@ public:
 
     /**
      * @brief Here are the functions to get the pointer of each device
-     *
      */
     ESP_PanelLcd *getLcd(void);
     ESP_PanelTouch *getTouch(void);
@@ -84,7 +80,6 @@ public:
 
     /**
      * @brief Here are the functions to get the some parameters of the devices
-     *
      */
     uint16_t getLcdWidth(void)
     {

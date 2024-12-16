@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,6 +15,341 @@
 
 namespace esp_panel::drivers {
 
+void BusRGB::Config::convertPartialToFull()
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (use_control_panel && std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+        printControlPanelConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+        auto &config = std::get<ControlPanelPartialConfig>(control_panel);
+        control_panel =  ControlPanelFullConfig{
+            .line_config = {
+                .cs_io_type = static_cast<panel_io_type_t>(config.cs_io_type),
+                .cs_gpio_num = config.cs_gpio_num,
+                .scl_io_type = static_cast<panel_io_type_t>(config.scl_io_type),
+                .scl_gpio_num = config.scl_gpio_num,
+                .sda_io_type = static_cast<panel_io_type_t>(config.sda_io_type),
+                .sda_gpio_num = config.sda_gpio_num,
+            },
+            .expect_clk_speed = PANEL_IO_SPI_CLK_MAX,
+            .spi_mode = static_cast<uint32_t>(config.flags_scl_active_falling_edge ? 1 : 0),
+            .lcd_cmd_bytes = 1,
+            .lcd_param_bytes = 1,
+            .flags = {
+                .use_dc_bit = 1,
+                .dc_zero_on_data = 0,
+                .lsb_first = 0,
+                .cs_high_active = 0,
+                .del_keep_cs_inactive = 1,
+            },
+        };
+    }
+
+    if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+        printRefreshPanelConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+        auto &config = std::get<RefreshPanelPartialConfig>(refresh_panel);
+        refresh_panel = RefreshPanelFullConfig{
+            .clk_src = LCD_CLK_SRC_DEFAULT,
+            .timings = {
+                .pclk_hz = static_cast<uint32_t>(config.pclk_hz),
+                .h_res = static_cast<uint32_t>(config.h_res),
+                .v_res = static_cast<uint32_t>(config.v_res),
+                .hsync_pulse_width = static_cast<uint32_t>(config.hsync_pulse_width),
+                .hsync_back_porch = static_cast<uint32_t>(config.hsync_back_porch),
+                .hsync_front_porch = static_cast<uint32_t>(config.hsync_front_porch),
+                .vsync_pulse_width = static_cast<uint32_t>(config.vsync_pulse_width),
+                .vsync_back_porch = static_cast<uint32_t>(config.vsync_back_porch),
+                .vsync_front_porch = static_cast<uint32_t>(config.vsync_front_porch),
+                .flags = {
+                    .hsync_idle_low = 0,
+                    .vsync_idle_low = 0,
+                    .de_idle_high = 0,
+                    .pclk_active_neg = config.flags_pclk_active_neg,
+                    .pclk_idle_high = 0,
+                },
+            },
+            .data_width = static_cast<size_t>(config.data_width),
+            .bits_per_pixel = static_cast<size_t>(config.bits_per_pixel),
+            .num_fbs = 1,
+            .bounce_buffer_size_px = static_cast<size_t>(config.bounce_buffer_size_px),
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+            .dma_burst_size = 64,
+#else
+            .sram_trans_align = 4,
+            .psram_trans_align = 64,
+#endif // ESP_IDF_VERSION
+            .hsync_gpio_num = config.hsync_gpio_num,
+            .vsync_gpio_num = config.vsync_gpio_num,
+            .de_gpio_num = config.de_gpio_num,
+            .pclk_gpio_num = config.pclk_gpio_num,
+            .disp_gpio_num = config.disp_gpio_num,
+            .data_gpio_nums = {
+                config.data_gpio_nums[0], config.data_gpio_nums[1],
+                config.data_gpio_nums[2], config.data_gpio_nums[3],
+                config.data_gpio_nums[4], config.data_gpio_nums[5],
+                config.data_gpio_nums[6], config.data_gpio_nums[7],
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+                config.data_gpio_nums[8], config.data_gpio_nums[9],
+                config.data_gpio_nums[10], config.data_gpio_nums[11],
+                config.data_gpio_nums[12], config.data_gpio_nums[13],
+                config.data_gpio_nums[14], config.data_gpio_nums[15],
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+            },
+            .flags = {
+                .disp_active_low = 0,
+                .refresh_on_demand = 0,
+                .fb_in_psram = 1,
+                .double_fb = 0,
+                .no_fb = 0,
+                .bb_invalidate_cache = 0,
+            },
+        };
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+void BusRGB::Config::printControlPanelConfig() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (std::holds_alternative<ControlPanelFullConfig>(control_panel)) {
+        auto &config = std::get<ControlPanelFullConfig>(control_panel);
+        ESP_UTILS_LOGI(
+            "\n\t{Full control panel config}"
+            "\n\t\t-> {line_config}"
+            "\n\t\t\t-> [cs_io_type]: %d"
+            "\n\t\t\t-> [cs_gpio_num]: %d"
+            "\n\t\t\t-> [scl_io_type]: %d"
+            "\n\t\t\t-> [scl_gpio_num]: %d"
+            "\n\t\t\t-> [sda_io_type]: %d"
+            "\n\t\t\t-> [sda_gpio_num]: %d"
+            , static_cast<int>(config.line_config.cs_io_type)
+            , config.line_config.cs_gpio_num
+            , static_cast<int>(config.line_config.scl_io_type)
+            , config.line_config.scl_gpio_num
+            , static_cast<int>(config.line_config.sda_io_type)
+            , config.line_config.sda_gpio_num
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> [expect_clk_speed]: %d"
+            "\n\t\t-> [spi_mode]: %d"
+            "\n\t\t-> [lcd_cmd_bytes]: %d"
+            "\n\t\t-> [lcd_param_bytes]: %d"
+            , config.expect_clk_speed
+            , config.spi_mode
+            , config.lcd_cmd_bytes
+            , config.lcd_param_bytes
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> {flags}"
+            "\n\t\t\t-> [use_dc_bit]: %d"
+            "\n\t\t\t-> [dc_zero_on_data]: %d"
+            "\n\t\t\t-> [lsb_first]: %d"
+            "\n\t\t\t-> [cs_high_active]: %d"
+            "\n\t\t\t-> [del_keep_cs_inactive]: %d"
+            , config.flags.use_dc_bit
+            , config.flags.dc_zero_on_data
+            , config.flags.lsb_first
+            , config.flags.cs_high_active
+            , config.flags.del_keep_cs_inactive
+        );
+    } else {
+        auto &config = std::get<ControlPanelPartialConfig>(control_panel);
+        ESP_UTILS_LOGI(
+            "\n\t{Partial control panel config}"
+            "\n\t\t-> [cs_io_type]: %d"
+            "\n\t\t-> [cs_gpio_num]: %d"
+            "\n\t\t-> [scl_io_type]: %d"
+            "\n\t\t-> [scl_gpio_num]: %d"
+            "\n\t\t-> [sda_io_type]: %d"
+            "\n\t\t-> [sda_gpio_num]: %d"
+            "\n\t\t-> [flags_scl_active_falling_edge]: %d"
+            , config.cs_io_type
+            , config.cs_gpio_num
+            , config.scl_io_type
+            , config.scl_gpio_num
+            , config.sda_io_type
+            , config.sda_gpio_num
+            , config.flags_scl_active_falling_edge
+        );
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+void BusRGB::Config::printRefreshPanelConfig() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (std::holds_alternative<RefreshPanelFullConfig>(refresh_panel)) {
+        auto &config = std::get<RefreshPanelFullConfig>(refresh_panel);
+        ESP_UTILS_LOGI(
+            "\n\t{Full refresh panel config}"
+            "\n\t\t-> [clk_src]: %d"
+            , config.clk_src
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> {timings}"
+            "\n\t\t\t-> [pclk_hz]: %d"
+            "\n\t\t\t-> [h_res]: %d"
+            "\n\t\t\t-> [v_res]: %d"
+            "\n\t\t\t-> [hsync_pulse_width]: %d"
+            "\n\t\t\t-> [hsync_back_porch]: %d"
+            "\n\t\t\t-> [hsync_front_porch]: %d"
+            "\n\t\t\t-> [vsync_pulse_width]: %d"
+            "\n\t\t\t-> [vsync_back_porch]: %d"
+            "\n\t\t\t-> [vsync_front_porch]: %d"
+            , config.timings.pclk_hz
+            , config.timings.h_res
+            , config.timings.v_res
+            , config.timings.hsync_pulse_width
+            , config.timings.hsync_back_porch
+            , config.timings.hsync_front_porch
+            , config.timings.vsync_pulse_width
+            , config.timings.vsync_back_porch
+            , config.timings.vsync_front_porch
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t\t-> {flags}"
+            "\n\t\t\t\t-> [hsync_idle_low]: %d"
+            "\n\t\t\t\t-> [vsync_idle_low]: %d"
+            "\n\t\t\t\t-> [de_idle_high]: %d"
+            "\n\t\t\t\t-> [pclk_active_neg]: %d"
+            "\n\t\t\t\t-> [pclk_idle_high]: %d"
+            , config.timings.flags.hsync_idle_low
+            , config.timings.flags.vsync_idle_low
+            , config.timings.flags.de_idle_high
+            , config.timings.flags.pclk_active_neg
+            , config.timings.flags.pclk_idle_high
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> [data_width]: %d"
+            "\n\t\t-> [bits_per_pixel]: %d"
+            "\n\t\t-> [num_fbs]: %d"
+            "\n\t\t-> [bounce_buffer_size_px]: %d"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+            "\n\t\t-> [dma_burst_size]: %d"
+#else
+            "\n\t\t-> [sram_trans_align]: %d"
+            "\n\t\t-> [psram_trans_align]: %d"
+#endif // ESP_IDF_VERSION
+            "\n\t\t-> [hsync_gpio_num]: %d"
+            "\n\t\t-> [vsync_gpio_num]: %d"
+            "\n\t\t-> [de_gpio_num]: %d"
+            "\n\t\t-> [pclk_gpio_num]: %d"
+            "\n\t\t-> [disp_gpio_num]: %d"
+            , config.data_width
+            , config.bits_per_pixel
+            , config.num_fbs
+            , config.bounce_buffer_size_px
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+            , config.dma_burst_size
+#else
+            , config.sram_trans_align
+            , config.psram_trans_align
+#endif // ESP_IDF_VERSION
+            , config.hsync_gpio_num
+            , config.vsync_gpio_num
+            , config.de_gpio_num
+            , config.pclk_gpio_num
+            , config.disp_gpio_num
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> {data_gpio_nums}"
+            "\n\t\t\t-> [0-7]: %d, %d, %d, %d, %d, %d, %d, %d"
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+            "\n\t\t\t-> [8-15]: %d, %d, %d, %d, %d, %d, %d, %d"
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+            , config.data_gpio_nums[0], config.data_gpio_nums[1], config.data_gpio_nums[2], config.data_gpio_nums[3]
+            , config.data_gpio_nums[4], config.data_gpio_nums[5], config.data_gpio_nums[6], config.data_gpio_nums[7]
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+            , config.data_gpio_nums[8], config.data_gpio_nums[9], config.data_gpio_nums[10], config.data_gpio_nums[11]
+            , config.data_gpio_nums[12], config.data_gpio_nums[13], config.data_gpio_nums[14], config.data_gpio_nums[15]
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> {flags}"
+            "\n\t\t\t-> [disp_active_low]: %d"
+            "\n\t\t\t-> [refresh_on_demand]: %d"
+            "\n\t\t\t-> [fb_in_psram]: %d"
+            "\n\t\t\t-> [double_fb]: %d"
+            "\n\t\t\t-> [no_fb]: %d"
+            "\n\t\t\t-> [bb_invalidate_cache]: %d"
+            , config.flags.disp_active_low
+            , config.flags.refresh_on_demand
+            , config.flags.fb_in_psram
+            , config.flags.double_fb
+            , config.flags.no_fb
+            , config.flags.bb_invalidate_cache
+        );
+    } else {
+        auto &config = std::get<RefreshPanelPartialConfig>(refresh_panel);
+        ESP_UTILS_LOGI(
+            "\n\t{Partial refresh panel config}"
+            "\n\t\t-> [pclk_hz]: %d"
+            "\n\t\t-> [h_res]: %d"
+            "\n\t\t-> [v_res]: %d"
+            , config.pclk_hz
+            , config.h_res
+            , config.v_res
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> [hsync_pulse_width]: %d"
+            "\n\t\t-> [hsync_back_porch]: %d"
+            "\n\t\t-> [hsync_front_porch]: %d"
+            "\n\t\t-> [vsync_pulse_width]: %d"
+            "\n\t\t-> [vsync_back_porch]: %d"
+            "\n\t\t-> [vsync_front_porch]: %d"
+            , config.hsync_pulse_width
+            , config.hsync_back_porch
+            , config.hsync_front_porch
+            , config.vsync_pulse_width
+            , config.vsync_back_porch
+            , config.vsync_front_porch
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> [data_width]: %d"
+            "\n\t\t-> [bits_per_pixel]: %d"
+            "\n\t\t-> [bounce_buffer_size_px]: %d"
+            "\n\t\t-> [hsync_gpio_num]: %d"
+            "\n\t\t-> [vsync_gpio_num]: %d"
+            "\n\t\t-> [de_gpio_num]: %d"
+            "\n\t\t-> [pclk_gpio_num]: %d"
+            "\n\t\t-> [disp_gpio_num]: %d"
+            , config.data_width
+            , config.bits_per_pixel
+            , config.bounce_buffer_size_px
+            , config.hsync_gpio_num
+            , config.vsync_gpio_num
+            , config.de_gpio_num
+            , config.pclk_gpio_num
+            , config.disp_gpio_num
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> {data_gpio_nums}"
+            "\n\t\t\t-> [0-7]: %d, %d, %d, %d, %d, %d, %d, %d"
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+            "\n\t\t\t-> [8-15]: %d, %d, %d, %d, %d, %d, %d, %d"
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+            "\n\t\t-> [flags_pclk_active_neg]: %d"
+            , config.data_gpio_nums[0], config.data_gpio_nums[1], config.data_gpio_nums[2], config.data_gpio_nums[3]
+            , config.data_gpio_nums[4], config.data_gpio_nums[5], config.data_gpio_nums[6], config.data_gpio_nums[7]
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+            , config.data_gpio_nums[8], config.data_gpio_nums[9], config.data_gpio_nums[10], config.data_gpio_nums[11]
+            , config.data_gpio_nums[12], config.data_gpio_nums[13], config.data_gpio_nums[14], config.data_gpio_nums[15]
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+            , config.flags_pclk_active_neg
+        );
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
 BusRGB::~BusRGB()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -24,14 +359,188 @@ BusRGB::~BusRGB()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+bool BusRGB::configSPI_IO_Type(bool cs_use_expander, bool sck_use_expander, bool sda_use_expander)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+
+    ESP_UTILS_LOGD(
+        "Param: cs_use_expander(%d), sck_use_expander(%d), sda_use_expander(%d)",
+        cs_use_expander, sck_use_expander, sda_use_expander
+    );
+    auto &config = getControlPanelFullConfig();
+    if (cs_use_expander) {
+        if (config.line_config.cs_io_type == IO_TYPE_GPIO) {
+            config.line_config.cs_expander_pin = (esp_io_expander_pin_num_t)BIT(config.line_config.cs_gpio_num);
+        }
+        config.line_config.cs_io_type = IO_TYPE_EXPANDER;
+    }
+    if (sck_use_expander) {
+        if (config.line_config.scl_io_type == IO_TYPE_GPIO) {
+            config.line_config.scl_expander_pin = (esp_io_expander_pin_num_t)BIT(config.line_config.scl_gpio_num);
+        }
+        config.line_config.scl_io_type = IO_TYPE_EXPANDER;
+    }
+    if (sda_use_expander) {
+        if (config.line_config.sda_io_type == IO_TYPE_GPIO) {
+            config.line_config.sda_expander_pin = (esp_io_expander_pin_num_t)BIT(config.line_config.sda_gpio_num);
+        }
+        config.line_config.sda_io_type = IO_TYPE_EXPANDER;
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configSPI_IO_Expander(esp_io_expander_t *handle)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+
+    ESP_UTILS_LOGD("Param: handle(@%p)", handle);
+    getControlPanelFullConfig().line_config.io_expander = handle;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configSPI_SCL_ActiveFallingEdge(bool enable)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+
+    ESP_UTILS_LOGD("Param: enable(%d)", enable);
+    getControlPanelFullConfig().spi_mode = enable ? 1 : 0;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configRGB_FrameBufferNumber(uint8_t num)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+
+    ESP_UTILS_LOGD("Param: num(%d)", num);
+    ESP_UTILS_CHECK_FALSE_RETURN(num > 0, false, "Frame buffer number must be greater than 0");
+    getRefreshPanelFullConfig().num_fbs = num;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configRGB_BounceBufferSize(uint32_t size_in_pixel)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+
+    ESP_UTILS_LOGD("Param: size_in_pixel(%d)", size_in_pixel);
+    getRefreshPanelFullConfig().bounce_buffer_size_px = size_in_pixel;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configRGB_TimingFlags(
+    bool hsync_idle_low, bool vsync_idle_low, bool de_idle_high, bool pclk_active_neg, bool pclk_idle_high
+)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+
+    ESP_UTILS_LOGD(
+        "Param: hsync_idle_low(%d), vsync_idle_low(%d), de_idle_high(%d), pclk_active_neg(%d), pclk_idle_high(%d)",
+        hsync_idle_low, vsync_idle_low, de_idle_high, pclk_active_neg, pclk_idle_high
+    );
+    auto &config = getRefreshPanelFullConfig();
+    config.timings.flags.hsync_idle_low = hsync_idle_low;
+    config.timings.flags.vsync_idle_low = vsync_idle_low;
+    config.timings.flags.de_idle_high = de_idle_high;
+    config.timings.flags.pclk_active_neg = pclk_active_neg;
+    config.timings.flags.pclk_idle_high = pclk_idle_high;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configSpiLine(
+    bool cs_use_expander, bool sck_use_expander, bool sda_use_expander, ESP_IOExpander *io_expander
+)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+
+    ESP_UTILS_LOGD(
+        "Param: cs_use_expander(%d), sck_use_expander(%d), sda_use_expander(%d), io_expander(@%p)",
+        cs_use_expander, sck_use_expander, sda_use_expander, io_expander
+    );
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        configSPI_IO_Expander(io_expander->getDeviceHandle()), false, "config SPI IO expander failed"
+    );
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        configSPI_IO_Type(cs_use_expander, sck_use_expander, sda_use_expander), false, "config SPI IO type failed"
+    );
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configRgbFlagDispActiveLow()
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
+
+    getRefreshPanelFullConfig().flags.disp_active_low = 1;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
 bool BusRGB::configRgbTimingFreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
 
     ESP_UTILS_LOGD("Param: hz(%d)", (int)hz);
-    _panel_config.timings.pclk_hz = hz;
+    getRefreshPanelFullConfig().timings.pclk_hz = hz;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
@@ -44,176 +553,82 @@ bool BusRGB::configRgbTimingPorch(
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        !isOverState(State::INIT), false, "Should be called before `init()`"
+    );
 
     ESP_UTILS_LOGD("Param: hpw(%d), hbp(%d), hfp(%d), vpw(%d), vbp(%d), vfp(%d)", hpw, hbp, hfp, vpw, vbp, vfp);
-    _panel_config.timings.hsync_pulse_width = hpw;
-    _panel_config.timings.hsync_back_porch = hbp;
-    _panel_config.timings.hsync_front_porch = hfp;
-    _panel_config.timings.vsync_pulse_width = vpw;
-    _panel_config.timings.vsync_back_porch = vbp;
-    _panel_config.timings.vsync_front_porch = vfp;
+    auto &config = getRefreshPanelFullConfig();
+    config.timings.hsync_pulse_width = hpw;
+    config.timings.hsync_back_porch = hbp;
+    config.timings.hsync_front_porch = hfp;
+    config.timings.vsync_pulse_width = vpw;
+    config.timings.vsync_back_porch = vbp;
+    config.timings.vsync_front_porch = vfp;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
 }
 
-bool BusRGB::configRgbTimingFlags(
-    bool hsync_idle_low, bool vsync_idle_low, bool de_idle_high, bool pclk_active_neg, bool pclk_idle_high
-)
+bool BusRGB::init()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
 
-    ESP_UTILS_LOGD(
-        "Param: hsync_idle_low(%d), vsync_idle_low(%d), de_idle_high(%d), pclk_active_neg(%d), pclk_idle_high(%d)",
-        hsync_idle_low, vsync_idle_low, de_idle_high, pclk_active_neg, pclk_idle_high
-    );
-    _panel_config.timings.flags.hsync_idle_low = hsync_idle_low;
-    _panel_config.timings.flags.vsync_idle_low = vsync_idle_low;
-    _panel_config.timings.flags.de_idle_high = de_idle_high;
-    _panel_config.timings.flags.pclk_active_neg = pclk_active_neg;
-    _panel_config.timings.flags.pclk_idle_high = pclk_idle_high;
+    // Convert the partial configuration to full configuration
+    _config.convertPartialToFull();
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    _config.printControlPanelConfig();
+    _config.printRefreshPanelConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+
+    setState(State::INIT);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
 }
 
-bool BusRGB::configRgbFrameBufferNumber(uint8_t num)
+bool BusRGB::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Already begun");
 
-    ESP_UTILS_LOGD("Param: num(%d)", num);
-    _panel_config.num_fbs = num;
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::configRgbBounceBufferSize(uint32_t size_in_pixel)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
-
-    ESP_UTILS_LOGD("Param: size_in_pixel(%d)", size_in_pixel);
-    _panel_config.bounce_buffer_size_px = size_in_pixel;
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::configRgbFlagDispActiveLow(void)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
-
-    _panel_config.timings.flags.pclk_active_neg = 1;
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::configSpiLine(
-    bool cs_use_expaneer, bool sck_use_expander, bool sda_use_expander, esp_expander::Base *io_expander
-)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
-    ESP_UTILS_CHECK_FALSE_RETURN(_flags.use_spi_interface, false, "Not use SPI interface");
-
-    ESP_UTILS_LOGD(
-        "Param: cs_use_expaneer(%d), sck_use_expander(%d), sda_use_expander(%d), io_expander(@%p)",
-        cs_use_expaneer, sck_use_expander, sda_use_expander, io_expander
-    );
-    if (cs_use_expaneer) {
-        _io_config.line_config.cs_io_type = IO_TYPE_EXPANDER;
-        _io_config.line_config.cs_expander_pin =
-            (esp_io_expander_pin_num_t)BIT(_io_config.line_config.cs_gpio_num);
-    }
-    if (sck_use_expander) {
-        _io_config.line_config.scl_io_type = IO_TYPE_EXPANDER;
-        _io_config.line_config.scl_expander_pin =
-            (esp_io_expander_pin_num_t)BIT(_io_config.line_config.scl_gpio_num);
-    }
-    if (sda_use_expander) {
-        _io_config.line_config.sda_io_type = IO_TYPE_EXPANDER;
-        _io_config.line_config.sda_expander_pin =
-            (esp_io_expander_pin_num_t)BIT(_io_config.line_config.sda_gpio_num);
-    }
-    if (io_expander != NULL) {
-        _io_config.line_config.io_expander = io_expander->getDeviceHandle();
+    // Initialize the bus if not initialized
+    if (!isOverState(State::INIT)) {
+        ESP_UTILS_CHECK_FALSE_RETURN(init(), false, "Init failed");
     }
 
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::configSPI_IO_Expander(esp_io_expander_t *expander_handle)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
-    ESP_UTILS_CHECK_FALSE_RETURN(_flags.use_spi_interface, false, "Not use SPI interface");
-
-    ESP_UTILS_LOGD("Param: io_expander(@%p)", expander_handle);
-    _io_config.line_config.io_expander = expander_handle;
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::configSPI_SCL_ActiveFallingEdge(bool enable)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "This function should be called before `begin()`");
-    ESP_UTILS_CHECK_FALSE_RETURN(_flags.use_spi_interface, false, "Not use SPI interface");
-
-    _io_config.spi_mode = enable ? 1 : 0;
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-
-    return true;
-}
-
-bool BusRGB::begin(void)
-{
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIO_HandleValid(), false, "Already begun");
-
-    if (checkUseSPI_Interface()) {
+    // Create the control panel if needed
+    auto &config = getConfig();
+    if (config.use_control_panel) {
         ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_lcd_new_panel_io_3wire_spi(&_io_config, &io_handle), false, "Create panel IO failed"
+            esp_lcd_new_panel_io_3wire_spi(config.getControlPanelFullConfig(), &control_panel), false,
+            "create control panel failed"
         );
-        ESP_UTILS_LOGD("Create panel IO @%p", io_handle);
+        ESP_UTILS_LOGD("Create control panel @%p", control_panel);
     }
+
+    setState(State::BEGIN);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
 }
 
-bool BusRGB::del(void)
+bool BusRGB::del()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (checkIO_HandleValid() && checkUseSPI_Interface()) {
-        ESP_UTILS_CHECK_FALSE_RETURN(Bus::del(), false, "Delete base bus failed");
+    // Delete the control panel if valid
+    if (getConfig().use_control_panel && isControlPanelValid()) {
+        ESP_UTILS_CHECK_FALSE_RETURN(delControlPanel(), false, "Delete control panel failed");
     }
+
+    setState(State::DEINIT);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

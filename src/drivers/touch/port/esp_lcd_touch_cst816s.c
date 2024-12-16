@@ -20,6 +20,7 @@
 #include "esp_lcd_touch.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_touch_cst816s.h"
 
 #define POINT_NUM_MAX       (1)

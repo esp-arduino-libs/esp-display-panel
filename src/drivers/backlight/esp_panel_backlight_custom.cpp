@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -18,28 +18,26 @@ BacklightCustom::~BacklightCustom()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool BacklightCustom::begin(void)
+bool BacklightCustom::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsBegun(), false, "Already begun");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Already begun");
 
     ESP_UTILS_CHECK_NULL_RETURN(_config.callback, false, "Invalid callback function");
 
-    flags.is_begun = true;
+    setState(State::BEGIN);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
 }
 
-bool BacklightCustom::del(void)
+bool BacklightCustom::del()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (checkIsBegun()) {
-        flags.is_begun = false;
-    }
+    setState(State::DEINIT);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
@@ -50,7 +48,7 @@ bool BacklightCustom::setBrightness(uint8_t percent)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(checkIsBegun(), false, "Not begun");
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
     ESP_UTILS_LOGD("Param: percent(%d)", percent);
     if (percent > 100) {

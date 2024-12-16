@@ -24,6 +24,8 @@
 #include "esp_lcd_st7701.h"
 #include "esp_lcd_st7701_interface.h"
 
+#include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 #include "esp_lcd_st7789.h"
 

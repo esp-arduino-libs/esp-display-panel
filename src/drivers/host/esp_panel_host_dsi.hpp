@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,7 +16,6 @@ namespace esp_panel::drivers {
 
 /**
  * @brief The MIPI-DSI bus host class
- *
  */
 class HostDSI : public Host<HostDSI, esp_lcd_dsi_bus_config_t, MIPI_DSI_LL_NUM_BUS> {
 public:
@@ -30,7 +29,6 @@ public:
 
     /**
      * @brief Destroy the host
-     *
      */
     ~HostDSI() override;
 
@@ -38,20 +36,8 @@ public:
      * @brief Startup the host
      *
      * @return true if success, otherwise false
-     *
      */
-    bool begin(void) override;
-
-    /**
-     * @brief Get the handle of the host
-     *
-     * @return The handle of the host
-     *
-     */
-    esp_lcd_dsi_bus_handle_t getHandle(void)
-    {
-        return _host_handle;
-    }
+    bool begin() override;
 
 private:
     /* Make constructor private to prevent users from constructing it directly */
@@ -64,11 +50,8 @@ private:
      * @param[in] config The new configuration
      *
      * @return true if success, otherwise false
-     *
      */
     bool calibrateConfig(const esp_lcd_dsi_bus_config_t &config) override;
-
-    esp_lcd_dsi_bus_handle_t _host_handle = nullptr;
 };
 
 } // namespace esp_panel::drivers

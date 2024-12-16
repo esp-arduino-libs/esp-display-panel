@@ -12,7 +12,6 @@ namespace esp_panel {
 
 /**
  * MicroPython Wrappers
- *
  */
 // Object
 struct MP_Board {

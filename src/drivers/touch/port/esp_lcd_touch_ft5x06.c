@@ -19,6 +19,7 @@
 #include "esp_lcd_touch.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_touch_ft5x06.h"
 
 static const char *TAG = "FT5x06";

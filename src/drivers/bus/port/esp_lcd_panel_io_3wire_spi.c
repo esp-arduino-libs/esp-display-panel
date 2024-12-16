@@ -14,6 +14,7 @@
 #include "esp_lcd_panel_io_interface.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_panel_io_additions.h"
 
 #define LCD_CMD_BYTES_MAX       (sizeof(uint32_t))  // Maximum number of bytes for LCD command

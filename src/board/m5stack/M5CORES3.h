@@ -42,7 +42,6 @@
  *
  * Please refer to https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/lcd.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
@@ -233,7 +232,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. Even if the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 0
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 1

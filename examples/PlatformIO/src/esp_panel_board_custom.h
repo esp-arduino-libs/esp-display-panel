@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -57,7 +57,6 @@
  * For the parameters of other bus types, they will be ignored. To understand the parameters, please check
  * https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s3/api-reference/peripherals/lcd/index.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
@@ -67,7 +66,6 @@
      * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
      * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
      * host is initialized only once.
-     *
      */
     #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST  (0)     // 0/1. Typically set to 0
     /* For general */
@@ -95,7 +93,6 @@
      * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
      * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
      * host is initialized only once.
-     *
      */
     #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST  (0)     // 0/1. Typically set to 0
     /* For general */
@@ -133,7 +130,7 @@
     #define ESP_PANEL_BOARD_LCD_SPI_SCL_ACTIVE_EDGE         (0) // 0: rising edge, 1: falling edge. Typically set to 0
     /* For device */
     #define ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX   (0) // Set to 1 if the 3-wire SPI pins are sharing other pins of
-                                                                // the RGB interface to save GPIOs. Then, the panel IO and
+                                                                // the RGB interface to save GPIOs. Then, the control panel and
                                                                 // its pins (except CS signal) will be released after LCD
                                                                 // call `init()`. All `*_by_cmd` flags will be invalid.
     #define ESP_PANEL_BOARD_LCD_FLAGS_MIRROR_BY_CMD         (!ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX)
@@ -205,7 +202,6 @@
                                                                     // color format (RGB565/RGB888) may have different
                                                                     // lane bit rate requirements.
                                                                     // ESP32-P4 supports max 1500Mbps
-    #define ESP_PANEL_BOARD_LCD_MIPI_DSI_PHY_LDO_ID         (3)     // -1 if not used.
     /* For refresh panel (DPI) */
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_CLK_MHZ            (52)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_PIXEL_BITS         (ESP_PANEL_LCD_COLOR_BITS_RGB565)
@@ -216,6 +212,8 @@
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VPW                (1)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VBP                (23)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VFP                (12)
+    /* For PHY */
+    #define ESP_PANEL_BOARD_LCD_MIPI_PHY_LDO_ID             (3)     // -1 if not used.
 
 #else
 
@@ -299,7 +297,6 @@
 
 /**
  * Touch bus parameters.
- *
  */
 #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 
@@ -309,7 +306,6 @@
      * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
      * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
      * host is initialized only once.
-     *
      */
     #define ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST    (0)     // 0/1. Typically set to 0
     /* For general */
@@ -338,7 +334,6 @@
      * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
      * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
      * host is initialized only once.
-     *
      */
     #define ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST    (0)     // 0/1. Typically set to 0
     /* For general */
@@ -387,7 +382,6 @@
  *      - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
  *      - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
  *      - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
- *
  */
 #define ESP_PANEL_BOARD_BACKLIGHT_TYPE          (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
@@ -407,7 +401,6 @@
      * @param[in] user_data User data, default is a pointer of `Board`
      *
      * @return true if successful, otherwise false
-     *
      */
     #define ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION( percent, user_data )  \
         {  \
@@ -444,7 +437,6 @@
  * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
  * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
  * host is initialized only once.
- *
  */
 #define ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST     (0)     // 0/1
 /* For general */
@@ -473,7 +465,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_PRE_BEGIN_FUNCTION( p ) \
@@ -489,7 +480,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_POST_BEGIN_FUNCTION( p ) \
@@ -505,7 +495,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_EXPANDER_PRE_BEGIN_FUNCTION( p ) \
@@ -521,7 +510,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_EXPANDER_POST_BEGIN_FUNCTION( p ) \
@@ -537,7 +525,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_LCD_PRE_BEGIN_FUNCTION( p ) \
@@ -553,7 +540,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION( p ) \
@@ -569,7 +555,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_TOUCH_PRE_BEGIN_FUNCTION( p ) \
@@ -585,7 +570,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_TOUCH_POST_BEGIN_FUNCTION( p ) \
@@ -601,7 +585,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION( p ) \
@@ -617,7 +600,6 @@
  * @param[in] p Pointer to the board object
  *
  * @return true if successful, otherwise false
- *
  */
 /*
 #define ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION( p ) \
@@ -639,7 +621,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. Even if the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 1
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 0

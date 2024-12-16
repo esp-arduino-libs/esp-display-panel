@@ -22,6 +22,7 @@
 #include "esp_lcd_hx8399.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define HX8399_CMD_DSI_INT0     (0xBA)

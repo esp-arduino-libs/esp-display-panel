@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 
 #define TEST_LCD_ENABLE_ATTACH_CALLBACK     (0)
 #define TEST_LCD_SHOW_TIME_MS               (5000)

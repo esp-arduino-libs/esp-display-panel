@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,6 +13,8 @@
 
 namespace esp_panel::drivers {
 
+const LCD::BasicBusSpecificationMap LCD_ST77903::_bus_specifications = initBusSpecifications();
+
 LCD_ST77903::~LCD_ST77903()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -22,29 +24,33 @@ LCD_ST77903::~LCD_ST77903()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool LCD_ST77903::init(void)
+bool LCD_ST77903::init()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
 
 #if SOC_LCD_RGB_SUPPORTED
-    /* Load configurations from bus to vendor configurations */
-    ESP_UTILS_CHECK_FALSE_RETURN(loadVendorConfigFromBus(), false, "Load vendor config from bus failed");
+    // Process the device on initialization
+    ESP_UTILS_CHECK_FALSE_RETURN(processDeviceOnInit(_bus_specifications), false, "Process device on init failed");
 
-    /* Create panel handle */
+    // Create refresh panel
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_lcd_new_panel_st77903_rgb(bus->getIO_Handle(), &panel_config, &panel_handle), false, "Create LCD panel failed"
+        esp_lcd_new_panel_st77903_rgb(
+            bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
+        ), false, "Create refresh panel failed"
     );
-    ESP_UTILS_LOGD("Create LCD panel(@%p)", panel_handle);
+    ESP_UTILS_LOGD("Create refresh panel(@%p)", refresh_panel);
 #else
     ESP_UTILS_CHECK_FALSE_RETURN(false, false, "RGB is not supported");
 #endif // SOC_LCD_RGB_SUPPORTED
 
-    /* Disable panel IO if enable `auto_del_panel_io/enable_io_multiplex` flag */
-    if ((static_cast<esp_panel_lcd_vendor_config_t *>(panel_config.vendor_config))->flags.auto_del_panel_io) {
-        bus->disableIO_Handle();
+    /* Disable control panel if enable `auto_del_panel_io/enable_io_multiplex` flag */
+    if (getConfig().getVendorFullConfig()->flags.auto_del_panel_io) {
+        bus->disableControlPanelHandle();
     }
+
+    setState(State::INIT);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

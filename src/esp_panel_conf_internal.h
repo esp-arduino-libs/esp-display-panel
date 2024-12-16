@@ -61,14 +61,12 @@
      * There are two purposes to include the this file:
      *  1. Convert configuration items starting with `CONFIG_` to the required configuration items.
      *  2. Define default values for configuration items that are not defined to keep compatibility.
-     *
      */
     #include "esp_panel_conf_kconfig.h"
 #endif
 
 /**
  * Check if the current configuration file version is compatible with the library version
- *
  */
 /* File `esp_panel_conf.h` */
 #ifndef ESP_PANEL_CONF_FILE_SKIP

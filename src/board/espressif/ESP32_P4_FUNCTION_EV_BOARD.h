@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -30,7 +30,6 @@
  * It is useful if other devices use the same host. Please ensure that the host is initialized only once.
  *
  * Note: This macro is not useful for the MIPI-DSI bus.
- *
  */
 #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST    (0)     // 0/1
 /**
@@ -42,7 +41,6 @@
  *
  * Please refer to https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/lcd.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
 
@@ -50,7 +48,6 @@
     #define ESP_PANEL_BOARD_LCD_MIPI_DSI_LANE_RATE_MBPS   (1000)  // Single lane bit rate, should consult the LCD supplier or check the
                                                             // LCD drive IC datasheet for the supported lane rate.
                                                             // ESP32-P4 supports max 1500Mbps
-    #define ESP_PANEL_BOARD_LCD_MIPI_DSI_PHY_LDO_ID       (3)     // -1 if not used
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_CLK_MHZ          (52)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_PIXEL_BITS       (ESP_PANEL_LCD_COLOR_BITS_RGB565)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_HPW              (10)
@@ -59,6 +56,7 @@
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VPW              (1)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VBP              (23)
     #define ESP_PANEL_BOARD_LCD_MIPI_DPI_VFP              (12)
+    #define ESP_PANEL_BOARD_LCD_MIPI_PHY_LDO_ID           (3)     // -1 if not used
 
 #endif /* ESP_PANEL_BOARD_LCD_BUS_TYPE */
 
@@ -74,20 +72,13 @@
  *   2. Formatter: ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, { data0, data1, ... }) and
  *                ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command)
  */
-/*
 #define ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD()                                        \
     {                                                                          \
         {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x10}, 5, 0},              \
         {0xC0, (uint8_t []){0x3B, 0x00}, 2, 0},                                \
         {0xC1, (uint8_t []){0x0D, 0x02}, 2, 0},                                \
         {0x29, (uint8_t []){0x00}, 0, 120},                                    \
-        or                                                                     \
-        ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xFF, {0x77, 0x01, 0x00, 0x00, 0x10}), \
-        ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xC0, {0x3B, 0x00}),                   \
-        ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(0, 0xC1, {0x0D, 0x02}),                   \
-        ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(120, 0x29),                               \
     }
-*/
 
 /* LCD Color Settings */
 /* LCD color depth in bits */
@@ -175,9 +166,8 @@
      *  - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
      *  - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
      *  - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
-     *
      */
-    #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO)
+    #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
     #if ESP_PANEL_BOARD_BACKLIGHT_TYPE != ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
 
@@ -223,7 +213,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. Even if the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 1
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 0

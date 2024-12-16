@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -10,33 +10,37 @@
 namespace esp_panel::drivers {
 
 /**
- * @brief The base backlight device class
+ * @brief The backlight base class
  *
  * @note  This class is a base class for all devices. Due to it is a virtual class, users cannot construct it directly
- *
  */
 class Backlight {
 public:
     /**
-     * @brief The attributes of base backlight device
-     *
+     * @brief The backlight basic attributes structure
      */
-    struct Attributes {
-        int type = -1;                  /*<! The backlight device type. Default is `-1` */
-        const char *name = nullptr;     /*<! The backlight device name. Default is `nullptr` */
+    struct BasicAttributes {
+        int type = -1;                  /*!< The device type. Default is `-1` */
+        const char *name = "Unknown";   /*!< The device name. Default is `Unknown` */
+    };
+
+    /**
+     * @brief The driver state enumeration
+     */
+    enum class State : uint8_t {
+        DEINIT = 0,    /*!< Driver is not initialized */
+        BEGIN,         /*!< Driver is initialized and ready */
     };
 
     /**
      * @brief Construct a new device
      *
-     * @param[in] attr The backlight attributes
-     *
+     * @param[in] attr The backlight basic attributes
      */
-    Backlight(const Attributes &attr): _attributes(attr) {}
+    Backlight(const BasicAttributes &attr): _basic_attributes(attr) {}
 
     /**
      * @brief Destroy the device
-     *
      */
     virtual ~Backlight() = default;
 
@@ -44,9 +48,8 @@ public:
      * @brief Startup the device
      *
      * @return true if success, otherwise false
-     *
      */
-    virtual bool begin(void) = 0;
+    virtual bool begin() = 0;
 
     /**
      * @brief Delete the device, release the resources
@@ -54,9 +57,8 @@ public:
      * @note  After calling this function, users should call `begin()` to re-init the device
      *
      * @return true if success, otherwise false
-     *
      */
-    virtual bool del(void) = 0;
+    virtual bool del() = 0;
 
     /**
      * @brief Set the brightness by percent
@@ -66,7 +68,6 @@ public:
      * @param[in] percent The brightness percent (0-100)
      *
      * @return true if success, otherwise false
-     *
      */
     virtual bool setBrightness(uint8_t percent) = 0;
 
@@ -77,9 +78,8 @@ public:
      * @note  This function is same as `setBrightness(100)`
      *
      * @return true if success, otherwise false
-     *
      */
-    bool on(void);
+    bool on();
 
     /**
      * @brief Turn off the backlight
@@ -88,47 +88,49 @@ public:
      * @note  This function is same as `setBrightness(0)`
      *
      * @return true if success, otherwise false
-     *
      */
-    bool off(void);
+    bool off();
 
     /**
-     * @brief Get the device attributes
+     * @brief Check if the driver has reached or passed the specified state
      *
-     * @return The backlight attributes
+     * @param[in] state The state to check against current state
      *
+     * @return true if current state >= given state, otherwise false
      */
-    const Attributes &getAttributes(void)
+    bool isOverState(State state)
     {
-        return _attributes;
+        return (_state >= state);
+    }
+
+    /**
+     * @brief Get the device basic attributes
+     *
+     * @return The backlight basic attributes
+     */
+    const BasicAttributes &getBasicAttributes()
+    {
+        return _basic_attributes;
     }
 
 protected:
-    /**
-     * @brief Check if the device is already begun
-     *
-     * @return true if the device is already begun, otherwise false
-     *
-     */
-    bool checkIsBegun(void)
+    void setState(State state)
     {
-        return flags.is_begun;
+        _state = state;
     }
 
-    struct {
-        uint8_t is_begun: 1;
-    } flags = {};
-
 private:
-    Attributes _attributes = {};
+    State _state = State::DEINIT;
+    BasicAttributes _basic_attributes = {};
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Backlight` instead.
+ * @deprecated Deprecated. Please use `esp_panel::drivers::Backlight`
+ *             instead.
  *
  * @TODO: Remove in the next major version
- *
  */
-typedef esp_panel::drivers::Backlight ESP_PanelBacklight __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::Backlight` instead.")));
+typedef esp_panel::drivers::Backlight ESP_PanelBacklight __attribute__((deprecated("Deprecated and will be removed \
+in the next major version. Please use `esp_panel::drivers::Backlight` instead.")));

@@ -1,11 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
 
-#include "driver/gpio.h"
+#include <variant>
 #include "esp_panel_types.h"
 #include "esp_panel_backlight_base.hpp"
 
@@ -15,94 +15,57 @@ namespace esp_panel::drivers {
  * @brief The switch(GPIO) backlight device class
  *
  * @note  The class is a derived class of `Backlight`, users can use it to construct a custom backlight device
- *
  */
 class BacklightSwitchGPIO: public Backlight {
 public:
     /**
-     * @brief The default attributes of switch(GPIO) backlight device
-     *
+     * Here are some default values for switch(GPIO) backlight device
      */
-    constexpr static Attributes ATTRIBUTES_DEFAULT = {
+    static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO,
         .name = "switch(GPIO)",
     };
 
     /**
-     * @brief The configuration for switch(GPIO) backlight device
-     *
+     * @brief The switch(GPIO) backlight device configuration structure
      */
     struct Config {
-        /**
-         * @brief Get the GPIO configuration
-         *
-         * @return The GPIO configuration
-         *
-         */
-        gpio_config_t getGPIO_Config(void) const
-        {
-            return {
-                .pin_bit_mask = BIT64(io_num),
-                .mode = GPIO_MODE_OUTPUT,
-                .pull_up_en = GPIO_PULLUP_DISABLE,
-                .pull_down_en = GPIO_PULLDOWN_DISABLE,
-                .intr_type = GPIO_INTR_DISABLE,
-            };
-        }
+        void print() const;
 
-        /**
-         * @brief Create a new configuration
-         *
-         * @param[in] io_num   GPIO number
-         * @param[in] on_level Level when light up
-         *
-         * @return The configuration
-         *
-         */
-        static Config create(int io_num, int on_level)
-        {
-            return {
-                .io_num = io_num,
-                .on_level = on_level,
-            };
-        }
-
-        int io_num = -1;    /*<! GPIO number. Default is `-1` */
-        int on_level = 1;   /*<! Level when light up. Default is `1` */
+        int io_num = -1;    /*!< GPIO number. Default is `-1` */
+        int on_level = 1;   /*!< Level when light up. Default is `1` */
     };
 
 // *INDENT-OFF*
     /**
-     * @brief Construct a new switch(GPIO) backlight device with simple parameters
+     * @brief Construct the switch(GPIO) backlight device with separate parameters
      *
      * @param[in] io_num   GPIO number
      * @param[in] on_level Level when light up
-     *
      */
     BacklightSwitchGPIO(int io_num, bool on_level):
-        Backlight(ATTRIBUTES_DEFAULT),
-        _config(Config::create(io_num, on_level)),
-        _io_config(_config.getGPIO_Config())
+        Backlight(BASIC_ATTRIBUTES_DEFAULT),
+        _config{
+            .io_num = io_num,
+            .on_level = on_level,
+        }
     {
     }
 
     /**
-     * @brief Construct a new custom device with complex parameters
+     * @brief Construct the switch(GPIO) backlight device with configuration
      *
      * @param[in] config The switch(GPIO) backlight configuration
-     *
      */
     BacklightSwitchGPIO(const Config &config):
-        Backlight(ATTRIBUTES_DEFAULT),
-        _config(config),
-        _io_config(config.getGPIO_Config())
+        Backlight(BASIC_ATTRIBUTES_DEFAULT),
+        _config(config)
     {
     }
 // *INDENT-OFF*
 
     /**
      * @brief Destroy the device
-     *
      */
     ~BacklightSwitchGPIO() override;
 
@@ -110,9 +73,8 @@ public:
      * @brief Startup the device
      *
      * @return true if success, otherwise false
-     *
      */
-    bool begin(void) override;
+    bool begin() override;
 
     /**
      * @brief Delete the device, release the resources
@@ -120,9 +82,8 @@ public:
      * @note  After calling this function, users should call `begin()` to re-init the device
      *
      * @return true if success, otherwise false
-     *
      */
-    bool del(void) override;
+    bool del() override;
 
     /**
      * @brief Set the brightness by percent
@@ -132,13 +93,11 @@ public:
      * @param[in] percent The brightness percent (0-100)
      *
      * @return true if success, otherwise false
-     *
      */
     bool setBrightness(uint8_t percent) override;
 
 private:
     Config _config = {};
-    gpio_config_t _io_config = {};
 };
 
 } // namespace esp_panel::drivers

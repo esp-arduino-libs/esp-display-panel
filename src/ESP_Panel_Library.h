@@ -9,10 +9,9 @@
  * Please use the file `esp_io_expander.hpp` instead.
  *
  * @TODO: Remove in the next major version
- *
  */
 #pragma once
 
-#warning "This file is deprecated and will be removed in the next major version. Please use the file `esp_io_expander.hpp` instead."
+#warning "This file is Deprecated. Please use the file `esp_io_expander.hpp` instead."
 
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"

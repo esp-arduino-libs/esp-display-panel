@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -94,7 +94,6 @@
      * There are two purposes to include the this file:
      *  1. Convert configuration items starting with `CONFIG_` to the required configuration items.
      *  2. Define default values for configuration items that are not defined to keep compatibility.
-     *
      */
     #include "esp_panel_board_kconfig.h"
 #endif
@@ -104,7 +103,7 @@
     #error "Please select either a custom or a supported development board, cannot enable both simultaneously"
 #endif
 
-/* Check if use a default board */
+/* Check if using a default board */
 #define ESP_PANEL_BOARD_USE_DEFAULT     (ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED || ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM)
 
 /* For using a supported board, include the supported board header file */
@@ -211,12 +210,11 @@
 
 /**
  * Check if the current configuration file version is compatible with the library version
- *
  */
 /* File `esp_panel_board_custom.h` & `esp_panel_board_supported.h` */
 #if ESP_PANEL_BOARD_USE_DEFAULT
     /* File `esp_panel_board_supported.h` */
-    // Only check this file versions if use a supported board and not skip the file
+    // Only check this file versions if using a supported board and not skip the file
     #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED && !defined(ESP_PANEL_BOARD_FILE_SKIP)
         // If the version is not defined, set it to `0.1.0`
         #if !defined(ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MAJOR) && \
@@ -250,11 +248,11 @@
     #if ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR != ESP_PANEL_BOARD_CUSTOM_VERSION_MAJOR
         #error "The file `esp_panel_board_custom.h` version is not compatible. Please update it with the file from the library"
     #endif
-    // Only check the other versions if not skip the file
-    #if !defined(ESP_PANEL_BOARD_FILE_SKIP)
+    // Only check this file versions if using a custom board and not skip the file
+    #if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM && !defined(ESP_PANEL_BOARD_FILE_SKIP)
         #if ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR < ESP_PANEL_BOARD_CUSTOM_VERSION_MINOR
             #warning "The file `esp_panel_board_custom.h` version is outdated. Some new configurations are missing"
-        #elif ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR > ESP_PANEL_BOARD_CUSTOM_VERSION_PATCH
+        #elif ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR > ESP_PANEL_BOARD_CUSTOM_VERSION_MINOR
             #warning "The file `esp_panel_board_custom.h` version is newer than the library. Some new configurations are not supported"
         #endif
     #endif

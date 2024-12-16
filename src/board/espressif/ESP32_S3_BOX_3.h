@@ -39,7 +39,6 @@
  *
  * Please refer to https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/lcd.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
@@ -174,7 +173,6 @@
  *  - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
  *  - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
  *  - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
- *
  */
 #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
@@ -188,7 +186,6 @@
  *
  * @param[in] percent   Brightness percentage, 0-100
  * @param[in] user_data User data, default is a pointer of `Board`
- *
  */
 #define ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION( percent, user_data )  \
     {  \
@@ -217,6 +214,7 @@
         gpio_set_direction((gpio_num_t)ESP_PANEL_BOARD_TOUCH_INT_IO, GPIO_MODE_OUTPUT); \
         gpio_set_level((gpio_num_t)ESP_PANEL_BOARD_TOUCH_INT_IO, 0); \
         vTaskDelay(pdMS_TO_TICKS(10)); \
+        return true; \
     }
 
 // #define ESP_PANEL_BOARD_LCD_POST_BEGIN_FUNCTION( p )
@@ -225,5 +223,9 @@
 // #define ESP_PANEL_BOARD_BACKLIGHT_PRE_BEGIN_FUNCTION( p )
 // #define ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION( p )
 // #define ESP_PANEL_BOARD_POST_BEGIN_FUNCTION( p )
+
+#define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 1
+#define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 0
+#define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_PATCH 0
 
 // *INDENT-OFF*

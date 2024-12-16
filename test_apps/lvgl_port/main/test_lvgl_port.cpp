@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 #include "lvgl.h"
 #include "lvgl_port_v8.h"
 #include "lv_demos.h"

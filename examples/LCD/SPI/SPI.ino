@@ -50,11 +50,10 @@
  * ## Troubleshooting
  *
  * Please check the [FAQ](https://github.com/esp-arduino-libs/ESP32_Display_Panel/blob/master/docs/FAQ.md) first to see if the same question exists. If not, please create a [Github issue](https://github.com/esp-arduino-libs/ESP32_Display_Panel/issues). We will get back to you as soon as possible.
- *
  */
 
 #include <Arduino.h>
-#include <esp_panel_library.hpp>
+#include <esp_display_panel.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////

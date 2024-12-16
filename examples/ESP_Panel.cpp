@@ -6,7 +6,7 @@
 
 #include "ESP_PanelLog.h"
 #include "ESP_Panel.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 
 #ifdef ESP_PANEL_BOARD_USE_DEFAULT
 #include <memory>
@@ -19,13 +19,11 @@ using namespace std;
 
 /**
  * Macros for adding host of bus
- *
  */
 #define _ADD_HOST(name, host, config, id) host->addHost##name(config, id)
 #define ADD_HOST(name, host, config, id)  _ADD_HOST(name, host, config, id)
 /**
  * Macros for creating panel bus
- *
  */
 #define _CREATE_BUS_INIT_HOST(name, host_config, io_config, host_id) \
                                                     make_shared<ESP_PanelBus##name>(host_config, io_config, host_id)
@@ -35,7 +33,6 @@ using namespace std;
 #define CREATE_BUS_SKIP_HOST(name, io_config, host_id)  _CREATE_BUS_SKIP_HOST(name, io_config, host_id)
 /**
  * Macros for configuration of panel IO
- *
  */
 #define _LCD_PANEL_IO_SPI_CONFIG(name, line_config, scl_active_edge) \
                                                         name##_PANEL_IO_SPI_CONFIG(line_config, scl_active_edge)
@@ -43,7 +40,6 @@ using namespace std;
                                                     _LCD_PANEL_IO_SPI_CONFIG(name, line_config, scl_active_edge)
 /**
  * Macros for creating device
- *
  */
 #define _CREATE_LCD(name, bus, cfg) make_shared<ESP_PanelLcd_##name>(bus, cfg)
 #define CREATE_LCD(name, bus, cfg)  _CREATE_LCD(name, bus, cfg)
@@ -326,7 +322,7 @@ bool ESP_Panel::init(void)
 #endif
 #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
     lcd_bus_ptr = CREATE_BUS_INIT_HOST(
-                      ESP_PANEL_LCD_BUS_NAME, dsi_bus_config, dpi_panel_config, ESP_PANEL_BOARD_LCD_MIPI_DSI_PHY_LDO_ID
+                      ESP_PANEL_LCD_BUS_NAME, dsi_bus_config, dpi_panel_config, ESP_PANEL_BOARD_LCD_MIPI_PHY_LDO_ID
                   );
 #else
     /* For other LCDs, should use `ADD_HOST()` to init host when `ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST` enabled */

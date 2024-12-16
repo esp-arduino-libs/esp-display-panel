@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -11,7 +11,6 @@
 
 /**
  * @brief Macros for backlight
- *
  */
 #define ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO    (0)
 #define ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC       (1)
@@ -19,7 +18,6 @@
 
 /**
  * @brief Macros for bus type
- *
  */
 #define ESP_PANEL_BUS_TYPE_SPI                  (0)
 #define ESP_PANEL_BUS_TYPE_QSPI                 (1)
@@ -30,14 +28,13 @@
 
 /**
  * @brief  Macros for LCD color format bits
- *
  */
 #define ESP_PANEL_LCD_COLOR_BITS_RGB565         (16)
 #define ESP_PANEL_LCD_COLOR_BITS_RGB666         (18)
 #define ESP_PANEL_LCD_COLOR_BITS_RGB888         (24)
 
 /**
- * @brief This macro is used to generate the I2C panel IO configuration according to the touch panel name.
+ * @brief This macro is used to generate the I2C control panel configuration according to the touch panel name.
  *
  * @param[in] name Touch panel name
  *
@@ -49,7 +46,8 @@
 #define ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG(name)  _ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG(name)
 
 /**
- * @brief This macro is used to generate the I2C panel IO configuration according to the touch panel name and address.
+ * @brief This macro is used to generate the I2C control panel configuration according to the touch panel name and
+ *        address.
  *
  * @param[in] name Touch panel name
  * @param[in] addr I2C address of the touch panel
@@ -58,11 +56,13 @@
  *
  *      ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(GT911, 0x14) => ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG_WITH_ADDR(0x14)
  */
-#define _ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr) ESP_LCD_TOUCH_IO_I2C_ ## name ## _CONFIG_WITH_ADDR(addr)
-#define ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr)  _ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr)
+#define _ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr) \
+    ESP_LCD_TOUCH_IO_I2C_ ## name ## _CONFIG_WITH_ADDR(addr)
+#define ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr) \
+    _ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG_WITH_ADDR(name, addr)
 
 /**
- * @brief This macro is used to generate the SPI panel IO configuration according to the touch panel name.
+ * @brief This macro is used to generate the SPI control panel configuration according to the touch panel name.
  *
  * @param[in] name  Touch panel name
  * @param[in] cs_io Chip select IO number
@@ -80,15 +80,13 @@
  * @param[in] delay_ms Delay in milliseconds after this command
  * @param[in] command  LCD command
  * @param ...      Array of 8-bit command parameters, should be like `{data0, data1, data2, ...}`
- *
  */
-#define ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, ...) {command, (uint8_t []) __VA_ARGS__, sizeof((uint8_t []) \
-                                                                __VA_ARGS__), delay_ms}
+#define ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, ...) \
+    {command, (uint8_t []) __VA_ARGS__, sizeof((uint8_t []) __VA_ARGS__), delay_ms}
 /**
  * @brief Formatter for single LCD vendor command with no parameter
  *
  * @param[in] delay_ms Delay in milliseconds after this command
  * @param[in] command  LCD command
- *
  */
 #define ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command) {command, (uint8_t []){ 0x00 }, 0, delay_ms}

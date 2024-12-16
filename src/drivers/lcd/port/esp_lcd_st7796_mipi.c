@@ -24,6 +24,7 @@
 #include "esp_lcd_st7796_interface.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 typedef struct {

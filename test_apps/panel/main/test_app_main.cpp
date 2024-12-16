@@ -9,7 +9,7 @@
 #include "esp_heap_caps.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 
 // Some resources are lazy allocated in the LCD driver, the threadhold is left for that case
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI

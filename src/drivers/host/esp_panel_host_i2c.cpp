@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,29 +13,24 @@ HostI2C::~HostI2C()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (!checkIsBegun()) {
-        goto end;
-    }
-
-    {
+    if (isOverState(State::BEGIN)) {
         int id = getID();
         ESP_UTILS_CHECK_ERROR_EXIT(
             i2c_driver_delete(static_cast<i2c_port_t>(id)), "Delete I2C host(%d) failed", id
         );
         ESP_UTILS_LOGI("Delete I2C host(%d)", id);
-    }
 
-end:
-    flags.is_begun = false;
+        setState(State::DEINIT);
+    }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool HostI2C::begin(void)
+bool HostI2C::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (checkIsBegun()) {
+    if (isOverState(State::BEGIN)) {
         goto end;
     }
 
@@ -50,7 +45,7 @@ bool HostI2C::begin(void)
         ESP_UTILS_LOGI("Initialize I2C host(%d)", id);
     }
 
-    flags.is_begun = true;
+    setState(State::BEGIN);
 
 end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();

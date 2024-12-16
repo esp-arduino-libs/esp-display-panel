@@ -5,9 +5,13 @@ repository: https://github.com/esp-arduino-libs/ESP32_Display_Panel.git
 issues: https://github.com/esp-arduino-libs/ESP32_Display_Panel/issues
 dependencies:
   idf: ">=5.1"
-  espressif/esp32_io_expander:
-    version: "^1.0.0"
-    public: true
-  espressif/esp-lib-utils:
-    version: ">=0.1.0,<=0.2.0"
-    public: true
+  # espressif/esp32_io_expander:
+    # version: "^1.0.0"
+    # public: true
+  ESP32_IO_Expander:
+    override_path: "../ESP32_IO_Expander"
+  # espressif/esp-lib-utils:
+    # version: ">=0.1.0,<=0.2.0"
+    # public: true
+  esp-lib-utils:
+    override_path: "../esp-lib-utils"

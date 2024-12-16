@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -11,66 +11,95 @@
 namespace esp_panel::drivers {
 
 /**
- * @brief ST77903 LCD device object class
+ * @brief The ST77903 LCD device class
  *
- * @note  This class is a derived class of `ESP_PanelLcd`, user can use it directly
+ * @note  This class is a derived class of `LCD`, user can use it directly
  */
 class LCD_ST77903: public LCD {
 public:
-    constexpr static Attributes ATTRIBUTES_DEFAULT = {
+    /**
+     * Here are some default values for the device
+     */
+    static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .name = "ST77903",
     };
+// *INDENT-OFF*
+    static constexpr BasicBusSpecificationMap initBusSpecifications()
+    {
+        return {
+            {
+                ESP_PANEL_BUS_TYPE_RGB, BasicBusSpecification{
+                    .color_bits = {
+                        ESP_PANEL_LCD_COLOR_BITS_RGB565,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB666,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB888,
+                    },
+                    .functions = (1U << BasicBusSpecification::FUNC_INVERT_COLOR) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_X) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_Y) |
+                                 (1U << BasicBusSpecification::FUNC_SWAP_XY) |
+                                 (1U << BasicBusSpecification::FUNC_GAP) |
+                                 (1U << BasicBusSpecification::FUNC_DISPLAY_ON_OFF),
+                },
+            },
+        };
+    }
+// *INDENT-OFF*
 
     /**
-     * @brief Construct a ST77903 LCD device
+     * @brief Construct the LCD device with separate parameters
      *
-     * @note  This function uses some default values to config the LCD device, please use `config*()` functions to
-     *        change them
-     * @note  Vendor specific initialization can be different between manufacturers, should consult the LCD supplier
-     *        for initialization sequence code, and use `configVendorCommands()` to configure
+     * @note  This function uses some default values to config the LCD device, use `config*()` functions to change them
+     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
+     *        supplier for them and use `configVendorCommands()` to configure
      *
-     * @param bus        Pointer of panel bus
-     * @param color_bits Bits per pixel (16/18/24)
-     * @param rst_io     Reset pin, set to -1 if no use
+     * @param[in] panel_bus   Simple pointer of panel bus
+     * @param[in] color_bits  Bits per pixel (16/18/24)
+     * @param[in] rst_io      Reset pin, set to -1 if not used
      */
-    LCD_ST77903(Bus *bus, uint8_t color_bits, int rst_io = -1):
-        LCD(bus, color_bits, rst_io, ATTRIBUTES_DEFAULT)
+    LCD_ST77903(Bus *panel_bus, uint8_t color_bits, int rst_io = -1):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, color_bits, rst_io)
     {
     }
 
     /**
-     * @brief Construct a new ST77903 LCD device
+     * @brief Construct the LCD device with configuration
      *
-     * @param bus    Pointer of panel bus
-     * @param config LCD configuration
+     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
+     *        supplier for them
+     *
+     * @param[in] panel_bus Smart pointer of panel bus
+     * @param[in] config    LCD configuration
      */
-    LCD_ST77903(std::shared_ptr<Bus> bus, const Config &config):
-        LCD(bus, config, ATTRIBUTES_DEFAULT)
+    LCD_ST77903(std::shared_ptr<Bus> panel_bus, const Config &config):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, config)
     {
     }
 
     /**
      * @brief Destroy the LCD device
-     *
      */
     ~LCD_ST77903() override;
 
     /**
-     * @brief Initialize the LCD device
+     * @brief Initialize the LCD device.
      *
-     * @note  This function typically calls `esp_lcd_new_panel_*()` to create the LCD panel handle
+     * @note  This function should be called after bus is begun
+     * @note  This function typically calls `esp_lcd_new_panel_*()` to create the refresh panel
      *
      * @return true if success, otherwise false
-     *
      */
-    bool init(void) override;
+    bool init() override;
+
+private:
+    static const BasicBusSpecificationMap _bus_specifications;
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated This type is deprecated and will be removed in the next major version.
- *             Please use `esp_panel::drivers::LCD_ST77903` instead.
- *
+ * @deprecated Deprecated. Please use `esp_panel::drivers::LCD_ST77903
+ *             instead.
  */
-typedef esp_panel::drivers::LCD_ST77903 ESP_PanelLcd_ST77903_RGB __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_panel::drivers::LCD_ST77903` instead.")));
+typedef esp_panel::drivers::LCD_ST77903 LCD_ST77903_RGB __attribute__((deprecated("Deprecated and will be removed in the \
+next major version. Please use `esp_panel::drivers::LCD_ST77903` instead.")));

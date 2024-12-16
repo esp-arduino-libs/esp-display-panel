@@ -23,6 +23,7 @@
 #include "esp_lcd_touch.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_touch_spd2010.h"
 
 static const char *TAG = "SPD2010";

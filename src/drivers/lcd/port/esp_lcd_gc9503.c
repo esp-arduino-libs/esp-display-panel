@@ -23,6 +23,7 @@
 #include "esp_lcd_gc9503.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define GC9503_CMD_MADCTL           (0xB1)      // Memory data access control

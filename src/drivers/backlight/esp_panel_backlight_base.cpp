@@ -9,9 +9,11 @@
 
 namespace esp_panel::drivers {
 
-bool Backlight::on(void)
+bool Backlight::on()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
     ESP_UTILS_CHECK_FALSE_RETURN(setBrightness(100), false, "Turn on failed");
 
@@ -20,9 +22,11 @@ bool Backlight::on(void)
     return true;
 }
 
-bool Backlight::off(void)
+bool Backlight::off()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
     ESP_UTILS_CHECK_FALSE_RETURN(setBrightness(0), false, "Turn off failed");
 

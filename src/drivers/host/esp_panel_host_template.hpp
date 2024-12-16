@@ -1,10 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
 
+#include <memory>
 #include "esp_panel_utils.h"
 
 namespace esp_panel::drivers {
@@ -15,18 +16,28 @@ namespace esp_panel::drivers {
  * @tparam Derived Derived class
  * @tparam Config  Configuration type
  * @tparam N       Number of instances
- *
  */
 template <class Derived, typename Config, int N>
 class Host {
 public:
+    static_assert(N > 0, "Number of instances must be greater than 0");
+
+    using HostHandle = void *;
+
+    /**
+     * @brief The driver state enumeration
+     */
+    enum class State : uint8_t {
+        DEINIT = 0,
+        BEGIN,
+    };
+
     /* Remove copy constructor and copy assignment operator */
     Host(const Host &) = delete;
     Host &operator=(const Host &) = delete;
 
     /**
      * @brief Destroy the host
-     *
      */
     virtual ~Host() = default;
 
@@ -34,19 +45,39 @@ public:
      * @brief Startup the host
      *
      * @return true if success, otherwise false
-     *
      */
-    virtual bool begin(void) = 0;
+    virtual bool begin() = 0;
 
     /**
-     * @brief Get the host ID
+     * @brief Get the ID of the host
      *
      * @return The host ID
-     *
      */
-    int getID(void) const
+    int getID() const
     {
         return _id;
+    }
+
+    /**
+     * @brief Get the handle of the host
+     *
+     * @return The handle of the host
+     */
+    HostHandle getHandle() const
+    {
+        return host_handle;
+    }
+
+    /**
+     * @brief Check if the driver has reached or passed the specified state
+     *
+     * @param[in] state The state to check against current state
+     *
+     * @return true if current state >= given state, otherwise false
+     */
+    bool isOverState(State state)
+    {
+        return (_state >= state);
     }
 
     /**
@@ -56,7 +87,6 @@ public:
      * @param[in] config The host configuration
      *
      * @return The instance pointer of the derived class
-     *
      */
     static std::shared_ptr<Derived> getInstance(int id, const Config &config);
 
@@ -67,7 +97,6 @@ public:
      * @param[in] id The host ID
      *
      * @return true if success, otherwise false
-     *
      */
     static bool tryReleaseInstance(int id);
 
@@ -75,31 +104,24 @@ protected:
     /* Only derived class can construct the base host */
     Host(int id, const Config &config): config(config), _id(id) {}
 
-    /**
-     * @brief Check if the device is already begun
-     *
-     * @return true if the device is already begun, otherwise false
-     *
-     */
-    bool checkIsBegun(void) const
+    void setState(State state)
     {
-        return flags.is_begun;
+        _state = state;
     }
 
-    struct {
-        uint8_t is_begun: 1;
-    } flags = {};
     Config config = {};
+    HostHandle host_handle = nullptr;
 
 private:
     virtual bool calibrateConfig(const Config &config) = 0;
 
     int _id = -1;
-    static std::array<std::shared_ptr<Derived>, N> _instance_array;
+    State _state = State::DEINIT;
+    static std::array<std::shared_ptr<Derived>, N> _instances;
 };
 
 template <class Derived, typename Config, int N>
-std::array<std::shared_ptr<Derived>, N> Host<Derived, Config, N>::_instance_array = {};
+std::array<std::shared_ptr<Derived>, N> Host<Derived, Config, N>::_instances = {};
 
 template <class Derived, typename Config, int N>
 bool Host<Derived, Config, N>::tryReleaseInstance(int id)
@@ -107,10 +129,10 @@ bool Host<Derived, Config, N>::tryReleaseInstance(int id)
     ESP_UTILS_LOG_TRACE_ENTER();
 
     ESP_UTILS_LOGD("Param: id(%d)", id);
-    ESP_UTILS_CHECK_FALSE_RETURN((size_t)id < _instance_array.size(), false, "Invalid ID");
+    ESP_UTILS_CHECK_FALSE_RETURN((size_t)id < _instances.size(), false, "Invalid ID");
 
-    if ((_instance_array[id] != nullptr) && (_instance_array[id].use_count() == 1)) {
-        _instance_array[id] = nullptr;
+    if ((_instances[id] != nullptr) && (_instances[id].use_count() == 1)) {
+        _instances[id] = nullptr;
         ESP_UTILS_LOGD("Release host(%d)", id);
     }
 
@@ -125,26 +147,26 @@ std::shared_ptr<Derived> Host<Derived, Config, N>::getInstance(int id, const Con
     ESP_UTILS_LOG_TRACE_ENTER();
 
     ESP_UTILS_LOGD("Param: id(%d), config(@%p)", id, &config);
-    ESP_UTILS_CHECK_FALSE_RETURN((size_t)id < _instance_array.size(), nullptr, "Invalid host ID");
+    ESP_UTILS_CHECK_FALSE_RETURN((size_t)id < _instances.size(), nullptr, "Invalid host ID");
 
-    if (_instance_array[id] == nullptr) {
+    if (_instances[id] == nullptr) {
         ESP_UTILS_CHECK_EXCEPTION_RETURN(
-            (_instance_array[id] = esp_utils::make_shared<Derived>(id, config)), nullptr, "Create instance failed"
+            (_instances[id] = utils::make_shared<Derived>(id, config)), nullptr, "Create instance failed"
         );
-        ESP_UTILS_LOGD("Derived not exist, create new instance(@%p)", _instance_array[id].get());
+        ESP_UTILS_LOGD("No instance exist, create new one(@%p)", _instances[id].get());
     } else {
-        ESP_UTILS_LOGD("Derived already exist(@%p)", _instance_array[id].get());
+        ESP_UTILS_LOGD("Instance exist(@%p)", _instances[id].get());
 
         Config new_config = config;
         ESP_UTILS_CHECK_FALSE_RETURN(
-            _instance_array[id]->calibrateConfig(new_config), nullptr,
+            _instances[id]->calibrateConfig(new_config), nullptr,
             "Calibrate configuration failed, attempt to configure host with a incompatible configuration"
         );
     }
 
     ESP_UTILS_LOG_TRACE_EXIT();
 
-    return _instance_array[id];
+    return _instances[id];
 }
 
 } // namespace esp_panel::drivers

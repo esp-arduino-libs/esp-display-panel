@@ -243,10 +243,10 @@ menu "LCD settings"
                     default n
 
                 config ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX
-                    bool "Auto delete panel IO instance"
+                    bool "Auto delete control panel instance"
                     default n
                     help
-                        If set to 1, the panel IO instance will be deleted automatically when the panel is initialized. If the 3-wire SPI pins are sharing other pins of the RGB interface to save GPIOs, please set it to 1 to release the panel IO and its pins (except CS signal).
+                        If set to 1, the control panel instance will be deleted automatically when the panel is initialized. If the 3-wire SPI pins are sharing other pins of the RGB interface to save GPIOs, please set it to 1 to release the control panel and its pins (except CS signal).
 
                 config ESP_PANEL_BOARD_LCD_FLAGS_MIRROR_BY_CMD
                     bool "Mirror by LCD command instead of software"

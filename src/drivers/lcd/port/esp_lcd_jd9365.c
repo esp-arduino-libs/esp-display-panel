@@ -22,6 +22,7 @@
 #include "esp_lcd_jd9365.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define JD9365_CMD_PAGE         (0xE0)

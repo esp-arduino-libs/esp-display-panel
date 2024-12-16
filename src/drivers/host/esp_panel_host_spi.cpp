@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,29 +13,24 @@ HostSPI::~HostSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (!checkIsBegun()) {
-        goto end;
-    }
-
-    {
+    if (isOverState(State::BEGIN)) {
         int id = getID();
         ESP_UTILS_CHECK_ERROR_EXIT(
             spi_bus_free(static_cast<spi_host_device_t>(id)), "Delete SPI host(%d) failed", id
         );
         ESP_UTILS_LOGI("Delete SPI host(%d)", id);
-    }
 
-end:
-    flags.is_begun = false;
+        setState(State::DEINIT);
+    }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool HostSPI::begin(void)
+bool HostSPI::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (checkIsBegun()) {
+    if (isOverState(State::BEGIN)) {
         goto end;
     }
 
@@ -48,7 +43,7 @@ bool HostSPI::begin(void)
         ESP_UTILS_LOGI("Initialize SPI host(%d)", id);
     }
 
-    flags.is_begun = true;
+    setState(State::BEGIN);
 
 end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();

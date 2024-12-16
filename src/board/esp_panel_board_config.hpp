@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,7 +16,7 @@ namespace esp_panel {
 
 // *INDENT-OFF*
 struct BoardConfig {
-    using CallbackFunction = bool (*)(void *);
+    using FunctionCallback = bool (*)(void *);
 
     /* General */
     int width = 0;
@@ -24,7 +24,6 @@ struct BoardConfig {
 
     /* LCD */
     struct {
-        int bus_type;
         drivers::BusFactory::Config bus_config;
         std::string device_name;
         drivers::LCD::Config device_config;
@@ -38,7 +37,6 @@ struct BoardConfig {
 
     /* Touch */
     struct {
-        int bus_type;
         drivers::BusFactory::Config bus_config;
         std::string device_name;
         drivers::Touch::Config device_config;
@@ -51,7 +49,6 @@ struct BoardConfig {
 
     /* Backlight */
     struct {
-        int type;
         drivers::BacklightFactory::Config config;
         struct {
             int idle_off: 1;
@@ -61,21 +58,21 @@ struct BoardConfig {
     /* IO expander */
     struct {
         std::string name;
-        esp_expander::Base::Config config;
+        drivers::IO_Expander::Config config;
     } io_expander = {};
 
     /* Others */
     struct {
-        CallbackFunction pre_board_begin;
-        CallbackFunction post_board_begin;
-        CallbackFunction pre_expander_begin;
-        CallbackFunction post_expander_begin;
-        CallbackFunction pre_lcd_begin;
-        CallbackFunction post_lcd_begin;
-        CallbackFunction pre_touch_begin;
-        CallbackFunction post_touch_begin;
-        CallbackFunction pre_backlight_begin;
-        CallbackFunction post_backlight_begin;
+        FunctionCallback pre_board_begin;
+        FunctionCallback post_board_begin;
+        FunctionCallback pre_expander_begin;
+        FunctionCallback post_expander_begin;
+        FunctionCallback pre_lcd_begin;
+        FunctionCallback post_lcd_begin;
+        FunctionCallback pre_touch_begin;
+        FunctionCallback post_touch_begin;
+        FunctionCallback pre_backlight_begin;
+        FunctionCallback post_backlight_begin;
     } callbacks = {};
     struct {
         int use_lcd: 1;

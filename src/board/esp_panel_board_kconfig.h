@@ -25,7 +25,6 @@
 
 /**
  * Supported Board
- *
  */
 #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
     // Espressif
@@ -167,7 +166,6 @@
 
 /**
  * Custom Board
- *
  */
 #if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM
     // LCD

@@ -38,7 +38,6 @@
  * For the parameters of other bus types, they will be ignored. To understand the parameters, please check
  * https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32s3/api-reference/peripherals/lcd/index.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
@@ -48,7 +47,6 @@
      * For drivers which created by this library, even if they use the same host, the host will be initialized only once.
      * So it is not necessary to set the macro to `1`. For other devices, please set the macro to `1` ensure that the
      * host is initialized only once.
-     *
      */
     #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST  (0)     // 0/1. Typically set to 0
     /* For general */
@@ -134,7 +132,6 @@
  *      - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
  *      - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
  *      - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
- *
  */
 #define ESP_PANEL_BOARD_BACKLIGHT_TYPE          (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
@@ -174,7 +171,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. Even if the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MAJOR 1
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 0

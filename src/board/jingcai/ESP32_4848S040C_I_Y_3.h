@@ -39,7 +39,6 @@
  *
  * Please refer to https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/lcd.html and
  * https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/index.html for more details.
- *
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 
@@ -89,9 +88,9 @@
     #define ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER    (0)     // 0/1
     #define ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER    (0)     // 0/1
     #define ESP_PANEL_BOARD_LCD_SPI_SCL_ACTIVE_EDGE     (0)     // 0: rising edge, 1: falling edge
-    #define ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX       (0)     // Delete the panel IO instance automatically if set to 1.
+    #define ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX       (0)     // Delete the control panel instance automatically if set to 1.
                                                                 // If the 3-wire SPI pins are sharing other pins of the RGB interface to save GPIOs,
-                                                                // Please set it to 1 to release the panel IO and its pins (except CS signal).
+                                                                // Please set it to 1 to release the control panel and its pins (except CS signal).
     #define ESP_PANEL_BOARD_LCD_FLAGS_MIRROR_BY_CMD           (!ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX)
                                                                 // The `mirror()` function will be implemented by LCD command if set to 1.
 #endif
@@ -233,7 +232,6 @@
      *  - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
      *  - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
      *  - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
-     *
      */
     #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 

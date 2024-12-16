@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -21,21 +21,32 @@ TouchGT911::~TouchGT911()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool TouchGT911::begin(void)
+bool TouchGT911::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(checkIsInit(), false, "Not initialized");
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsBegun(), false, "Already begun");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Already begun");
 
+    // Initialize the touch if not initialized
+    if (!isOverState(State::INIT)) {
+        ESP_UTILS_CHECK_FALSE_RETURN(init(), false, "Init failed");
+    }
+
+    // Since GT911 has two I2C addresses, we can decide which one to use
+    auto bus = static_cast<BusI2C *>(getBus());
     esp_lcd_touch_io_gt911_config_t tp_gt911_config = {
-        .dev_addr = std::static_pointer_cast<BusI2C>(bus)->getI2cAddress(),
+        .dev_addr = bus->getI2cAddress(),
     };
-    touch_config.driver_data = (void *)&tp_gt911_config;
+    setDriverData(&tp_gt911_config);
+
+    // Create touch panel
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_lcd_touch_new_i2c_gt911(bus->getIO_Handle(), &touch_config, &touch_handle), false,
-        "Create touch panel failed"
+        esp_lcd_touch_new_i2c_gt911(bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &touch_panel),
+        false, "Create touch panel failed"
     );
+    ESP_UTILS_LOGD("Create touch panel(@%p)", touch_panel);
+
+    setState(State::BEGIN);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

@@ -5,7 +5,7 @@
  */
 
 #include <Arduino.h>
-#include <esp_panel_library.hpp>
+#include <esp_display_panel.hpp>
 #include <lvgl.h>
 #include "lvgl_port_v8.h"
 

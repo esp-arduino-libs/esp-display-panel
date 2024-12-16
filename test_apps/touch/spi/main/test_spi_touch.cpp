@@ -10,7 +10,7 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 
 using namespace std;
 
@@ -108,6 +108,5 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 
 /**
  * Here to create test cases for different touchs
- *
  */
 CREATE_TEST_CASE(XPT2046)

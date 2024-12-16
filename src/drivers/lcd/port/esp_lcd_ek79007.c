@@ -22,6 +22,7 @@
 #include "esp_lcd_ek79007.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define EK79007_PAD_CONTROL     (0xB2)

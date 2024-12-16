@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: CC0-1.0
  */
@@ -10,19 +10,19 @@
 #include "esp_log.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 
 #define TEST_LCD_ENABLE_ATTACH_CALLBACK     (0)
 #define TEST_LCD_SHOW_TIME_MS               (5000)
 
 #define TEST_TOUCH_ENABLE_ATTACH_CALLBACK   (0)
-#define TEST_TOUCH_READ_POINTS_NUM          (5)
 #define TEST_TOUCH_READ_TIME_MS             (3000)
 #define TEST_TOUCH_READ_DELAY_MS            (30)
 
 #define delay(x)     vTaskDelay(pdMS_TO_TICKS(x))
 
 using namespace std;
+using namespace esp_panel;
 
 static const char *TAG = "test_panel";
 
@@ -110,33 +110,35 @@ TEST_CASE("Test board", "[board]")
         vTaskDelay(pdMS_TO_TICKS(TEST_LCD_SHOW_TIME_MS));
     }
 
+    if (touch != nullptr) {
+#if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
+        TEST_ASSERT_TRUE_MESSAGE(
+            touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Attach touch interrupt callback failed"
+        );
+#endif
+        ESP_LOGI(TAG, "Reading touch_device point...");
+
+        uint32_t t = 0;
+        utils::vector<drivers::TouchPoint> points;
+        utils::vector<drivers::TouchButton> buttons;
+
+        while (t++ < TEST_TOUCH_READ_TIME_MS / TEST_TOUCH_READ_DELAY_MS) {
+            TEST_ASSERT_TRUE_MESSAGE(touch->readRawData(-1, -1, TEST_TOUCH_READ_DELAY_MS), "Read touch raw data failed");
+            TEST_ASSERT_TRUE_MESSAGE(touch->getPoints(points), "Read touch points failed");
+            TEST_ASSERT_TRUE_MESSAGE(touch->getButtons(buttons), "Read touch buttons failed");
+            for (auto &point : points) {
+                ESP_LOGI(TAG, "Point: x(%d), y(%d), strength(%d)", point.x, point.y, point.strength);
+            }
+            for (auto &button : buttons) {
+                ESP_LOGI(TAG, "Button(%d): %d", button.first, button.second);
+            }
+            if (!touch->isInterruptEnabled()) {
+                delay(TEST_TOUCH_READ_DELAY_MS);
+            }
+        }
+    } else {
+        ESP_LOGI(TAG, "Touch is not available");
+    }
+
     panel->del();
-
-//     if (touch != nullptr) {
-// #if TEST_LCD_ENABLE_ATTACH_CALLBACK && (ESP_PANEL_BOARD_TOUCH_INT_IO >= 0)
-//         TEST_ASSERT_TRUE_MESSAGE(
-//             touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Attach touch interrupt callback failed"
-//         );
-// #endif
-//         uint32_t t = 0;
-//         ESP_PanelTouchPoint point[TEST_TOUCH_READ_POINTS_NUM];
-//         int read_touch_result = 0;
-
-//         ESP_LOGI(TAG, "Reading touch_device point...");
-//         while (t++ < TEST_TOUCH_READ_TIME_MS / TEST_TOUCH_READ_DELAY_MS) {
-//             read_touch_result = touch->readPoints(point, TEST_TOUCH_READ_POINTS_NUM, TEST_TOUCH_READ_DELAY_MS);
-//             if (read_touch_result > 0) {
-//                 for (int i = 0; i < read_touch_result; i++) {
-//                     ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d\n", i, point[i].x, point[i].y, point[i].strength);
-//                 }
-//             } else if (read_touch_result < 0) {
-//                 ESP_LOGE(TAG, "Read touch_device point failed");
-//             }
-//             if (!touch->isInterruptEnabled()) {
-//                 delay(TEST_TOUCH_READ_DELAY_MS);
-//             }
-//         }
-//     } else {
-//         ESP_LOGI(TAG, "Touch is not available");
-//     }
 }

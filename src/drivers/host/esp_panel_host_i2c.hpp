@@ -13,7 +13,6 @@ namespace esp_panel::drivers {
 
 /**
  * @brief The I2C bus host class
- *
  */
 class HostI2C : public Host<HostI2C, i2c_config_t, static_cast<int>(I2C_NUM_MAX)> {
 public:
@@ -27,7 +26,6 @@ public:
 
     /**
      * @brief Destroy the host
-     *
      */
     ~HostI2C() override;
 
@@ -35,9 +33,8 @@ public:
      * @brief Startup the host
      *
      * @return true if success, otherwise false
-     *
      */
-    bool begin(void) override;
+    bool begin() override;
 
 private:
     /* Make constructor private to prevent users from constructing it directly */
@@ -50,7 +47,6 @@ private:
      * @param[in] config The new configuration
      *
      * @return true if success, otherwise false
-     *
      */
     bool calibrateConfig(const i2c_config_t &config) override;
 };

@@ -1,8 +1,0 @@
-menu "Driver - LCD"
-    config ESP_PANEL_CONF_TOUCH_MAX_POINTS
-        int "Max point number"
-        default 5
-        help
-            Maximum number of touch points that can be handled by the touch driver.
-            This value should be set to the maximum number of touch points supported by the touch controller.
-endmenu

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +12,8 @@
 
 namespace esp_panel::drivers {
 
+const LCD::BasicBusSpecificationMap LCD_SH8601::_bus_specifications = initBusSpecifications();
+
 LCD_SH8601::~LCD_SH8601()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -21,20 +23,24 @@ LCD_SH8601::~LCD_SH8601()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool LCD_SH8601::init(void)
+bool LCD_SH8601::init()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsInit(), false, "Already initialized");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
 
-    /* Load configurations from bus to vendor configurations */
-    ESP_UTILS_CHECK_FALSE_RETURN(loadVendorConfigFromBus(), false, "Load vendor config from bus failed");
+    // Process the device on initialization
+    ESP_UTILS_CHECK_FALSE_RETURN(processDeviceOnInit(_bus_specifications), false, "Process device on init failed");
 
-    /* Create panel handle */
+    // Create refresh panel
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_lcd_new_panel_sh8601(bus->getIO_Handle(), &panel_config, &panel_handle), false, "Create LCD panel failed"
+        esp_lcd_new_panel_sh8601(
+            bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
+        ), false, "Create refresh panel failed"
     );
-    ESP_UTILS_LOGD("Create LCD panel(@%p)", panel_handle);
+    ESP_UTILS_LOGD("Create refresh panel(@%p)", refresh_panel);
+
+    setState(State::INIT);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

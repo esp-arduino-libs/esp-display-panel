@@ -14,6 +14,7 @@
 #include "esp_lcd_st7701.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 static const char *TAG = "st7701";

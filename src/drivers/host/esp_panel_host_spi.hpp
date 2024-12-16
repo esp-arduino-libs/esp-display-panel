@@ -13,7 +13,6 @@ namespace esp_panel::drivers {
 
 /**
  * @brief The SPI bus host class
- *
  */
 class HostSPI : public Host<HostSPI, spi_bus_config_t, static_cast<int>(SPI_HOST_MAX)> {
 public:
@@ -27,7 +26,6 @@ public:
 
     /**
      * @brief Destroy the host
-     *
      */
     ~HostSPI() override;
 
@@ -35,9 +33,8 @@ public:
      * @brief Startup the host
      *
      * @return true if success, otherwise false
-     *
      */
-    bool begin(void) override;
+    bool begin() override;
 
 private:
     /* Make constructor private to prevent users from constructing it directly */
@@ -50,7 +47,6 @@ private:
      * @param[in] config The new configuration
      *
      * @return true if success, otherwise false
-     *
      */
     bool calibrateConfig(const spi_bus_config_t &config) override;
 };

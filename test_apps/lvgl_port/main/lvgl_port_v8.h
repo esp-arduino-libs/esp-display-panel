@@ -1,19 +1,18 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: CC0-1.0
  */
 #pragma once
 
 #include "sdkconfig.h"
-#include "esp_panel_library.hpp"
+#include "esp_display_panel.hpp"
 #include "lvgl.h"
 
 // *INDENT-OFF*
 
 /**
  * LVGL related parameters, can be adjusted by users
- *
  */
 #define LVGL_PORT_DISP_WIDTH                    (ESP_PANEL_BOARD_WIDTH)   // The width of the display
 #define LVGL_PORT_DISP_HEIGHT                   (ESP_PANEL_BOARD_HEIGHT)  // The height of the display
@@ -35,7 +34,6 @@
  *  - The size (in bytes) and number of buffers:
  *      - Lager buffer size can improve FPS, but it will occupy more memory. Maximum buffer size is `LVGL_PORT_DISP_WIDTH * LVGL_PORT_DISP_HEIGHT`.
  *      - The number of buffers should be 1 or 2.
- *
  */
 #define LVGL_PORT_BUFFER_MALLOC_CAPS            (MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)       // Allocate LVGL buffer in SRAM
 // #define LVGL_PORT_BUFFER_MALLOC_CAPS            (MALLOC_CAP_SPIRAM)      // Allocate LVGL buffer in PSRAM
@@ -44,7 +42,6 @@
 
 /**
  * LVGL timer handle task related parameters, can be adjusted by users
- *
  */
 #define LVGL_PORT_TASK_MAX_DELAY_MS             (500)       // The maximum delay of the LVGL timer task, in milliseconds
 #define LVGL_PORT_TASK_MIN_DELAY_MS             (2)         // The minimum delay of the LVGL timer task, in milliseconds
@@ -60,7 +57,6 @@
  * Avoid tering related configurations, can be adjusted by users.
  *
  *  (Currently, This function only supports RGB LCD and the version of LVGL must be >= 8.3.9)
- *
  */
 /**
  * Set the avoid tearing mode:
@@ -68,7 +64,6 @@
  *      - 1: LCD double-buffer & LVGL full-refresh
  *      - 2: LCD triple-buffer & LVGL full-refresh
  *      - 3: LCD double-buffer & LVGL direct-mode (recommended)
- *
  */
 #define LVGL_PORT_AVOID_TEARING_MODE            (CONFIG_LVGL_PORT_AVOID_TEARING_MODE)
 
@@ -79,7 +74,6 @@
  * buffer functionality to enhance the RGB data bandwidth.
  *
  * This feature will occupy `LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE * 2 * bytes_per_pixel` of SRAM memory.
- *
  */
 #define LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE        (LVGL_PORT_DISP_WIDTH * 10)
 #endif
@@ -93,7 +87,6 @@
  *      - 90: 90 degree
  *      - 180: 180 degree
  *      - 270: 270 degree
- *
  */
 #define LVGL_PORT_ROTATION_DEGREE               (0)
 
@@ -103,7 +96,6 @@
  *
  * Users should use `lcd_bus->configRgbFrameBufferNumber(LVGL_PORT_DISP_BUFFER_NUM);` to set the buffer number before. If screen drifting occurs, please refer to the Troubleshooting section in the README.
  * initializing the LCD bus
- *
  */
 #define LVGL_PORT_AVOID_TEAR                    (1)
 // Set the buffer number and refresh mode according to the different modes

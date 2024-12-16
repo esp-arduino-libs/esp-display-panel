@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,41 +16,36 @@ HostDSI::~HostDSI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (!checkIsBegun()) {
-        goto end;
-    }
-
-    {
+    if (isOverState(State::BEGIN)) {
         int id = getID();
         ESP_UTILS_CHECK_ERROR_EXIT(
-            esp_lcd_del_dsi_bus(_host_handle), "Delete DSI host(%d) failed", id
+            esp_lcd_del_dsi_bus(static_cast<esp_lcd_dsi_bus_handle_t>(host_handle)), "Delete DSI host(%d) failed", id
         );
         ESP_UTILS_LOGI("Delete DSI host(%d)", id);
-    }
 
-end:
-    flags.is_begun = false;
+        setState(State::DEINIT);
+    }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool HostDSI::begin(void)
+bool HostDSI::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (checkIsBegun()) {
+    if (isOverState(State::BEGIN)) {
         goto end;
     }
 
     {
         int id = getID();
-        ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_lcd_new_dsi_bus(&config, &_host_handle), false, "Initialize DSI host(%d) failed", id
-        );
+        esp_lcd_dsi_bus_handle_t host = nullptr;
+        ESP_UTILS_CHECK_ERROR_RETURN(esp_lcd_new_dsi_bus(&config, &host), false, "Initialize DSI host(%d) failed", id);
+        host_handle = host;
         ESP_UTILS_LOGI("Initialize DSI host(%d)", id);
     }
 
-    flags.is_begun = true;
+    setState(State::BEGIN);
 
 end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();

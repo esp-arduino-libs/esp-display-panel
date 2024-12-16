@@ -68,7 +68,6 @@
  * ## Troubleshooting
  *
  * Please check the [FAQ](https://github.com/esp-arduino-libs/ESP32_Display_Panel/blob/master/docs/FAQ.md) first to see if the same question exists. If not, please create a [Github issue](https://github.com/esp-arduino-libs/ESP32_Display_Panel/issues). We will get back to you as soon as possible.
- *
  */
 
 #include <stdio.h>
@@ -80,7 +79,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include <esp_panel_library.hpp>
+#include <esp_display_panel.hpp>
 #include <lvgl.h>
 #include <ui.h>
 #include <NTPClient.h>

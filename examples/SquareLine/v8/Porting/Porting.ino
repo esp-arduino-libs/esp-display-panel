@@ -44,11 +44,10 @@
  * ## Troubleshooting
  *
  * Please first check [FAQ](https://github.com/esp-arduino-libs/ESP32_Display_Panel/blob/master/docs/FAQ.md) for troubleshooting. If you still cannot solve the problem, please create a [Github issue](https://github.com/esp-arduino-libs/ESP32_Display_Panel/issues). We will get back to you as soon as possible.
- *
  */
 
 #include <Arduino.h>
-#include <esp_panel_library.hpp>
+#include <esp_display_panel.hpp>
 #include <lvgl.h>
 #include <ui.h>
 #include "lvgl_port_v8.h"

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,17 +20,26 @@ TouchCST816S::~TouchCST816S()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-bool TouchCST816S::begin(void)
+bool TouchCST816S::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(checkIsInit(), false, "Not initialized");
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsBegun(), false, "Already begun");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Already begun");
 
+    // Initialize the touch if not initialized
+    if (!isOverState(State::INIT)) {
+        ESP_UTILS_CHECK_FALSE_RETURN(init(), false, "Init failed");
+    }
+
+    // Create touch panel
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_lcd_touch_new_i2c_cst816s(bus->getIO_Handle(), &touch_config, &touch_handle), false,
-        "Create touch panel failed"
+        esp_lcd_touch_new_i2c_cst816s(
+            getBus()->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &touch_panel
+        ), false, "Create touch panel failed"
     );
+    ESP_UTILS_LOGD("Create touch panel(@%p)", touch_panel);
+
+    setState(State::BEGIN);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

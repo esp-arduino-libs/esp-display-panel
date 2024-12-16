@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,20 +12,21 @@
 
 namespace esp_panel::drivers {
 
-#define CREATE_FUNCTION(chip) \
+#define DEVICE_CREATOR(chip) \
     [](const IO_Expander::Config &config) { \
         std::shared_ptr<IO_Expander> device = nullptr; \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
-            (device = esp_utils::make_shared<IO_ExpanderAdapter<esp_expander::chip>>( \
-                config, IO_Expander::Attributes{#chip} \
-            )), nullptr,  "Create " #chip " failed" \ \
+            (device = utils::make_shared<IO_ExpanderAdapter<esp_expander::chip>>( \
+                IO_Expander::BasicAttributes{#chip}, config \
+            )), nullptr, "Create " #chip " failed" \
         ); \
         return device; \
     }
 #define ITEM_CONTROLLER(chip) \
-    {#chip, CREATE_FUNCTION(chip)}
+    {#chip, DEVICE_CREATOR(chip)}
 
-const std::unordered_map<std::string, IO_ExpanderFactory::CreateFunction> IO_ExpanderFactory::_name_function_map = {
+const std::unordered_map<std::string, IO_ExpanderFactory::FunctionDeviceConstructor>
+IO_ExpanderFactory::_name_function_map = {
     ITEM_CONTROLLER(CH422G),
     ITEM_CONTROLLER(HT8574),
     ITEM_CONTROLLER(TCA95XX_8BIT),

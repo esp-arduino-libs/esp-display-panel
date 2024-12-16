@@ -1,11 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
 
-#include <functional>
 #include "esp_panel_types.h"
 #include "esp_panel_backlight_base.hpp"
 
@@ -14,61 +13,54 @@ namespace esp_panel::drivers {
 /**
  * @brief The custom backlight device class
  *
- * @note  The class is a derived class of `Backlight`, users can use it to construct a custom backlight device
- *
+ * @note This class is a derived class of `Backlight`. Users can implement
+ *       custom backlight control through callback functions.
  */
 class BacklightCustom: public Backlight {
 public:
     /**
-     * @brief The default attributes of custom backlight device
-     *
+     * Here are some default values for custom backlight device
      */
-    constexpr static Attributes ATTRIBUTES_DEFAULT = {
+    static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BACKLIGHT_TYPE_CUSTOM,
         .name = "Custom",
     };
 
-    /**
-     * @brief The callback function to set the brightness
-     *
-     */
-    using SetBrightnessCallback = bool (*)(uint8_t, void *);
+    using FunctionSetBrightnessCallback = bool (*)(uint8_t, void *);
 
     /**
-     * @brief The configuration for custom backlight device
-     *
+     * @brief The custom backlight device configuration structure
      */
     struct Config {
-        SetBrightnessCallback callback = nullptr;   /*<! The callback function to set the brightness. Default is `nullptr` */
-        void *user_data = nullptr;                  /*<! The user data passed to the callback function. Default is `nullptr` */
+        /*!< The callback function to set the brightness. Default is `nullptr` */
+        FunctionSetBrightnessCallback callback = nullptr;
+        /*!< The user data passed to the callback function. Default is `nullptr` */
+        void *user_data = nullptr;
     };
 
 // *INDENT-OFF*
     /**
-     * @brief Construct a new custom device with simple parameters
+     * @brief Construct the custom backlight device with separate parameters
      *
      * @param[in] callback  The callback function to set the brightness
      * @param[in] user_data The user data passed to the callback function
-     *
      */
-    BacklightCustom(SetBrightnessCallback callback, void *user_data):
-        Backlight(ATTRIBUTES_DEFAULT),
+    BacklightCustom(FunctionSetBrightnessCallback callback, void *user_data):
+        Backlight(BASIC_ATTRIBUTES_DEFAULT),
         _config(Config{callback, user_data})
     {
     }
 // *INDENT-OFF*
 
     /**
-     * @brief Construct a new custom device with complex parameters
+     * @brief Construct the custom backlight device with configuration
      *
      * @param[in] config The custom backlight configuration
-     *
      */
-    BacklightCustom(const Config &config): Backlight(ATTRIBUTES_DEFAULT), _config(config) {}
+    BacklightCustom(const Config &config): Backlight(BASIC_ATTRIBUTES_DEFAULT), _config(config) {}
 
     /**
      * @brief Destroy the device
-     *
      */
     ~BacklightCustom() override;
 
@@ -76,9 +68,8 @@ public:
      * @brief Startup the device
      *
      * @return true if success, otherwise false
-     *
      */
-    bool begin(void) override;
+    bool begin() override;
 
     /**
      * @brief Delete the device, release the resources
@@ -86,9 +77,8 @@ public:
      * @note  After calling this function, users should call `begin()` to re-init the device
      *
      * @return true if success, otherwise false
-     *
      */
-    bool del(void) override;
+    bool del() override;
 
     /**
      * @brief Set the brightness by percent
@@ -98,12 +88,11 @@ public:
      * @param[in] percent The brightness percent (0-100)
      *
      * @return true if success, otherwise false
-     *
      */
     bool setBrightness(uint8_t percent) override;
 
 private:
-    Config _config;
+    Config _config = {};
 };
 
 } // namespace esp_panel::drivers

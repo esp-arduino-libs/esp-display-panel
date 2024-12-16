@@ -22,6 +22,7 @@
 #include "esp_lcd_jd9165.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_panel_lcd_vendor_types.h"
 
 #define JD9165_CMD_GS_BIT       (1 << 0)

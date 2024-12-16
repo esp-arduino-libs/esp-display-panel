@@ -13,7 +13,6 @@
 /**
  * Uncomment one of the following macros to select an supported development board. If multiple macros are uncommented
  * at the same time, an error will be prompted during compilation.
- *
  */
 
 /*
@@ -32,7 +31,6 @@
  *  -BOARD_ESP32_S3_LCD_EV_BOARD_2_V1_5 (ESP32-S3-LCD-EV-Board-2(v1.5)): https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-lcd-ev-board/user_guide.html
  *  -BOARD_ESP32_S3_USB_OTG (ESP32-S3-USB-OTG): https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-usb-otg/index.html
  *  -BOARD_ESP32_P4_FUNCTION_EV_BOARD (ESP32-P4-Function-EV-Board): https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32p4/esp32-p4-function-ev-board/index.html
- *
  */
 // #define BOARD_ESP32_C3_LCDKIT
 // #define BOARD_ESP32_S3_BOX
@@ -72,7 +70,6 @@
  *  -BOARD_ESP32_4848S040C_I_Y_3 (ESP32-4848S040C_I_Y_3):
  *      - https://www.displaysmodule.com/sale-41828962-experience-the-power-of-the-esp32-display-module-sku-esp32-4848s040c-i-y-3.html
  *      - http://pan.jczn1688.com/directlink/1/ESP32%20module/4.0inch_ESP32-4848S040.zip
- *
  */
 // #define BOARD_ESP32_4848S040C_I_Y_3
 
@@ -109,7 +106,6 @@
  *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
  *      default values. It is recommended to replace it with the file from the library.
  *   3. If the patch version is not consistent, it will not affect normal functionality.
- *
  */
 #define ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MAJOR 1
 #define ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MINOR 0

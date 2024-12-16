@@ -18,6 +18,7 @@
 #include "esp_lcd_touch.h"
 
 #include "esp_panel_utils.h"
+#include "esp_utils_helper.h"
 #include "esp_lcd_touch_tt21100.h"
 
 static const char *TAG = "TT21100";
