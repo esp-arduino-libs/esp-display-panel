@@ -42,7 +42,7 @@ bool ESP_PanelLcd_GC9503::init(void)
 {
     ESP_PANEL_CHECK_NULL_RET(bus, false, "Invalid bus");
 
-    /* Load RGB configurations from bus to vendor configurations */
+    /* Load configurations from bus to vendor configurations */
     ESP_PANEL_CHECK_FALSE_RET(loadVendorConfigFromBus(), false, "Load vendor config from bus failed");
 
     /* Create panel handle */

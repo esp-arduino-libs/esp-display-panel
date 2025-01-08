@@ -64,7 +64,7 @@ bool ESP_PanelLcd_ST7262::init(void)
         ESP_PANEL_CHECK_ERR_RET(gpio_config(&gpio_conf), false, "`Config RST gpio failed");
     }
 
-    /* Load RGB configurations from bus to vendor configurations */
+    /* Load configurations from bus to vendor configurations */
     ESP_PANEL_CHECK_FALSE_RET(loadVendorConfigFromBus(), false, "Load vendor config from bus failed");
 
     /* Create panel handle */

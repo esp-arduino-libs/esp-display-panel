@@ -41,6 +41,9 @@ bool ESP_PanelLcd_ST77922::init(void)
 {
     ESP_PANEL_CHECK_NULL_RET(bus, false, "Invalid bus");
 
+    /* Load configurations from bus to vendor configurations */
+    ESP_PANEL_CHECK_FALSE_RET(loadVendorConfigFromBus(), false, "Load vendor config from bus failed");
+
     ESP_PANEL_CHECK_ERR_RET(esp_lcd_new_panel_st77922(bus->getPanelIO_Handle(), &panel_config, &handle), false, "Create panel failed");
 
     return true;
