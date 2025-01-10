@@ -41,6 +41,17 @@
     + defined(BOARD_WAVESHARE_ESP32_S3_Touch_LCD_5_B) \
     + defined(BOARD_WAVESHARE_ESP32_S3_Touch_LCD_7) \
     + defined(BOARD_WAVESHARE_ESP32_P4_NANO) \
+    /* viewe */ \
+    + defined(BOARD_UEDX24320028E_WB_A_2_4) \
+    + defined(BOARD_UEDX24320028E_WB_A_2_8) \
+    + defined(BOARD_UEDX24320028E_WB_A_3_5_240_320) \
+    + defined(BOARD_UEDX24320028E_WB_A_3_5_320_480) \
+    + defined(BOARD_UEDX48480040E_WB_A_4_0) \
+    + defined(BOARD_UEDX80480043E_WB_A_4_3_800_480) \
+    + defined(BOARD_UEDX80480043E_WB_A_4_3_480_272) \
+    + defined(BOARD_UEDX80480050E_WB_A_5_0) \
+    + defined(BOARD_UEDX80480050E_WB_A_5_0_B) \
+    + defined(BOARD_UEDX80480070E_WB_A_7_0) \
     > 1
     #error "Multiple boards enabled! Please check file `ESP_Panel_Board_Supported.h` and make sure only one board is enabled."
 #endif
@@ -103,6 +114,27 @@
     #include "board/waveshare/ESP32_S3_Touch_LCD_7.h"
 #elif defined(BOARD_WAVESHARE_ESP32_P4_NANO)
     #include "board/waveshare/ESP32_P4_NANO.h"
+/* viewe */
+#elif defined(BOARD_UEDX24320028E_WB_A_2_4)
+    #include "board/viewe/viewe_panel_24320024.h"
+#elif defined(BOARD_UEDX24320028E_WB_A_2_8)
+    #include "board/viewe/viewe_panel_24320028.h"
+#elif defined(BOARD_UEDX24320028E_WB_A_3_5_240_320)
+    #include "board/viewe/viewe_panel_24320035.h"
+#elif defined(BOARD_UEDX24320028E_WB_A_3_5_320_480)
+    #include "board/viewe/viewe_panel_32480035.h"
+#elif defined(BOARD_UEDX48480040E_WB_A_4_0)
+    #include "board/viewe/viewe_panel_4848040.h"
+#elif defined(BOARD_UEDX80480043E_WB_A_4_3_800_480)
+    #include "board/viewe/viewe_panel_8048043.h"
+#elif defined(BOARD_UEDX80480043E_WB_A_4_3_480_272)
+    #include "board/viewe/viewe_panel_48272043.h"
+#elif defined(BOARD_UEDX80480050E_WB_A_5_0)
+    #include "board/viewe/viewe_panel_8048050.h"
+#elif defined(BOARD_UEDX80480050E_WB_A_5_0_B)
+    #include "board/viewe/viewe_panel2_8048050.h"
+#elif defined(BOARD_UEDX80480070E_WB_A_7_0)
+    #include "board/viewe/viewe_panel_8048070.h"
 #else
     #error "Unknown board selected! Please check file `ESP_Panel_Board_Supported.h` and make sure only one board is enabled."
 #endif

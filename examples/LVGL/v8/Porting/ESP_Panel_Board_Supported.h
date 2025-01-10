@@ -97,6 +97,43 @@
 // #define BOARD_WAVESHARE_ESP32_S3_Touch_LCD_7
 // #define BOARD_WAVESHARE_ESP32_P4_NANO
 
+/*
+ * VIEWE Supported Boards (https://viewedisplay.com/):
+ *  
+ *  - BOARD_UEDX24320028E_WB_A_2_4:https://viewedisplay.com/product/esp32-2-4-inch-240x320-rgb-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/
+ *  - BOARD_UEDX24320028E_WB_A_2_8:https://viewedisplay.com/product/esp32-2-8-inch-240x320-mcu-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/
+ *  - BOARD_UEDX24320028E_WB_A_3_5_240_320:https://viewedisplay.com/product/esp32-3-5-inch-240x320-mcu-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/
+ *  - BOARD_UEDX24320028E_WB_A_3_5_320_480:https://github.com/VIEWESMART/Product-Specification-and-Schematic/blob/main/ESP32/3.5inch/320480/UEDX32480035E-WB-A%20SPEC.pdf
+ *  - BOARD_UEDX48480040E_WB_A_4_0:https://viewedisplay.com/product/esp32-4-inch-tft-display-touch-screen-arduino-lvgl/
+ *  - BOARD_UEDX80480043E_WB_A_4_3_800_480:https://viewedisplay.com/product/esp32-4-3-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl/
+ *  - BOARD_UEDX80480043E_WB_A_4_3_480_272:https://github.com/VIEWESMART/Product-Specification-and-Schematic/blob/main/ESP32/4.3inch/Low-Resolution_480272/UEDX48270043E-WB-A%20SPEC.pdf
+ *  - BOARD_UEDX80480050E_WB_A_5_0:https://viewedisplay.com/product/esp32-5-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl/
+ *  - BOARD_UEDX80480070E_WB_A_7_0:https://viewedisplay.com/product/esp32-7-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl-uart/
+ *
+ */
+
+// #define BOARD_UEDX24320028E_WB_A_2_4  
+// #define BOARD_UEDX24320028E_WB_A_2_8 
+// #define BOARD_UEDX24320028E_WB_A_3_5_240_320     //The resolution is 240*320
+// #define BOARD_UEDX24320028E_WB_A_3_5_320_480     //The resolution is 320*480
+// #define BOARD_UEDX48480040E_WB_A_4_0
+// #define BOARD_UEDX80480043E_WB_A_4_3_800_480     //The resolution is 800*480
+// #define BOARD_UEDX80480043E_WB_A_4_3_480_272     //The resolution is 480*272
+// #define BOARD_UEDX80480050E_WB_A_5_0
+// #define BOARD_UEDX80480070E_WB_A_7_0
+
+/*
+The following products control IM through software
+*/
+#if defined(BOARD_UEDX24320028E_WB_A_2_4) || \
+    defined(BOARD_UEDX24320028E_WB_A_2_8) || \
+    defined(BOARD_UEDX24320028E_WB_A_3_5_240_320) || \
+    defined(BOARD_UEDX24320028E_WB_A_3_5_320_480)
+#define IM
+#define IM0 47
+#define IM1 48
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////// File Version ///////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

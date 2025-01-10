@@ -16,7 +16,7 @@ ESP32_Display_Panel 内部集成了多个[乐鑫组件库](https://components.es
 
 ESP32_Display_Panel 的功能框图如下所示，主要包含以下特性：
 
-- 支持多种 **Espressif** 官方及第三方开发板，包括 **M5Stack**、**Elecrow**、**Waveshare** 等。
+- 支持多种 **Espressif** 官方及第三方开发板，包括 **M5Stack**、**Elecrow**、**Waveshare**、**VIEWE** 等。
 - 支持适配 **自定义的开发板**。
 - 支持多种类型的设备驱动，包括 **接口总线**、**LCD**、**触摸**、**背光** 和 **IO 扩展**。
 - 支持动态配置驱动，如开启调试 LOG 等。
@@ -41,6 +41,7 @@ ESP32_Display_Panel 的功能框图如下所示，主要包含以下特性：
 | [Elecrow](docs/Board_Instructions.md#elecrow) | CrowPanel 7.0" |
 | [Jingcai](docs/Board_Instructions.md#shenzhen-jingcai-intelligent) | ESP32-4848S040C_I_Y_3 |
 | [Waveshare](docs/Board_Instructions.md#waveshare) | ESP32-S3-Touch-LCD-1.85, ESP32-S3-Touch-LCD-2.1, ESP32-S3-Touch-LCD-4.3, ESP32-S3-Touch-LCD-4.3B, ESP32-S3-Touch-LCD-5, ESP32-S3-Touch-LCD-5B, ESP32-S3-Touch-LCD-7, ESP32-P4-NANO |
+| [VIEWE](docs/Board_Instructions.md#viewe) | UEDX24320028E-WB-A-2.4, UEDX24320028E-WB-A-2.8, UEDX24320028E-WB-A-3.5-240x320, UEDX24320028E-WB-A-3.5-320x480, DX48480040E-WB-A, UEDX80480043E-WB-A-4.3-800x480, UEDX80480043E-WB-A-4.3-480x272, UEDX80480050E-WB-A, UEDX80480070E-WB-A|
 
 欢迎开发者和厂商贡献 PR 来添加更多的开发板，详细说明请参考 [`开发板贡献指南`](./docs/Board_Contribution_Guide_CN.md)。
 
@@ -69,6 +70,7 @@ ESP32_Display_Panel 的功能框图如下所示，主要包含以下特性：
 | Parade | TT21100 |
 | Sitronix | ST7123 |
 | Xptek | XPT2046 |
+|Chipsemicorp | CHSC6540 |
 
 ## 常见问题解答
 

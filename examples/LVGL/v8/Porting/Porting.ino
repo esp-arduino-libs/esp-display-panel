@@ -68,6 +68,18 @@ void setup()
     Serial.println(title + " start");
 
     Serial.println("Initialize panel device");
+#ifdef IM
+    pinMode(IM1, OUTPUT);
+    digitalWrite(IM1, HIGH);
+  #ifdef BOARD_UEDX24320028E_WB_A_3_5_320_480
+    pinMode(IM0, OUTPUT);
+    digitalWrite(IM0, HIGH);
+  #endif
+  #ifndef BOARD_UEDX24320028E_WB_A_3_5_320_480
+    pinMode(IM0, OUTPUT);
+    digitalWrite(IM0, LOW);
+  #endif
+#endif
     ESP_Panel *panel = new ESP_Panel();
     panel->init();
 #if LVGL_PORT_AVOID_TEAR

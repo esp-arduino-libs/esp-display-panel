@@ -11,6 +11,7 @@
   - [Where are the installation directory for arduino-esp32 and the SDK located?](#where-are-the-installation-directory-for-arduino-esp32-and-the-sdk-located)
   - [How to fix screen drift issue when driving RGB LCD with ESP32-S3?](#how-to-fix-screen-drift-issue-when-driving-rgb-lcd-with-esp32-s3)
   - [How to Use ESP32\_Display\_Panel on PlatformIO?](#how-to-use-esp32_display_panel-on-platformio)
+  - [How to add an LVGL library and how to configure?](#How-to-add-an-LVGL-library-and-how-to-configure)
 
 ## Where is the directory for Arduino libraries?
 
@@ -82,3 +83,73 @@ When encountering screen drift issue when driving RGB LCD with ESP32-S3, you can
 ## How to Use ESP32_Display_Panel on PlatformIO?
 
 You can refer to the example [PlatformIO](../examples/PlatformIO/) to use the ESP32_Display_Panel library in PlatformIO. By default, it is suitable for the **ESP32-S3-LCD-EV-Board** and **ESP32-S3-LCD-EV-Board-2** development boards. You need to modify the [boards/ESP-LCD.json](../examples/PlatformIO/boards/ESP-LCD.json) file according to the actual situation.
+
+## How to add an LVGL library and how to configure?
+* How to use it normally
+  
+  1.Download the LVGL library in Arduino, it is best to choose the `V8.4.0` version.
+  
+  2.Find the downloaded LVGL library, copy and paste the `lv_conf_template.h` file into the same directory as the LVGL library.
+  
+  3.Change the `lv_conf_template.h` file name to `lv_conf.h`.
+  
+  4.Open `lv_conf.h` to modify the macro definition and save: `#if 0`--> `#if 1`
+  ```c
+  ...
+  /* clang-format off */
+  #if 1 /*Set it to "1" to enable content*/
+
+  #ifndef LV_CONF_H
+  #define LV_CONF_H
+
+  #include <stdint.h>
+  ...
+  ```
+* How to use the examples and demos in lvgl
+
+  please open the corresponding macros
+  ```c
+  ...
+  /*==================
+  * EXAMPLES
+  *==================*/
+  
+  /*Enable the examples to be built with the library*/
+  #define LV_BUILD_EXAMPLES 1
+  
+  /*===================
+   * DEMO USAGE
+   ====================*/
+  
+  /*Show some widget. It might be required to increase `LV_MEM_SIZE` */
+  #define LV_USE_DEMO_WIDGETS 1
+  #if LV_USE_DEMO_WIDGETS
+  #define LV_DEMO_WIDGETS_SLIDESHOW 0
+  #endif
+  
+  /*Demonstrate the usage of encoder and keyboard*/
+  #define LV_USE_DEMO_KEYPAD_AND_ENCODER 0
+  
+  /*Benchmark your system*/
+  #define LV_USE_DEMO_BENCHMARK 0
+  #if LV_USE_DEMO_BENCHMARK
+  /*Use RGB565A8 images with 16 bit color depth instead of ARGB8565*/
+  #define LV_DEMO_BENCHMARK_RGB565A8 0
+  #endif
+  
+  /*Stress test for LVGL*/
+  #define LV_USE_DEMO_STRESS 0
+  
+  /*Music player demo*/
+  #define LV_USE_DEMO_MUSIC 0
+  #if LV_USE_DEMO_MUSIC
+      #define LV_DEMO_MUSIC_SQUARE    0
+      #define LV_DEMO_MUSIC_LANDSCAPE 0
+      #define LV_DEMO_MUSIC_ROUND     0
+      #define LV_DEMO_MUSIC_LARGE     0
+      #define LV_DEMO_MUSIC_AUTO_PLAY 0
+  #endif
+
+  ...
+  ```
+

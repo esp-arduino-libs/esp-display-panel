@@ -16,7 +16,7 @@ ESP32_Display_Panel integrates multiple display-related driver components from t
 
 The functional block diagram of ESP32_Display_Panel is shown below and includes the following features:
 
-- Supports a variety of **Espressif** official and third-party development boards, including **M5Stack**, **Elecrow**, **Waveshare**, and others.
+- Supports a variety of **Espressif** official and third-party development boards, including **M5Stack**, **Elecrow**, **Waveshare**,**VIEWE** and others.
 - Supports **custom development board** adaptation.
 - Supports a variety of device drivers, including interface **Bus**, **LCD**, **Touch**, **Backlight** and **IO Expander**.
 - Supports dynamic driver configuration, such as enabling debug logs.
@@ -41,6 +41,7 @@ Below is the list of [Supported Development Boards](docs/Board_Instructions.md):
 | [M5Stack](docs/Board_Instructions.md#m5stack) | M5STACK-M5CORE2, M5STACK-M5DIAL, M5STACK-M5CORES3 |
 | [Jingcai](docs/Board_Instructions.md#shenzhen-jingcai-intelligent) | ESP32-4848S040C_I_Y_3 |
 | [Waveshare](docs/Board_Instructions.md#waveshare) | ESP32-S3-Touch-LCD-1.85, ESP32-S3-Touch-LCD-2.1, ESP32-S3-Touch-LCD-4.3, ESP32-S3-Touch-LCD-4.3B, ESP32-S3-Touch-LCD-5, ESP32-S3-Touch-LCD-5B, ESP32-S3-Touch-LCD-7, ESP32-P4-NANO |
+| [VIEWE](docs/Board_Instructions.md#viewe) | UEDX24320028E-WB-A-2.4, UEDX24320028E-WB-A-2.8, UEDX24320028E-WB-A-3.5-240x320, UEDX24320028E-WB-A-3.5-320x480, DX48480040E-WB-A, UEDX80480043E-WB-A-4.3-800x480, UEDX80480043E-WB-A-4.3-480x272, UEDX80480050E-WB-A, UEDX80480070E-WB-A|
 
 Developers and manufacturers are welcome to contribute PRs to add more boards. For details, please refer to the [Board Contribution Guide](./docs/Board_Contribution_Guide.md).
 
@@ -69,6 +70,7 @@ Below is the list of [Supported Touch Controllers](docs/Touch_Controllers.md):
 | Parade | TT21100 |
 | Sitronix | ST7123 |
 | Xptek | XPT2046 |
+|Chipsemicorp | CHSC6540 |
 
 ## FAQ
 

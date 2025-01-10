@@ -52,6 +52,20 @@
 | <img src="https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/e/s/esp32-s3-touch-lcd-7-1.jpg" width="150"> | [ESP32-S3-Touch-LCD-7](https://www.waveshare.com/esp32-s3-touch-lcd-7.htm) | RGB |       ST7262       |      800x480       |      I2C      |        GT911         |
 | <img src="https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/e/s/esp32-p4-nano-1.jpg" width="150"> | [ESP32-P4-NANO](https://www.waveshare.com/esp32-p4-nano.htm) |  MIPI-DSI   |       JD9365       | 800x1280           |      I2C      |        GT9271 (GT911-like)        |
 
+## [VIEWE](https://viewedisplay.com/)
+
+|                                                                                                                                       **Picture**                                                                                                                                       |                                                **Name**                                                 |   **LCD Bus**    |**LCD Controller**| **LCD resolution** | **Touch Bus** | **Touch Controller** |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :--------------: | :----------------: | ------------------ | :-----------: | :------------------: |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/11/UEDX24320024E-WB-A.jpg" width="150"> | [UEDX24320028E-WB-A-2.4](https://viewedisplay.com/product/esp32-2-4-inch-240x320-rgb-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/) | SPI |       GC9307(like GC9A01)       |      240x320       |      I2C      |        CHSC6540         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/11/UEDX24320028E-WB-A.jpg" width="150"> | [UEDX24320028E-WB-A-2.8](https://viewedisplay.com/product/esp32-2-8-inch-240x320-mcu-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/) | SPI |       GC9307(like GC9A01)       |      240x320       |      I2C      |        CHSC6540         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/11/UEDX24320035E-WB-A-1.jpg" width="150"> | [UEDX24320028E-WB-A-3.5-240x320](https://viewedisplay.com/product/esp32-3-5-inch-240x320-mcu-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/) | SPI |       GC9307(like GC9A01)       |      240x320       |      I2C      |        CHSC6540         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/11/UEDX32480035E-WB-A.jpg" width="150"> | [UEDX24320028E-WB-A-3.5-320x480](https://viewedisplay.com/product/esp32-3-5-inch-320x4-mcu-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/) | SPI |       ST7365P(like ST7789)       |      320x480       |      I2C      |        CHSC6540         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/07/DX48480040E-WB-A-%E6%AD%A3.jpg" width="150"> | [UEDX48480040E-WB-A](https://viewedisplay.com/product/esp32-4-inch-tft-display-touch-screen-arduino-lvgl/) | 3-wire SPI + RGB |       GC9503       |      480x480       |      I2C      |         FT6336U(like FT5x06)        |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/07/UEDX80480043E-13.jpg" width="150"> | [UEDX80480043E-WB-A-800x480](https://viewedisplay.com/product/esp32-4-3-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl/) | RGB |       ST7262       |      800x480       |      I2C      |        GT911         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/07/UEDX80480043E-13.jpg" width="150"> | [UEDX80480043E-WB-A-480x272](https://viewedisplay.com/product/esp32-4-3-inch-480x272-rgb-ips-tft-display-touch-screen-arduino-lvgl-wifi-ble-uart-smart-module/) | RGB |       ST7262       |      480x272      |      I2C      |        GT911         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/06/DX80480050E-aa.jpg" width="150"> | [UEDX80480050E-WB-A](https://viewedisplay.com/product/esp32-5-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl/) | RGB |       ST7262E43-G4(like ST7262)       |      800x480       |      I2C      |        GT911         |
+| <img src="https://viewedisplay.com/wp-content/uploads/2024/08/DX80480070E-a2.jpg" width="150"> | [UEDX80480070E-WB-A](https://viewedisplay.com/product/esp32-7-inch-800x480-rgb-ips-tft-display-touch-screen-arduino-lvgl-uart/) | RGB |       EK9716BD3+EK73002AB2(like ST7262)       |      800x480       |      I2C      |        GT911         |
+
 ## Recommended Configurations in the Arduino IDE
 
 Below are recommended configurations for developing GUI applications on different development boards. These settings can be adjusted according to specific requirements, and users can navigate to the `Tools` menu in the Arduino IDE to configure the following settings.
@@ -82,6 +96,15 @@ Below are recommended configurations for developing GUI applications on differen
 | Waveshare-ESP32-S3-Touch-LCD-5B   | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB    |    Enabled      |     16M Flash (3MB)     |
 | Waveshare-ESP32-S3-Touch-LCD-7    | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    8MB     |    Disabled     |     8M with spiffs      |
 |      Waveshare-ESP32-P4-NANO      | ESP32P4 Dev Module | Enabled  |    QIO     |    16MB    |    Disabled     |     16M Flash (3MB)     |
+|      UEDX24320028E-WB-A-2.4       | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|      UEDX24320028E-WB-A-2.8       | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|   UEDX24320028E-WB-A-3.5-240x320  | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|   UEDX24320028E-WB-A-3.5-320x480  | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|        UEDX48480040E-WB-A         | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|    UEDX80480043E-WB-A-800x480     | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|    UEDX80480043E-WB-A-480x272     | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|        UEDX80480050E-WB-A         | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
+|        UEDX80480070E-WB-A         | ESP32S3 Dev Module |   OPI    | QIO 80MHz  |    16MB     |    Enabled     |     16M Flash (3MB)     |
 
 **Notes:**
 
