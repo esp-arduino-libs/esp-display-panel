@@ -8,44 +8,88 @@
 #include <concepts>
 #include "esp_panel_utils.h"
 #include "drivers/host/esp_panel_host_i2c.hpp"
-#include "esp_panel_io_expander_base.hpp"
+#include "esp_panel_io_expander.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief Check whether the type is derived from `esp_expander::Base`
+ * @brief Concept to check whether a type is derived from `esp_expander::Base`
  *
- * @tparam T The type to be checked
+ * @tparam T Type to be checked
  */
 template<class T>
 concept CheckIsIO_ExpanderAdaptee = std::is_base_of_v<esp_expander::Base, T>;
 
+/**
+ * @brief Adapter class template for IO expander devices
+ *
+ * @tparam T Type of the IO expander device, must satisfy CheckIsIO_ExpanderAdaptee concept
+ */
 template <class T>
 requires CheckIsIO_ExpanderAdaptee<T>
 class IO_ExpanderAdapter: public IO_Expander, public T {
 public:
+    /**
+     * @brief Construct a new IO expander adapter
+     *
+     * @param[in] attr Basic attributes for the IO expander device
+     * @param[in] config Configuration for the IO expander device
+     */
     IO_ExpanderAdapter(const BasicAttributes &attr, const esp_expander::Base::Config &config):
         IO_Expander(attr, config),
         T(processConfig(config))
     {
     }
 
+    /**
+     * @brief Destroy the IO expander adapter
+     */
     ~IO_ExpanderAdapter() override;
 
+    /**
+     * @brief Initialize the IO expander device
+     *
+     * @return `true` if successful, `false` otherwise
+     */
     bool init() override;
+
+    /**
+     * @brief Start the IO expander device
+     *
+     * @return `true` if successful, `false` otherwise
+     */
     bool begin() override;
+
+    /**
+     * @brief Delete the IO expander device and release resources
+     *
+     * @return `true` if successful, `false` otherwise
+     */
     bool del() override;
+
+    /**
+     * @brief Check if device has reached specified state
+     *
+     * @param[in] state State to check against
+     * @return `true` if current state >= given state, `false` otherwise
+     */
     bool isOverState(esp_expander::Base::State state) const override
     {
         return T::isOverState(state);
     }
+
+    /**
+     * @brief Get base class pointer
+     *
+     * @return Pointer to base class
+     */
     esp_expander::Base *getBase() override
     {
         return static_cast<esp_expander::Base *>(this);
     }
 
 public:
-    std::shared_ptr<HostI2C> _host = nullptr;
+    std::shared_ptr<HostI2C> _host = nullptr;  /*!< I2C host interface */
 };
 
 template <class T>

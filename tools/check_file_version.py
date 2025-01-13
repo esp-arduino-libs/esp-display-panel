@@ -6,7 +6,7 @@ import sys
 import re
 
 internal_version_file = 'src/esp_panel_versions.h'
-internal_version_macross = [
+internal_version_macros = [
     {
         'file': 'library.properties',
         'macro': {
@@ -16,11 +16,11 @@ internal_version_macross = [
         },
     },
     {
-        'file': 'esp_panel_conf.h',
+        'file': 'esp_panel_drivers_conf.h',
         'macro': {
-            'major': 'ESP_PANEL_CONF_VERSION_MAJOR',
-            'minor': 'ESP_PANEL_CONF_VERSION_MINOR',
-            'patch': 'ESP_PANEL_CONF_VERSION_PATCH'
+            'major': 'ESP_PANEL_DRIVERS_CONF_VERSION_MAJOR',
+            'minor': 'ESP_PANEL_DRIVERS_CONF_VERSION_MINOR',
+            'patch': 'ESP_PANEL_DRIVERS_CONF_VERSION_PATCH'
         },
     },
     {
@@ -42,11 +42,11 @@ internal_version_macross = [
 ]
 file_version_macros = [
     {
-        'file': 'esp_panel_conf.h',
+        'file': 'esp_panel_drivers_conf.h',
         'macro': {
-            'major': 'ESP_PANEL_CONF_FILE_VERSION_MAJOR',
-            'minor': 'ESP_PANEL_CONF_FILE_VERSION_MINOR',
-            'patch': 'ESP_PANEL_CONF_FILE_VERSION_PATCH'
+            'major': 'ESP_PANEL_DRIVERS_CONF_FILE_VERSION_MAJOR',
+            'minor': 'ESP_PANEL_DRIVERS_CONF_FILE_VERSION_MINOR',
+            'patch': 'ESP_PANEL_DRIVERS_CONF_FILE_VERSION_PATCH'
         },
     },
     {
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         internal_version_path = os.path.join(search_directory, internal_version_file)
         internal_versions = []
         print(f"Internal version extracted from '{internal_version_path}")
-        for internal_version_macros in internal_version_macross:
+        for internal_version_macros in internal_version_macros:
             version = extract_file_version(internal_version_path, internal_version_macros)
             if version:
                 print(f"Internal version: '{internal_version_macros['file']}': {version}")

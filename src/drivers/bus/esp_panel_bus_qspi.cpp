@@ -173,6 +173,24 @@ void BusQSPI::Config::printControlPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BusQSPI::Config::HostFullConfig *BusQSPI::Config::getHostFullConfig() const
+{
+    if (std::holds_alternative<HostPartialConfig>(host)) {
+        return nullptr;
+    }
+
+    return &std::get<HostFullConfig>(host);
+}
+
+const BusQSPI::Config::ControlPanelFullConfig *BusQSPI::Config::getControlPanelFullConfig() const
+{
+    if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
+        return nullptr;
+    }
+
+    return &std::get<ControlPanelFullConfig>(control_panel);
+}
+
 BusQSPI::~BusQSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -306,6 +324,24 @@ bool BusQSPI::del()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
+}
+
+BusQSPI::Config::ControlPanelFullConfig &BusQSPI::getControlPanelFullConfig()
+{
+    if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
+}
+
+BusQSPI::Config::HostFullConfig &BusQSPI::getHostFullConfig()
+{
+    if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::HostFullConfig>(_config.host);
 }
 
 } // namespace esp_panel::drivers

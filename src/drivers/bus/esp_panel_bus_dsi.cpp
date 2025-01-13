@@ -230,6 +230,33 @@ void BusDSI::Config::printPHY_LDO_Config() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BusDSI::Config::HostFullConfig *BusDSI::Config::getHostFullConfig() const
+{
+    if (std::holds_alternative<HostPartialConfig>(host)) {
+        return nullptr;
+    }
+
+    return &std::get<HostFullConfig>(host);
+}
+
+const BusDSI::Config::RefreshPanelFullConfig *BusDSI::Config::getRefreshPanelFullConfig() const
+{
+    if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
+        return nullptr;
+    }
+
+    return &std::get<RefreshPanelFullConfig>(refresh_panel);
+}
+
+const BusDSI::Config::PHY_LDO_FullConfig *BusDSI::Config::getPHY_LDO_Config() const
+{
+    if (std::holds_alternative<PHY_LDO_PartialConfig>(phy_ldo)) {
+        return nullptr;
+    }
+
+    return &std::get<PHY_LDO_FullConfig>(phy_ldo);
+}
+
 BusDSI::~BusDSI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -360,6 +387,15 @@ bool BusDSI::del()
 esp_lcd_dsi_bus_handle_t BusDSI::getHostHandle()
 {
     return (_host == nullptr) ? nullptr : static_cast<esp_lcd_dsi_bus_handle_t>(_host->getHandle());
+}
+
+BusDSI::Config::RefreshPanelFullConfig &BusDSI::getRefreshPanelFullConfig()
+{
+    if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
 }
 
 } // namespace esp_panel::drivers

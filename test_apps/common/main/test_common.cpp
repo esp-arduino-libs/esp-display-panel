@@ -126,11 +126,12 @@ TEST_CASE("Test board", "[board]")
             TEST_ASSERT_TRUE_MESSAGE(touch->readRawData(-1, -1, TEST_TOUCH_READ_DELAY_MS), "Read touch raw data failed");
             TEST_ASSERT_TRUE_MESSAGE(touch->getPoints(points), "Read touch points failed");
             TEST_ASSERT_TRUE_MESSAGE(touch->getButtons(buttons), "Read touch buttons failed");
+            int i = 0;
             for (auto &point : points) {
-                ESP_LOGI(TAG, "Point: x(%d), y(%d), strength(%d)", point.x, point.y, point.strength);
+                ESP_LOGI(TAG, "Point(%d): x(%d), y(%d), strength(%d)", i++, point.x, point.y, point.strength);
             }
             for (auto &button : buttons) {
-                ESP_LOGI(TAG, "Button(%d): %d", button.first, button.second);
+                ESP_LOGI(TAG, "Button(%d): %d", i++, button.second);
             }
             if (!touch->isInterruptEnabled()) {
                 delay(TEST_TOUCH_READ_DELAY_MS);

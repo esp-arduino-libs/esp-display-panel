@@ -233,7 +233,7 @@
          * @param[in] percent   Brightness percentage, 0-100
          * @param[in] user_data User data, default is a pointer of `Board`
          *
-         * @return true if successful, otherwise false
+         * @return `true` if successful, otherwise false
          *
          */
         #define ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION( percent, user_data )  \
@@ -298,4 +298,4 @@
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR 0
 #define ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_PATCH 0
 
-// *INDENT-OFF*
+// *INDENT-ON*

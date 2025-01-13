@@ -36,14 +36,14 @@ bool LCD_ST77922::init()
     // Create refresh panel
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_new_panel_st77922(
-            bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
+            getBus()->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
         ), false, "Create refresh panel failed"
     );
     ESP_UTILS_LOGD("Create refresh panel(@%p)", refresh_panel);
 
     /* Disable control panel if enable `auto_del_panel_io/enable_io_multiplex` flag */
     if (getConfig().getVendorFullConfig()->flags.auto_del_panel_io) {
-        bus->disableControlPanelHandle();
+        getBus()->disableControlPanelHandle();
     }
 
     setState(State::INIT);

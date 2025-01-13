@@ -84,7 +84,7 @@ Below are detailed instructions on how to configure ESP32_Display_Panel, mainly 
 
 #### Configuring Drivers
 
-ESP32_Display_Panel configures driver functionality and parameters based on the [esp_panel_conf.h](../esp_panel_conf.h) file. Users can update the behavior or default parameters of the driver by modifying macro definitions in this file. For example, to enable debug log output, here is a snippet of the modified `esp_panel_conf.h` file:
+ESP32_Display_Panel configures driver functionality and parameters based on the [esp_panel_drivers_conf.h](../esp_panel_drivers_conf.h) file. Users can update the behavior or default parameters of the driver by modifying macro definitions in this file. For example, to enable debug log output, here is a snippet of the modified `esp_panel_drivers_conf.h` file:
 
 ```c
 ...
@@ -347,7 +347,7 @@ SquareLine Studio (v1.3.x) allows for the rapid design of beautiful UIs through 
     Arduino
         |-libraries
             |-ESP32_Display_Panel
-            |-esp_panel_conf.h (optional)
+            |-esp_panel_drivers_conf.h (optional)
             |-lv_conf.h (optional)
             |-lvgl
             |-ui

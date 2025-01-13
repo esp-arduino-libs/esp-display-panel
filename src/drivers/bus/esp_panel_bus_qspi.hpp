@@ -11,19 +11,19 @@
 #include "driver/spi_master.h"
 #include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_spi.hpp"
-#include "esp_panel_bus_base.hpp"
+#include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The QSPI bus class
+ * @brief The QSPI bus class for ESP Panel
  *
- * @note  The class is a derived class of `Bus`, users can use it to construct the QSPI bus
+ * This class is derived from `Bus` class and provides QSPI bus implementation for ESP Panel
  */
 class BusQSPI: public Bus {
 public:
     /**
-     * Here are some default values for QSPI bus
+     * @brief Default values for QSPI bus configuration
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BUS_TYPE_QSPI,
@@ -36,66 +36,86 @@ public:
      * @brief The QSPI bus configuration structure
      */
     struct Config {
+        /**
+         * @brief Host configuration types
+         */
         using HostFullConfig = spi_bus_config_t;
+
+        /**
+         * @brief Control panel configuration types
+         */
         using ControlPanelFullConfig = esp_lcd_panel_io_spi_config_t;
 
+        /**
+         * @brief Partial host configuration structure
+         */
         struct HostPartialConfig {
-            int sclk_io_num = -1;
-            int data0_io_num = -1;
-            int data1_io_num = -1;
-            int data2_io_num = -1;
-            int data3_io_num = -1;
-        };
-        struct ControlPanelPartialConfig {
-            int cs_gpio_num = -1;
-            int spi_mode = 0;
-            int pclk_hz = QSPI_PCLK_HZ_DEFAULT;
-            int lcd_cmd_bits = 8;
-            int lcd_param_bits = 8;
+            int sclk_io_num = -1;    ///< GPIO number for SCLK signal
+            int data0_io_num = -1;   ///< GPIO number for DATA0 signal
+            int data1_io_num = -1;   ///< GPIO number for DATA1 signal
+            int data2_io_num = -1;   ///< GPIO number for DATA2 signal
+            int data3_io_num = -1;   ///< GPIO number for DATA3 signal
         };
 
+        /**
+         * @brief Partial control panel configuration structure
+         */
+        struct ControlPanelPartialConfig {
+            int cs_gpio_num = -1;        ///< GPIO number for CS signal
+            int spi_mode = 0;            ///< QSPI mode (0-3)
+            int pclk_hz = QSPI_PCLK_HZ_DEFAULT;  ///< QSPI clock frequency in Hz
+            int lcd_cmd_bits = 8;        ///< Bits for LCD commands
+            int lcd_param_bits = 8;      ///< Bits for LCD parameters
+        };
+
+        /**
+         * @brief Convert partial configurations to full configurations
+         */
         void convertPartialToFull();
+
+        /**
+         * @brief Print host configuration for debugging
+         */
         void printHostConfig() const;
+
+        /**
+         * @brief Print control panel configuration for debugging
+         */
         void printControlPanelConfig() const;
 
-        const HostFullConfig *getHostFullConfig() const
-        {
-            if (std::holds_alternative<HostPartialConfig>(host)) {
-                return nullptr;
-            }
-            return &std::get<HostFullConfig>(host);
-        }
+        /**
+         * @brief Get the full host configuration if available
+         *
+         * @return Pointer to full host configuration, `nullptr` if using partial configuration
+         */
+        const HostFullConfig *getHostFullConfig() const;
 
-        const ControlPanelFullConfig *getControlPanelFullConfig() const
-        {
-            if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
-                return nullptr;
-            }
-            return &std::get<ControlPanelFullConfig>(control_panel);
-        }
+        /**
+         * @brief Get the full control panel configuration if available
+         *
+         * @return Pointer to full control panel configuration, `nullptr` if using partial configuration
+         */
+        const ControlPanelFullConfig *getControlPanelFullConfig() const;
 
-        // General
-        int host_id = QSPI_HOST_ID_DEFAULT;
-        // Host
-        std::variant<HostFullConfig, HostPartialConfig> host = {};
-        // Control Panel
+        int host_id = QSPI_HOST_ID_DEFAULT;    ///< QSPI host ID
+        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
+        ///< Control panel configuration
         std::variant<ControlPanelFullConfig, ControlPanelPartialConfig> control_panel = {};
-        // Extra
-        bool skip_init_host = false;
+        bool skip_init_host = false;          ///< Skip host initialization if true
     };
 
 // *INDENT-OFF*
     /**
-     * @brief Construct the QSPI bus with separate parameters, the host will be initialized by the driver
+     * @brief Construct a new QSPI bus instance with individual parameters
      *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
+     * Uses default values for most configurations. Call `config*()` functions to modify the default settings
      *
-     * @param[in] cs_io   QSPI CS pin
-     * @param[in] sck_io  QSPI SCK pin
-     * @param[in] d0_io   QSPI D0 pin
-     * @param[in] d1_io   QSPI D1 pin
-     * @param[in] d2_io   QSPI D2 pin
-     * @param[in] d3_io   QSPI D3 pin
+     * @param[in] cs_io  GPIO number for QSPI CS signal
+     * @param[in] sck_io GPIO number for QSPI SCK signal
+     * @param[in] d0_io  GPIO number for QSPI D0 signal
+     * @param[in] d1_io  GPIO number for QSPI D1 signal
+     * @param[in] d2_io  GPIO number for QSPI D2 signal
+     * @param[in] d3_io  GPIO number for QSPI D3 signal
      */
     BusQSPI(int cs_io, int sck_io, int d0_io, int d1_io, int d2_io, int d3_io):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -119,12 +139,10 @@ public:
     }
 
     /**
-     * @brief Construct the QSPI bus with separate parameters, the host should be initialized by the user
-     *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
+     * @brief Construct a new QSPI bus instance with pre-initialized host
      *
      * @param[in] host_id QSPI host ID
-     * @param[in] cs_io   QSPI CS pin
+     * @param[in] cs_io   GPIO number for CS signal
      */
     BusQSPI(int host_id, int cs_io):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -142,106 +160,141 @@ public:
     }
 
     /**
-     * @brief Construct the QSPI bus with configuration
+     * @brief Construct a new QSPI bus instance with complete configuration
      *
-     * @param[in] config QSPI bus configuration
+     * @param[in] config Complete QSPI bus configuration
      */
     BusQSPI(const Config &config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config(config)
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
-     * @brief Destroy the QSPI bus
+     * @brief Destroy the QSPI bus instance
      */
     ~BusQSPI() override;
 
     /**
-     * Here are some functions to configure the bus. These functions should be called before `init()`
+     * @brief Configure QSPI mode
+     *
+     * @param[in] mode QSPI mode (0-3)
+     * @note This function should be called before `init()`
      */
     void configQSPI_Mode(uint8_t mode);
+
+    /**
+     * @brief Configure QSPI clock frequency
+     *
+     * @param[in] hz Clock frequency in Hz
+     * @note This function should be called before `init()`
+     */
     void configQSPI_FreqHz(uint32_t hz);
+
+    /**
+     * @brief Configure QSPI transaction queue depth
+     *
+     * @param[in] depth Queue depth for QSPI transactions
+     * @note This function should be called before `init()`
+     */
     void configQSPI_TransQueueDepth(uint8_t depth);
 
     /**
-     * @brief Initialize the bus
+     * @brief Initialize the QSPI bus
      *
-     * @return true if success, otherwise false
+     * @return `true` if initialization succeeds, `false` otherwise
      */
     bool init() override;
 
     /**
-     * @brief Startup the bus
+     * @brief Start the QSPI bus operation
      *
-     * @return true if success, otherwise false
+     * @return `true` if startup succeeds, `false` otherwise
      */
     bool begin() override;
 
     /**
-     * @brief Delete the bus, release the resources
+     * @brief Delete the QSPI bus instance and release resources
      *
-     * @return true if success, otherwise false
+     * @return `true` if deletion succeeds, `false` otherwise
      */
     bool del() override;
 
     /**
-     * @brief Get the bus configuration
+     * @brief Get the current bus configuration
      *
-     * @return Bus configuration
+     * @return Reference to the current bus configuration
      */
     const Config &getConfig() const
     {
         return _config;
     }
 
-    // TODO: Remove in the next major version
-    [[deprecated("Deprecated. Please use `configQSPI_Mode()` instead")]]
+    /**
+     * @brief Configure QSPI mode
+     *
+     * @param[in] mode QSPI mode (0-3)
+     * @deprecated Use `configQSPI_Mode()` instead
+     */
+    [[deprecated("Use `configQSPI_Mode()` instead")]]
     void configQspiMode(uint8_t mode)
     {
         configQSPI_Mode(mode);
     }
-    [[deprecated("Deprecated. Please use `configQSPI_FreqHz()` instead")]]
+
+    /**
+     * @brief Configure QSPI clock frequency
+     *
+     * @param[in] hz Clock frequency in Hz
+     * @deprecated Use `configQSPI_FreqHz()` instead
+     */
+    [[deprecated("Use `configQSPI_FreqHz()` instead")]]
     void configQspiFreqHz(uint32_t hz)
     {
         configQSPI_FreqHz(hz);
     }
-    [[deprecated("Deprecated. Please use \
-    `configQSPI_TransQueueDepth()` instead")]]
+
+    /**
+     * @brief Configure QSPI transaction queue depth
+     *
+     * @param[in] depth Queue depth for QSPI transactions
+     * @deprecated Use `configQSPI_TransQueueDepth()` instead
+     */
+    [[deprecated("Use `configQSPI_TransQueueDepth()` instead")]]
     void configQspiTransQueueDepth(uint8_t depth)
     {
         configQSPI_TransQueueDepth(depth);
     }
 
 private:
-    Config::ControlPanelFullConfig &getControlPanelFullConfig()
-    {
-        if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
-    }
+    /**
+     * @brief Get mutable reference to control panel full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to control panel full configuration
+     */
+    Config::ControlPanelFullConfig &getControlPanelFullConfig();
 
-    Config::HostFullConfig &getHostFullConfig()
-    {
-        if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::HostFullConfig>(_config.host);
-    }
+    /**
+     * @brief Get mutable reference to host full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to host full configuration
+     */
+    Config::HostFullConfig &getHostFullConfig();
 
-    Config _config = {};
-    std::shared_ptr<HostSPI> _host = nullptr;
+    Config _config = {};                      ///< QSPI bus configuration
+    std::shared_ptr<HostSPI> _host = nullptr; ///< QSPI host instance
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::BusQSPI`
- *             instead.
+ * @brief Alias for backward compatibility
  *
- * @TODO: Remove in the next major version
+ * @deprecated Use `esp_panel::drivers::BusQSPI` instead
  */
-typedef esp_panel::drivers::BusQSPI ESP_PanelBusQSPI __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::BusQSPI` instead.")));
+using ESP_PanelBusQSPI [[deprecated("Use `esp_panel::drivers::BusQSPI` instead")]] = esp_panel::drivers::BusQSPI;

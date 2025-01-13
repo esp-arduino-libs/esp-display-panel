@@ -11,12 +11,13 @@
 #include "esp_panel_conf_internal.h"
 
 /* Drivers */
-#include "drivers/bus/esp_panel_bus.hpp"
-#include "drivers/lcd/esp_panel_lcd.hpp"
-#include "drivers/touch/esp_panel_touch.hpp"
-#include "drivers/backlight/esp_panel_backlight.hpp"
-#include "drivers/io_expander/esp_panel_io_expander.hpp"
+#include "drivers/bus/esp_panel_bus_factory.hpp"
+#include "drivers/lcd/esp_panel_lcd_factory.hpp"
+#include "drivers/touch/esp_panel_touch_factory.hpp"
+#include "drivers/backlight/esp_panel_backlight_factory.hpp"
+#include "drivers/io_expander/esp_panel_io_expander_factory.hpp"
 
 /* Board */
 #include "board/esp_panel_board_internal.h"
 #include "board/esp_panel_board.hpp"
+#include "board/esp_panel_board_config_default.hpp"

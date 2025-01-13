@@ -18,6 +18,17 @@ BacklightCustom::~BacklightCustom()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+void BacklightCustom::configCallback(FunctionSetBrightnessCallback callback, void *user_data)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_LOGD("Param: callback(%p), user_data(%p)", callback, user_data);
+    _config.callback = callback;
+    _config.user_data = user_data;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
 bool BacklightCustom::begin()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -55,7 +66,9 @@ bool BacklightCustom::setBrightness(uint8_t percent)
         ESP_UTILS_LOGW("Percent out of range, force to 100");
         percent = 100;
     }
-    ESP_UTILS_CHECK_FALSE_RETURN(_config.callback(percent, _config.user_data), false, "Run callback failed");
+    if (_config.callback != nullptr) {
+        ESP_UTILS_CHECK_FALSE_RETURN(_config.callback(percent, _config.user_data), false, "Run callback failed");
+    }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

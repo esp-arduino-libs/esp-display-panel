@@ -102,6 +102,15 @@ void BacklightPWM_LEDC::Config::printLEDC_ChannelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BacklightPWM_LEDC::Config::LEDC_ChannelFullConfig *BacklightPWM_LEDC::Config::getLEDC_FullChannelConfig() const
+{
+    if (std::holds_alternative<LEDC_ChannelPartialConfig>(ledc_channel)) {
+        return nullptr;
+    }
+
+    return &std::get<LEDC_ChannelFullConfig>(ledc_channel);
+}
+
 BacklightPWM_LEDC::~BacklightPWM_LEDC()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -189,6 +198,15 @@ bool BacklightPWM_LEDC::setBrightness(uint8_t percent)
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
+}
+
+BacklightPWM_LEDC::Config::LEDC_ChannelFullConfig &BacklightPWM_LEDC::getLEDC_ChannelConfig()
+{
+    if (std::holds_alternative<Config::LEDC_ChannelPartialConfig>(_config.ledc_channel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::LEDC_ChannelFullConfig>(_config.ledc_channel);
 }
 
 } // namespace esp_panel::drivers

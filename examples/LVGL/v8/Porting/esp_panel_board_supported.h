@@ -1,22 +1,35 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @file esp_panel_board_supported.h
+ * @brief Configuration file for supported ESP development boards
+ *
+ * This file contains configuration options for various supported development boards using ESP Panel.
+ * Users can select their specific board by uncommenting the corresponding macro definition.
  */
 
 #pragma once
 
-/* Set to 1 if using a supported board */
+/**
+ * @brief Flag to enable supported board configuration
+ *
+ * Set to `1` to use supported board configuration
+ */
 #define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (0)         // 0/1
 
 #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
 /**
- * Uncomment one of the following macros to select an supported development board. If multiple macros are uncommented
- * at the same time, an error will be prompted during compilation.
+ * @brief Board selection macros
+ *
+ * Uncomment one of the following macros to select a supported development board. Multiple macros enabled
+ * simultaneously will trigger a compilation error.
  */
 
 /*
- * Espressif Supported Boards (https://www.espressif.com/en/products/devkits):
+ * Espressif (https://www.espressif.com/en/products/devkits):
  *
  *  -BOARD_ESP32_C3_LCDKIT (ESP32-C3-LCDkit): https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c3/esp32-c3-lcdkit/index.html
  *  -BOARD_ESP32_S3_BOX (ESP32-S3-Box): https://github.com/espressif/esp-box/tree/master
@@ -101,11 +114,11 @@
  * Do not change the following versions, they are used to check if the configurations in this file are compatible with
  * the current version of `esp_panel_board_supported.h` in the library. The detailed rules are as follows:
  *
- *   1. If the major version is not consistent, then the configurations in this file are incompatible with the library
- *      and must be replaced with the file from the library.
- *   2. If the minor version is not consistent, this file might be missing some new configurations, which will be set to
- *      default values. It is recommended to replace it with the file from the library.
- *   3. If the patch version is not consistent, it will not affect normal functionality.
+ * These version numbers are used to check compatibility between this configuration file and the library.
+ * Rules for version numbers:
+ * 1. Major version mismatch: Configurations are incompatible, must use library version
+ * 2. Minor version mismatch: May be missing new configurations, recommended to update
+ * 3. Patch version mismatch: No impact on functionality
  */
 #define ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MAJOR 1
 #define ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MINOR 0

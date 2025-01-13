@@ -14,8 +14,11 @@
 #include "esp_io_expander.hpp"
 #include "esp_panel_types.h"
 #include "port/esp_lcd_panel_io_additions.h"
-#include "esp_panel_bus_base.hpp"
+#include "esp_panel_bus.hpp"
 
+/**
+ * @brief Define RGB data width based on SOC capabilities
+ */
 // *INDENT-OFF*
 #ifdef SOC_LCDCAM_RGB_DATA_WIDTH
     #define ESP_PANEL_BUS_RGB_DATA_BITS SOC_LCDCAM_RGB_DATA_WIDTH
@@ -25,25 +28,23 @@
     #warning "`SOC_LCDCAM_RGB_DATA_WIDTH` or `SOC_LCD_RGB_DATA_WIDTH` not defined, using default value 16"
     #define ESP_PANEL_BUS_RGB_DATA_BITS 16
 #endif // SOC_LCDCAM_RGB_DATA_WIDTH
-// *INDENT-OFF*
-
-/**
- * For the ESP32-S3, the RGB peripheral only supports 16-bit RGB565 and 8-bit RGB888 color formats. For more details,
- * please refer to the part `Display > LCD Screen > RGB LCD Introduction` in ESP-IoT-Solution Programming Guide
- * (https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/rgb_lcd.html#color-formats).
- */
+// *INDENT-ON*
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The RGB bus class
+ * @brief The RGB bus class for ESP Panel
  *
- * @note  The class is a derived class of `Bus`, users can use it to construct the RGB bus
+ * This class is derived from `Bus` class and provides RGB bus implementation for ESP Panel
+ *
+ * For the ESP32-S3, the RGB peripheral only supports 16-bit RGB565 and 8-bit RGB888 color formats.
+ * For more details, please refer to the part `Display > LCD Screen > RGB LCD Introduction` in ESP-IoT-Solution
+ * Programming Guide (https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/lcd/rgb_lcd.html#color-formats)
  */
 class BusRGB: public Bus {
 public:
     /**
-     * Here are some default values for RGB bus
+     * @brief Default values for RGB bus configuration
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BUS_TYPE_RGB,
@@ -56,78 +57,96 @@ public:
      * @brief The RGB bus configuration structure
      */
     struct Config {
+        /**
+         * @brief Control panel configuration types
+         */
         using ControlPanelFullConfig = esp_lcd_panel_io_3wire_spi_config_t;
+
+        /**
+         * @brief Refresh panel configuration types
+         */
         using RefreshPanelFullConfig = esp_lcd_rgb_panel_config_t;
 
+        /**
+         * @brief Partial control panel configuration structure
+         */
         struct ControlPanelPartialConfig {
-            int cs_io_type = static_cast<int>(IO_TYPE_GPIO);
-            int scl_io_type = static_cast<int>(IO_TYPE_GPIO);
-            int sda_io_type = static_cast<int>(IO_TYPE_GPIO);
-            int cs_gpio_num = -1;
-            int scl_gpio_num = -1;
-            int sda_gpio_num = -1;
-            bool flags_scl_active_falling_edge = false;
-        };
-        struct RefreshPanelPartialConfig {
-            int pclk_hz = RGB_PCLK_HZ_DEFAULT;
-            int h_res = 0;
-            int v_res = 0;
-            int hsync_pulse_width = 10;
-            int hsync_back_porch = 10;
-            int hsync_front_porch = 20;
-            int vsync_pulse_width = 10;
-            int vsync_back_porch = 10;
-            int vsync_front_porch = 10;
-            int data_width = RGB_DATA_WIDTH_DEFAULT;
-            int bits_per_pixel = RGB_DATA_WIDTH_DEFAULT;
-            int bounce_buffer_size_px = 0;
-            int hsync_gpio_num = -1;
-            int vsync_gpio_num = -1;
-            int de_gpio_num = -1;
-            int pclk_gpio_num = -1;
-            int disp_gpio_num = -1;
-            int data_gpio_nums[ESP_PANEL_BUS_RGB_DATA_BITS] = {
-                -1, -1, -1, -1, -1, -1, -1, -1,
-    #if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
-                -1, -1, -1, -1, -1, -1, -1, -1
-    #endif // ESP_PANEL_BUS_RGB_DATA_BITS
-                };
-            bool flags_pclk_active_neg = false;
+            int cs_io_type = static_cast<int>(IO_TYPE_GPIO);      ///< IO type for CS signal
+            int scl_io_type = static_cast<int>(IO_TYPE_GPIO);     ///< IO type for SCL signal
+            int sda_io_type = static_cast<int>(IO_TYPE_GPIO);     ///< IO type for SDA signal
+            int cs_gpio_num = -1;                                  ///< GPIO number for CS signal
+            int scl_gpio_num = -1;                                ///< GPIO number for SCL signal
+            int sda_gpio_num = -1;                                ///< GPIO number for SDA signal
+            bool flags_scl_active_falling_edge = false;           ///< SCL active on falling edge if true
         };
 
+        /**
+         * @brief Partial refresh panel configuration structure
+         */
+        struct RefreshPanelPartialConfig {
+            int pclk_hz = RGB_PCLK_HZ_DEFAULT;                   ///< Pixel clock frequency in Hz
+            int h_res = 0;                                       ///< Horizontal resolution
+            int v_res = 0;                                       ///< Vertical resolution
+            int hsync_pulse_width = 10;                          ///< HSYNC pulse width
+            int hsync_back_porch = 10;                           ///< HSYNC back porch
+            int hsync_front_porch = 20;                          ///< HSYNC front porch
+            int vsync_pulse_width = 10;                          ///< VSYNC pulse width
+            int vsync_back_porch = 10;                           ///< VSYNC back porch
+            int vsync_front_porch = 10;                          ///< VSYNC front porch
+            int data_width = RGB_DATA_WIDTH_DEFAULT;             ///< Data width in bits
+            int bits_per_pixel = RGB_DATA_WIDTH_DEFAULT;         ///< Bits per pixel
+            int bounce_buffer_size_px = 0;                       ///< Bounce buffer size in pixels
+            int hsync_gpio_num = -1;                             ///< GPIO number for HSYNC signal
+            int vsync_gpio_num = -1;                             ///< GPIO number for VSYNC signal
+            int de_gpio_num = -1;                                ///< GPIO number for DE signal
+            int pclk_gpio_num = -1;                              ///< GPIO number for PCLK signal
+            int disp_gpio_num = -1;                              ///< GPIO number for DISP signal
+            int data_gpio_nums[ESP_PANEL_BUS_RGB_DATA_BITS] = {  ///< GPIO numbers for data signals
+                -1, -1, -1, -1, -1, -1, -1, -1,
+#if ESP_PANEL_BUS_RGB_DATA_BITS >= 16
+                    -1, -1, -1, -1, -1, -1, -1, -1
+#endif // ESP_PANEL_BUS_RGB_DATA_BITS
+                };
+            bool flags_pclk_active_neg = false;                  ///< PCLK active on negative edge if true
+        };
+
+        /**
+         * @brief Convert partial configurations to full configurations
+         */
         void convertPartialToFull();
+
+        /**
+         * @brief Print control panel configuration for debugging
+         */
         void printControlPanelConfig() const;
+
+        /**
+         * @brief Print refresh panel configuration for debugging
+         */
         void printRefreshPanelConfig() const;
 
-        const ControlPanelFullConfig *getControlPanelFullConfig() const
-        {
-            if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
-                return nullptr;
-            }
-            return &std::get<ControlPanelFullConfig>(control_panel);
-        }
+        /**
+         * @brief Get the full control panel configuration if available
+         *
+         * @return Pointer to full control panel configuration, `nullptr` if using partial configuration
+         */
+        const ControlPanelFullConfig *getControlPanelFullConfig() const;
 
-        const RefreshPanelFullConfig *getRefreshPanelFullConfig() const
-        {
-            if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
-                return nullptr;
-            }
-            return &std::get<RefreshPanelFullConfig>(refresh_panel);
-        }
+        /**
+         * @brief Get the full refresh panel configuration if available
+         *
+         * @return Pointer to full refresh panel configuration, `nullptr` if using partial configuration
+         */
+        const RefreshPanelFullConfig *getRefreshPanelFullConfig() const;
 
-        // Control Panel
-        std::variant<ControlPanelFullConfig, ControlPanelPartialConfig> control_panel = {};
-        // Refresh Panel
-        std::variant<RefreshPanelFullConfig, RefreshPanelPartialConfig> refresh_panel = {};
-        // Extra
-        bool use_control_panel = false;
+        std::variant<ControlPanelFullConfig, ControlPanelPartialConfig> control_panel = {};  ///< Control panel config
+        std::variant<RefreshPanelFullConfig, RefreshPanelPartialConfig> refresh_panel = {};  ///< Refresh panel config
+        bool use_control_panel = false;     ///< Whether use control panel
     };
 
 // *INDENT-OFF*
     /**
      * @brief Construct the "3-wire SPI + 16-bit RGB" bus with separate parameters
-     *
-     * @note  This function uses some default values to config the bus, use `config*()` functions to change them
      *
      * @param[in] cs_io    3-wire SPI CS pin
      * @param[in] sck_io   3-wire SPI SCK pin
@@ -147,6 +166,8 @@ public:
      * @param[in] vpw      The VSYNC pulse width
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
+     *
+     * @note This function uses some default values to config the bus, use `config*()` functions to change them
      */
     BusRGB(
         /* 3-wire SPI IOs */
@@ -198,8 +219,6 @@ public:
     /**
      * @brief Construct the single "16-bit RGB" bus with separate parameters
      *
-     * @note  This function uses some default values to config the bus, use `config*()` functions to change them
-     *
      * @param[in] d[N]_io  RGB data pins, N is [0, 15]
      * @param[in] hsync_io RGB HSYNC pin
      * @param[in] vsync_io RGB VSYNC pin
@@ -215,6 +234,8 @@ public:
      * @param[in] vpw      The VSYNC pulse width
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
+     *
+     * @note This function uses some default values to config the bus, use `config*()` functions to change them
      */
     BusRGB(
         /* 16-bit RGB IOs */
@@ -258,8 +279,6 @@ public:
     /**
      * @brief Construct the "3-wire SPI + 8-bit RGB" bus with separate parameters
      *
-     * @note  This function uses some default values to config the bus, use `config*()` functions to change them
-     *
      * @param[in] cs_io    3-wire SPI CS pin
      * @param[in] sck_io   3-wire SPI SCK pin
      * @param[in] sda_io   3-wire SPI SDA pin
@@ -278,6 +297,8 @@ public:
      * @param[in] vpw      The VSYNC pulse width
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
+     *
+     * @note This function uses some default values to config the bus, use `config*()` functions to change them
      */
     BusRGB(
         /* 3-wire SPI IOs */
@@ -327,8 +348,6 @@ public:
     /**
      * @brief Construct the single "8-bit RGB" bus with separate parameters
      *
-     * @note  This function uses some default values to config the bus, use `config*()` functions to change them
-     *
      * @param[in] d[N]_io  RGB data pins, N is [0, 7]
      * @param[in] hsync_io RGB HSYNC pin
      * @param[in] vsync_io RGB VSYNC pin
@@ -344,6 +363,8 @@ public:
      * @param[in] vpw      The VSYNC pulse width
      * @param[in] vbp      The VSYNC back porch
      * @param[in] vfp      The VSYNC front porch
+     *
+     * @note This function uses some default values to config the bus, use `config*()` functions to change them
      */
     BusRGB(
         /* 8-bit RGB IOs */
@@ -392,7 +413,7 @@ public:
         _config(config)
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
      * @brief Destroy the RGB bus
@@ -400,13 +421,63 @@ public:
     ~BusRGB() override;
 
     /**
-     * Here are some functions to configure the bus. These functions should be called before `init()`
+     * @brief Configure SPI IO types
+     *
+     * @param[in] cs_use_expander  Whether CS pin uses IO expander
+     * @param[in] sck_use_expander Whether SCK pin uses IO expander
+     * @param[in] sda_use_expander Whether SDA pin uses IO expander
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
      */
     bool configSPI_IO_Type(bool cs_use_expander, bool sck_use_expander, bool sda_use_expander);
+
+    /**
+     * @brief Configure SPI IO expander
+     *
+     * @param[in] handle Handle to IO expander instance
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
     bool configSPI_IO_Expander(esp_io_expander_t *handle);
+
+    /**
+     * @brief Configure SCL active edge
+     *
+     * @param[in] enable Enable falling edge if true
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
     bool configSPI_SCL_ActiveFallingEdge(bool enable);
+
+    /**
+     * @brief Configure number of frame buffers
+     *
+     * @param[in] num Number of frame buffers
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
     bool configRGB_FrameBufferNumber(uint8_t num);
+
+    /**
+     * @brief Configure bounce buffer size
+     *
+     * @param[in] size_in_pixel Size of bounce buffer in pixels
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
     bool configRGB_BounceBufferSize(uint32_t size_in_pixel);
+
+    /**
+     * @brief Configure RGB timing flags
+     *
+     * @param[in] hsync_idle_low  HSYNC is low in idle state if true
+     * @param[in] vsync_idle_low  VSYNC is low in idle state if true
+     * @param[in] de_idle_high    DE is high in idle state if true
+     * @param[in] pclk_active_neg PCLK is active on negative edge if true
+     * @param[in] pclk_idle_high  PCLK is high in idle state if true
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
     bool configRGB_TimingFlags(
         bool hsync_idle_low, bool vsync_idle_low, bool de_idle_high, bool pclk_active_neg, bool pclk_idle_high
     );
@@ -414,36 +485,35 @@ public:
     /**
      * @brief Initialize the bus
      *
-     * @return true if success, otherwise false
+     * @return `true` if initialization succeeds, `false` otherwise
      */
     bool init() override;
 
     /**
-     * @brief Startup the bus
+     * @brief Start the bus operation
      *
-     * @return true if success, otherwise false
+     * @return `true` if startup succeeds, `false` otherwise
      */
     bool begin() override;
 
     /**
-     * @brief Delete the bus object, release the resources
+     * @brief Delete the bus instance and release resources
      *
-     * @return true if success, otherwise false
+     * @return `true` if deletion succeeds, `false` otherwise
      */
     bool del() override;
 
     /**
-     * @brief Get the bus configuration
+     * @brief Get the current bus configuration
      *
-     * @return Bus configuration
+     * @return Reference to the current bus configuration
      */
     const Config &getConfig() const
     {
         return _config;
     }
 
-    // TODO: Remove in the next major version
-    [[deprecated("Deprecated. Please use other constructors instead.")]]
+    [[deprecated("Use other constructors instead")]]
     BusRGB(
         uint16_t width, uint16_t height,
         int cs_io, int sck_io, int sda_io,
@@ -460,7 +530,7 @@ public:
         )
     {
     }
-    [[deprecated("Deprecated. Please use other constructors instead.")]]
+    [[deprecated("Use other constructors instead")]]
     BusRGB(
         uint16_t width, uint16_t height,
         int cs_io, int sck_io, int sda_io,
@@ -475,7 +545,7 @@ public:
         )
     {
     }
-    [[deprecated("Deprecated. Please use other constructors instead.")]]
+    [[deprecated("Use other constructors instead")]]
     BusRGB(
         uint16_t width, uint16_t height,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
@@ -490,7 +560,7 @@ public:
         )
     {
     }
-    [[deprecated("Deprecated. Please use other constructors instead.")]]
+    [[deprecated("Use other constructors instead")]]
     BusRGB(
         uint16_t width, uint16_t height,
         int d0_io, int d1_io, int d2_io, int d3_io, int d4_io, int d5_io, int d6_io, int d7_io,
@@ -503,71 +573,64 @@ public:
         )
     {
     }
-    [[deprecated("Deprecated. Please use `configSPI_IO_Expander()` \
-    instead.")]]
-    bool configSpiLine(bool cs_use_expaneder, bool sck_use_expander, bool sda_use_expander, ESP_IOExpander *io_expander);
-    [[deprecated("Deprecated. Please use `configRGB_FrameBufferNumber()` \
-    instead.")]]
+    [[deprecated("Use `configSPI_IO_Expander()` instead")]]
+    bool configSpiLine(
+        bool cs_use_expaneder, bool sck_use_expander, bool sda_use_expander, ESP_IOExpander *io_expander
+    );
+    [[deprecated("Use `configRGB_FrameBufferNumber()` instead")]]
     bool configRgbFrameBufferNumber(uint8_t num)
     {
         return configRGB_FrameBufferNumber(num);
     }
-    [[deprecated("Deprecated. Please use `configRGB_BounceBufferSize()` \
-    instead.")]]
+    [[deprecated("Use `configRGB_BounceBufferSize()` instead")]]
     bool configRgbBounceBufferSize(uint32_t size_in_pixel)
     {
         return configRGB_BounceBufferSize(size_in_pixel);
     }
-    [[deprecated("Deprecated. Please use `configRGB_TimingFlags()` \
-    instead.")]]
+    [[deprecated("Use `configRGB_TimingFlags()` instead")]]
     bool configRgbTimingFlags(
         bool hsync_idle_low, bool vsync_idle_low, bool de_idle_high, bool pclk_active_neg, bool pclk_idle_high
     )
     {
         return configRGB_TimingFlags(hsync_idle_low, vsync_idle_low, de_idle_high, pclk_active_neg, pclk_idle_high);
     }
-    [[deprecated("Deprecated.")]]
+    [[deprecated("Deprecated")]]
     bool configRgbFlagDispActiveLow();
-    [[deprecated("Deprecated.")]]
+    [[deprecated("Deprecated")]]
     bool configRgbTimingFreqHz(uint32_t hz);
-    [[deprecated("Deprecated.")]]
+    [[deprecated("Deprecated")]]
     bool configRgbTimingPorch(uint16_t hpw, uint16_t hbp, uint16_t hfp, uint16_t vpw, uint16_t vbp, uint16_t vfp);
-    [[deprecated("Deprecated. Please use \
-    `getConfig().getRefreshPanelFullConfig()` instead.")]]
+    [[deprecated("Use `getConfig().getRefreshPanelFullConfig()` instead")]]
     const esp_lcd_rgb_panel_config_t *getRgbConfig()
     {
         return getConfig().getRefreshPanelFullConfig();
     }
 
 private:
-    Config::ControlPanelFullConfig &getControlPanelFullConfig()
-    {
-        if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
-    }
+    /**
+     * @brief Get mutable reference to control panel full configuration
+     *
+     * @return Reference to control panel full configuration
+     */
+    Config::ControlPanelFullConfig &getControlPanelFullConfig();
 
-    Config::RefreshPanelFullConfig &getRefreshPanelFullConfig()
-    {
-        if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
-    }
+    /**
+     * @brief Get mutable reference to refresh panel full configuration
+     *
+     * @return Reference to refresh panel full configuration
+     */
+    Config::RefreshPanelFullConfig &getRefreshPanelFullConfig();
 
-    Config _config = {};
+    Config _config = {};  ///< RGB bus configuration
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::BusRGB`
- *             instead.
+ * @brief Alias for backward compatibility
  *
- * @TODO: Remove in the next major version
+ * @deprecated Use `esp_panel::drivers::BusRGB` instead
  */
-typedef esp_panel::drivers::BusRGB ESP_PanelBusRGB __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::BusRGB` instead.")));
+using ESP_PanelBusRGB [[deprecated("Use `esp_panel::drivers::BusRGB` instead")]] = esp_panel::drivers::BusRGB;
 
 #endif // SOC_LCD_RGB_SUPPORTED

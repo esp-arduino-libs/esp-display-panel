@@ -118,6 +118,15 @@ void BusI2C::Config::printControlPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BusI2C::Config::HostFullConfig *BusI2C::Config::getHostFullConfig() const
+{
+    if (std::holds_alternative<HostPartialConfig>(host)) {
+        return nullptr;
+    }
+
+    return &std::get<HostFullConfig>(host);
+}
+
 BusI2C::~BusI2C()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -244,7 +253,7 @@ bool BusI2C::init()
     auto &config = getConfig();
     if (!config.skip_init_host) {
         auto host_config = config.getHostFullConfig();
-        ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get I2C host(%d) host config failed", config.host_id);
+        ESP_UTILS_CHECK_NULL_RETURN(host_config, false, "Get I2C host(%d) host config failed", config.host_id);
 
         _host = HostI2C::getInstance(config.host_id, *host_config);
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get I2C host(%d) instance failed", config.host_id);
@@ -326,6 +335,19 @@ bool BusI2C::del()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
+}
+
+BusI2C::Config::HostFullConfig &BusI2C::getHostFullConfig()
+{
+    if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
+        _config.convertPartialToFull();
+    }
+    return std::get<Config::HostFullConfig>(_config.host);
+}
+
+BusI2C::Config::ControlPanelFullConfig &BusI2C::getControlPanelFullConfig()
+{
+    return _config.control_panel;
 }
 
 } // namespace esp_panel::drivers

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,22 +7,20 @@
 #pragma once
 
 #include "driver/spi_master.h"
-#include "esp_panel_host_template.hpp"
+#include "esp_panel_host.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The SPI bus host class
+ * @brief SPI bus host class
  */
 class HostSPI : public Host<HostSPI, spi_bus_config_t, static_cast<int>(SPI_HOST_MAX)> {
 public:
     /* Add friend class to allow them to access the private member */
-    // To access `HostSPI()`
     template <typename U>
-    friend struct esp_utils::GeneralMemoryAllocator;
-    // To accdess `del()`, `calibrateConfig()`
+    friend struct esp_utils::GeneralMemoryAllocator;    // To access `HostSPI()`
     template <class Instance, typename Config, int N>
-    friend class Host;
+    friend class Host;                                  // To access `del()`, `calibrateConfig()`
 
     /**
      * @brief Destroy the host
@@ -32,21 +30,25 @@ public:
     /**
      * @brief Startup the host
      *
-     * @return true if success, otherwise false
+     * @return `true` if successful, `false` otherwise
      */
     bool begin() override;
 
 private:
-    /* Make constructor private to prevent users from constructing it directly */
+    /**
+     * @brief Private constructor to prevent direct instantiation
+     *
+     * @param[in] id Host ID
+     * @param[in] config Host configuration
+     */
     HostSPI(int id, const spi_bus_config_t &config):
         Host<HostSPI, spi_bus_config_t, static_cast<int>(SPI_HOST_MAX)>(id, config) {}
 
     /**
-     * @brief Calibrate the configuration when the host is already exist
+     * @brief Calibrate configuration when host already exists
      *
-     * @param[in] config The new configuration
-     *
-     * @return true if success, otherwise false
+     * @param[in] config New configuration
+     * @return `true` if successful, `false` otherwise
      */
     bool calibrateConfig(const spi_bus_config_t &config) override;
 };

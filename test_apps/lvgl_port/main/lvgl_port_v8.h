@@ -123,7 +123,7 @@
 #endif
 #endif /* LVGL_PORT_AVOID_TEARING_MODE */
 
-// *INDENT-OFF*
+// *INDENT-ON*
 
 #ifdef __cplusplus
 extern "C" {

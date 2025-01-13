@@ -1,54 +1,622 @@
 /*
- * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
-#include "esp_panel_conf_internal.h"
 #include "esp_panel_utils.h"
-#include "esp_utils_helper.h"
 #include "esp_panel_touch.hpp"
 
 namespace esp_panel::drivers {
 
-#define DEVICE_CREATOR(controller) \
-    [](Bus *bus, const Touch::Config &config) { \
-        std::shared_ptr<Touch> device = nullptr; \
-        ESP_UTILS_CHECK_EXCEPTION_RETURN( \
-            (device = utils::make_shared<Touch ## controller>(bus, config)), nullptr, \
-            "Create " #controller " failed" \
-        ); \
-        return device; \
-    }
-#define ITEM_CONTROLLER(controller) \
-    {Touch ##controller::BASIC_ATTRIBUTES_DEFAULT.name, DEVICE_CREATOR(controller)}
+constexpr int THREAD_CHECK_STOP_INTERVAL_MS = 100;
 
-const std::unordered_map<std::string, TouchFactory::FunctionCreateDevice> TouchFactory::_name_function_map = {
-    ITEM_CONTROLLER(AXS15231B),
-    ITEM_CONTROLLER(CST816S),
-    ITEM_CONTROLLER(FT5x06),
-    ITEM_CONTROLLER(GT911),
-    ITEM_CONTROLLER(GT1151),
-    ITEM_CONTROLLER(SPD2010),
-    ITEM_CONTROLLER(ST1633),
-    ITEM_CONTROLLER(ST7123),
-    ITEM_CONTROLLER(STMPE610),
-    ITEM_CONTROLLER(TT21100),
-    ITEM_CONTROLLER(XPT2046),
-};
-
-std::shared_ptr<Touch> TouchFactory::create(std::string name, Bus *bus, const Touch::Config &config)
+void Touch::Config::convertPartialToFull()
 {
-    ESP_UTILS_LOGD("Param: name(%s), bus(@%p), config(@%p)", name.c_str(), bus, &config);
-    ESP_UTILS_CHECK_FALSE_RETURN(bus != nullptr, nullptr, "Invalid bus");
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    auto it = _name_function_map.find(name);
-    ESP_UTILS_CHECK_FALSE_RETURN(it != _name_function_map.end(), nullptr, "Unknown controller: %s", name.c_str());
+    if (std::holds_alternative<DevicePartialConfig>(device)) {
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+        printDeviceConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+        auto &config = std::get<DevicePartialConfig>(device);
+        device = esp_lcd_touch_config_t{
+            .x_max = static_cast<uint16_t>(config.x_max),
+            .y_max = static_cast<uint16_t>(config.y_max),
+            .rst_gpio_num = static_cast<gpio_num_t>(config.rst_gpio_num),
+            .int_gpio_num = static_cast<gpio_num_t>(config.int_gpio_num),
+            .levels = {
+                .reset = static_cast<unsigned int>(config.levels_reset),
+                .interrupt = static_cast<unsigned int>(config.levels_interrupt),
+            },
+            .flags = {
+                .swap_xy = 0,
+                .mirror_x = 0,
+                .mirror_y = 0,
+            },
+            .process_coordinates = nullptr,
+            .interrupt_callback = nullptr,
+            .user_data = nullptr,
+            .driver_data = nullptr,
+        };
+    }
 
-    std::shared_ptr<Touch> device = it->second(bus, config);
-    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device failed");
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
 
-    return device;
+const Touch::Config::DeviceFullConfig *Touch::Config::getDeviceFullConfig() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<DeviceFullConfig>(device), nullptr, "Partial config");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return &std::get<DeviceFullConfig>(device);
+}
+
+void Touch::Config::printDeviceConfig() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (std::holds_alternative<DeviceFullConfig>(device)) {
+        auto &config = std::get<DeviceFullConfig>(device);
+        ESP_UTILS_LOGI(
+            "\n\t{Full device config}"
+            "\n\t\t-> [x_max]: %d"
+            "\n\t\t-> [y_max]: %d"
+            "\n\t\t-> [rst_gpio_num]: %d"
+            "\n\t\t-> [int_gpio_num]: %d"
+            "\n\t\t-> {levels}"
+            "\n\t\t\t-> [reset]: %d"
+            "\n\t\t\t-> [interrupt]: %d"
+            "\n\t\t-> {flags}"
+            "\n\t\t\t-> [swap_xy]: %d"
+            "\n\t\t\t-> [mirror_x]: %d"
+            "\n\t\t\t-> [mirror_y]: %d"
+            , config.x_max
+            , config.y_max
+            , config.rst_gpio_num
+            , config.int_gpio_num
+            , config.levels.reset
+            , config.levels.interrupt
+            , config.flags.swap_xy
+            , config.flags.mirror_x
+            , config.flags.mirror_y
+        );
+    } else {
+        auto &config = std::get<DevicePartialConfig>(device);
+        ESP_UTILS_LOGI(
+            "\n\t{Partial device config}"
+            "\n\t\t-> [x_max]: %d"
+            "\n\t\t-> [y_max]: %d"
+            "\n\t\t-> [rst_gpio_num]: %d"
+            "\n\t\t-> [int_gpio_num]: %d"
+            "\n\t\t-> [levels_reset]: %d"
+            "\n\t\t-> [levels_interrupt]: %d"
+            , config.x_max
+            , config.y_max
+            , config.rst_gpio_num
+            , config.int_gpio_num
+            , config.levels_reset
+            , config.levels_interrupt
+        );
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+void Touch::configResetActiveLevel(int level)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+
+    ESP_UTILS_LOGD("Param: level(%d)", level);
+    getDeviceFullConfig().levels.reset = level;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+void Touch::configInterruptActiveLevel(int level)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+
+    ESP_UTILS_LOGD("Param: level(%d)", level);
+    getDeviceFullConfig().levels.interrupt = level;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+bool Touch::init()
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
+
+    // Convert the device partial configuration to full configuration
+    _config.convertPartialToFull();
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    _config.printDeviceConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+
+    if (isInterruptEnabled()) {
+        ESP_UTILS_LOGD("Enable interruption");
+
+        std::shared_ptr<Interruption> interruption = nullptr;
+        ESP_UTILS_CHECK_EXCEPTION_RETURN(
+            interruption = utils::make_shared<Interruption>(), false, "Create interruption failed"
+        );
+
+        interruption->on_active_sem = xSemaphoreCreateBinaryStatic(&interruption->on_active_sem_buffer);
+        interruption->data.touch_ptr = this;
+
+        auto &device_config = getDeviceFullConfig();
+        device_config.interrupt_callback = onInterruptActive;
+        device_config.user_data = &interruption->data;
+
+        _interruption = interruption;
+    } else {
+        ESP_UTILS_LOGD("Disable interruption");
+    }
+
+    setState(State::INIT);
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::del()
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (touch_panel != nullptr) {
+        ESP_UTILS_CHECK_ERROR_RETURN(
+            esp_lcd_touch_del(touch_panel), false, "Delete touch panel(@%p) failed", touch_panel
+        );
+        ESP_UTILS_LOGD("Touch panel(@%p) deleted", touch_panel);
+        touch_panel = nullptr;
+    }
+
+    _transformation = {};
+    _points.clear();
+    _buttons.clear();
+    _interruption = nullptr;
+
+    setState(State::DEINIT);
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::attachInterruptCallback(FunctionInterruptCallback callback, void *user_data)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::INIT), false, "Not initialized");
+    ESP_UTILS_CHECK_FALSE_RETURN(isInterruptEnabled(), false, "Interruption is not enabled");
+
+    ESP_UTILS_LOGD("Param: callback(@%p), user_data(@%p)", callback, user_data);
+    _interruption->on_active_callback = callback;
+    _interruption->data.user_data = user_data;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::swapXY(bool en)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Swap XY: %d", en);
+    ESP_UTILS_CHECK_ERROR_RETURN(esp_lcd_touch_set_swap_xy(touch_panel, en), false, "Swap axes failed");
+    _transformation.swap_xy = en;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::mirrorX(bool en)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: en(%d)", en);
+    ESP_UTILS_CHECK_ERROR_RETURN(esp_lcd_touch_set_mirror_x(touch_panel, en), false, "Mirror X failed");
+    _transformation.mirror_x = en;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::mirrorY(bool en)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: en(%d)", en);
+    ESP_UTILS_CHECK_ERROR_RETURN(esp_lcd_touch_set_mirror_y(touch_panel, en), false, "Mirror Y failed");
+    _transformation.mirror_y = en;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::readRawData(int points_num, int buttons_num, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: points_num(%d), timeout_ms(%d)", points_num, timeout_ms);
+
+    // Wait for the interruption if it is enabled, then read the raw data
+    if (isInterruptEnabled()  && (timeout_ms != 0)) {
+        ESP_UTILS_LOGD("Wait for interruption");
+        BaseType_t timeout_ticks = (timeout_ms < 0) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
+        if (xSemaphoreTake(_interruption->on_active_sem, timeout_ticks) != pdTRUE) {
+            ESP_UTILS_LOGD("Wait timeout");
+            return true;
+        }
+    }
+
+    // Read the raw data
+    ESP_UTILS_CHECK_ERROR_RETURN(esp_lcd_touch_read_data(touch_panel), false, "Read data failed");
+
+    // Get the points
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawDataPoints(points_num), false, "Read points failed");
+
+    // Get the buttons
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawDataButtons(buttons_num), false, "Read buttons failed");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+int Touch::getPoints(TouchPoint points[], uint8_t num)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: points(@%p), num(%d)", points, num);
+    ESP_UTILS_CHECK_FALSE_RETURN((num == 0) || (points != nullptr), -1, "Invalid points or num");
+
+    int i = 0;
+    std::shared_lock lock(_resource_mutex);
+    for (auto &point : _points) {
+        if (i >= num) {
+            break;
+        }
+        points[i++] = point;
+    }
+    lock.unlock();
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return i;
+}
+
+bool Touch::getPoints(utils::vector<TouchPoint> &points)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: points(@%p)", &points);
+    std::shared_lock lock(_resource_mutex);
+    points = _points;
+    lock.unlock();
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+int Touch::getButtons(TouchButton buttons[], uint8_t num)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: buttons(@%p), num(%d)", buttons, num);
+    ESP_UTILS_CHECK_FALSE_RETURN((num == 0) || (buttons != nullptr), false, "Invalid buttons or num");
+
+    std::shared_lock lock(_resource_mutex);
+    int i = 0;
+    for (auto &button : _buttons) {
+        if (i >= num) {
+            break;
+        }
+        buttons[i++] = button;
+    }
+    lock.unlock();
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return i;
+}
+
+bool Touch::getButtons(utils::vector<TouchButton> &buttons)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: buttons(%p)", &buttons);
+    std::shared_lock lock(_resource_mutex);
+    buttons = _buttons;
+    lock.unlock();
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+int Touch::getButtonState(int index)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: index(%d)", index);
+    bool is_found = false;
+    TouchButton ret_button = {};
+
+    std::shared_lock lock(_resource_mutex);
+    for (auto &button : _buttons) {
+        if (button.first == index) {
+            is_found = true;
+            ret_button = button;
+            break;
+        }
+    }
+    lock.unlock();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(is_found, -1, "Index not found");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return ret_button.second;
+}
+
+int Touch::readPoints(TouchPoint points[], uint8_t num, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: points(@%p), num(%d), timeout_ms(%d)", points, num, timeout_ms);
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawData(num, 0, timeout_ms), -1, "Read raw data failed");
+    int ret_num = getPoints(points, num);
+    ESP_UTILS_CHECK_FALSE_RETURN(ret_num >= 0, -1, "Get points failed");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return ret_num;
+}
+
+bool Touch::readPoints(utils::vector<TouchPoint> &points, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: points(@%p), timeout_ms(%d)", &points, timeout_ms);
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawData(-1, 0, timeout_ms), false, "Read raw data failed");
+    getPoints(points);
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+int Touch::readButtons(TouchButton buttons[], uint8_t num, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: buttons(@%p), num(%d), timeout_ms(%d)", buttons, num, timeout_ms);
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawData(0, num, timeout_ms), false, "Read raw data failed");
+    int ret_num = getButtons(buttons, num);
+    ESP_UTILS_CHECK_FALSE_RETURN(ret_num >= 0, -1, "Get buttons failed");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return ret_num;
+}
+
+bool Touch::readButtons(utils::vector<TouchButton> &buttons, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: buttons(@%p), timeout_ms(%d)", &buttons, timeout_ms);
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawData(0, -1, timeout_ms), false, "Read raw data failed");
+    getButtons(buttons);
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+int Touch::readButtonState(uint8_t index, int timeout_ms)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
+
+    ESP_UTILS_LOGD("Param: index(%d), timeout_ms(%d)", index, timeout_ms);
+    ESP_UTILS_CHECK_FALSE_RETURN(readRawData(0, index + 1, timeout_ms), -1, "Read raw data failed");
+    int ret_state = getButtonState(index);
+    ESP_UTILS_CHECK_FALSE_RETURN(ret_state, -1, "Get button state failed");
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return ret_state;
+}
+
+Touch::Config::DeviceFullConfig &Touch::getDeviceFullConfig()
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (std::holds_alternative<Config::DevicePartialConfig>(_config.device)) {
+        _config.convertPartialToFull();
+    }
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return std::get<Config::DeviceFullConfig>(_config.device);
+}
+
+bool Touch::readRawDataPoints(int points_num)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_LOGD("Param: points_num(%d)", points_num);
+
+    // If less than 0, use the default points number
+    if (points_num < 0) {
+        points_num = getBasicAttributes().max_points_num;
+    }
+    // Limit the max points number
+    if (points_num > POINTS_MAX_NUM) {
+        points_num = POINTS_MAX_NUM;
+        ESP_UTILS_LOGW(
+            "The target points number(%d) out of range, use the max number(%d) instead", points_num, POINTS_MAX_NUM
+        );
+    }
+    if (points_num <= 0) {
+        ESP_UTILS_LOGD("Ignore to read points");
+        return true;
+    }
+    ESP_UTILS_LOGD("Try to read %d points", points_num);
+
+    std::shared_ptr <uint16_t[]> x_ptr = utils::make_shared<uint16_t[]>(points_num);
+    std::shared_ptr <uint16_t[]> y_ptr = utils::make_shared<uint16_t[]>(points_num);
+    std::shared_ptr <uint16_t[]> strength_ptr = utils::make_shared<uint16_t[]>(points_num);
+    auto x = x_ptr.get();
+    auto y = y_ptr.get();
+    auto strength = strength_ptr.get();
+    uint8_t ret_points_num = 0;
+
+    // Get the point coordinates from the raw data
+    esp_lcd_touch_get_coordinates(touch_panel, x, y, strength, &ret_points_num, points_num);
+    ESP_UTILS_LOGD("Get %d points number", ret_points_num);
+
+    // Update the points
+    std::unique_lock lock(_resource_mutex);
+    _points.clear();
+    for (int i = 0; i < ret_points_num; i++) {
+        _points.emplace_back(x[i], y[i], strength[i]);
+    }
+    lock.unlock();
+
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    for (auto &point : _points) {
+        point.print();
+    }
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool Touch::readRawDataButtons(int buttons_num)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_LOGD("Param: buttons_num(%d)", buttons_num);
+
+    // If less than 0, use the default points number
+    if (buttons_num < 0) {
+        buttons_num = getBasicAttributes().max_buttons_num;
+    }
+    // Limit the max buttons number
+    if (buttons_num > BUTTONS_MAX_NUM) {
+        buttons_num = BUTTONS_MAX_NUM;
+        ESP_UTILS_LOGW(
+            "The target buttons number(%d) out of range, use the max number(%d) instead", buttons_num, BUTTONS_MAX_NUM
+        );
+    }
+    if (buttons_num <= 0) {
+        ESP_UTILS_LOGD("Ignore to read buttons");
+        return true;
+    }
+    ESP_UTILS_LOGD("Try to read %d buttons", buttons_num);
+
+    // Get the buttons state from the raw data
+    utils::vector<TouchButton> buttons;
+    uint8_t button_state = 0;
+
+    for (int i = 0; i < buttons_num; i++) {
+        button_state = 0;
+        auto ret = esp_lcd_touch_get_button_state(touch_panel, i, &button_state);
+        if (ret == ESP_ERR_INVALID_ARG) {
+            ESP_UTILS_LOGD("Button(%d) is not supported", i);
+            break;
+        }
+        ESP_UTILS_CHECK_ERROR_RETURN(ret, false, "Get button(%d) state failed", i);
+
+        buttons.emplace_back(i, button_state);
+    }
+
+    std::unique_lock lock(_resource_mutex);
+    _buttons = std::move(buttons);
+    lock.unlock();
+
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    for (auto &button : _buttons) {
+        ESP_UTILS_LOGD("Button(%d): %d", button.first, button.second);
+    }
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+void Touch::onInterruptActive(PanelHandle panel)
+{
+    if ((panel == nullptr) || (panel->config.user_data == nullptr)) {
+        return;
+    }
+
+    Touch *touch = (Touch *)((Interruption::CallbackData *)panel->config.user_data)->touch_ptr;
+    if (touch == nullptr) {
+        return;
+    }
+
+    auto interruption = touch->_interruption;
+    if (interruption == nullptr) {
+        return;
+    }
+
+    BaseType_t need_yield = pdFALSE;
+    if (interruption->on_active_callback != nullptr) {
+        need_yield = interruption->on_active_callback(interruption->data.user_data) ? pdTRUE : need_yield;
+    }
+    if (interruption->on_active_sem != nullptr) {
+        xSemaphoreGiveFromISR(interruption->on_active_sem, &need_yield);
+    }
+    if (need_yield == pdTRUE) {
+        portYIELD_FROM_ISR();
+    }
 }
 
 } // namespace esp_panel::drivers

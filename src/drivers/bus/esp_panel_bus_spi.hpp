@@ -10,19 +10,19 @@
 #include "driver/spi_master.h"
 #include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_spi.hpp"
-#include "esp_panel_bus_base.hpp"
+#include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The SPI bus class
+ * @brief The SPI bus class for ESP Panel
  *
- * @note  The class is a derived class of `Bus`, users can use it to construct the SPI bus
+ * This class is derived from `Bus` class and provides SPI bus implementation for ESP Panel
  */
 class BusSPI: public Bus {
 public:
     /**
-     * Here are some default values for SPI bus
+     * @brief Default values for SPI bus configuration
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BUS_TYPE_SPI,
@@ -35,64 +35,84 @@ public:
      * @brief The SPI bus configuration structure
      */
     struct Config {
+        /**
+         * @brief Host configuration types
+         */
         using HostFullConfig = spi_bus_config_t;
+
+        /**
+         * @brief Control panel configuration types
+         */
         using ControlPanelFullConfig = esp_lcd_panel_io_spi_config_t;
 
+        /**
+         * @brief Partial host configuration structure
+         */
         struct HostPartialConfig {
-            int mosi_io_num = -1;
-            int miso_io_num = -1;
-            int sclk_io_num = -1;
-        };
-        struct ControlPanelPartialConfig {
-            int cs_gpio_num = -1;
-            int dc_gpio_num = -1;
-            int spi_mode = 0;
-            int pclk_hz = SPI_PCLK_HZ_DEFAULT;
-            int lcd_cmd_bits = 8;
-            int lcd_param_bits = 8;
+            int mosi_io_num = -1;    ///< GPIO number for MOSI signal
+            int miso_io_num = -1;    ///< GPIO number for MISO signal
+            int sclk_io_num = -1;    ///< GPIO number for SCLK signal
         };
 
+        /**
+         * @brief Partial control panel configuration structure
+         */
+        struct ControlPanelPartialConfig {
+            int cs_gpio_num = -1;        ///< GPIO number for CS signal
+            int dc_gpio_num = -1;        ///< GPIO number for DC signal
+            int spi_mode = 0;            ///< SPI mode (0-3)
+            int pclk_hz = SPI_PCLK_HZ_DEFAULT;  ///< SPI clock frequency in Hz
+            int lcd_cmd_bits = 8;        ///< Bits for LCD commands
+            int lcd_param_bits = 8;      ///< Bits for LCD parameters
+        };
+
+        /**
+         * @brief Convert partial configurations to full configurations
+         */
         void convertPartialToFull();
+
+        /**
+         * @brief Print host configuration for debugging
+         */
         void printHostConfig() const;
+
+        /**
+         * @brief Print control panel configuration for debugging
+         */
         void printControlPanelConfig() const;
 
-        const HostFullConfig *getHostFullConfig() const
-        {
-            if (std::holds_alternative<HostPartialConfig>(host)) {
-                return nullptr;
-            }
-            return &std::get<HostFullConfig>(host);
-        }
+        /**
+         * @brief Get the full host configuration if available
+         *
+         * @return Pointer to full host configuration, `nullptr` if using partial configuration
+         */
+        const HostFullConfig *getHostFullConfig() const;
 
-        const ControlPanelFullConfig *getControlPanelFullConfig() const
-        {
-            if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
-                return nullptr;
-            }
-            return &std::get<ControlPanelFullConfig>(control_panel);
-        }
+        /**
+         * @brief Get the full control panel configuration if available
+         *
+         * @return Pointer to full control panel configuration, `nullptr` if using partial configuration
+         */
+        const ControlPanelFullConfig *getControlPanelFullConfig() const;
 
-        // General
-        int host_id = SPI_HOST_ID_DEFAULT;
-        // Host
-        std::variant<HostFullConfig, HostPartialConfig> host = {};
-        // Control Panel
+        int host_id = SPI_HOST_ID_DEFAULT;    ///< SPI host ID
+        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
+        ///< Control panel configuration
         std::variant<ControlPanelFullConfig, ControlPanelPartialConfig> control_panel = {};
-        // Extra
-        bool skip_init_host = false;
+        bool skip_init_host = false;          ///< Skip host initialization if true
     };
 
 // *INDENT-OFF*
     /**
-     * @brief Construct the SPI bus with separate parameters, the host will be initialized by the driver
+     * @brief Construct a new SPI bus instance with individual parameters
      *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
+     * Uses default values for most configurations. Call `config*()` functions to modify the default settings
      *
-     * @param[in] cs_io  SPI CS pin
-     * @param[in] dc_io  SPI DC pin
-     * @param[in] sck_io SPI SCK pin
-     * @param[in] sda_io SPI SDA (MOSI) pin
-     * @param[in] sdo_io SPI SDO (MISO) pin, set to -1 if not used
+     * @param[in] cs_io  GPIO number for SPI CS signal
+     * @param[in] dc_io  GPIO number for SPI DC signal
+     * @param[in] sck_io GPIO number for SPI SCK signal
+     * @param[in] sda_io GPIO number for SPI SDA (MOSI) signal
+     * @param[in] sdo_io GPIO number for SPI SDO (MISO) signal, set to -1 if not used
      */
     BusSPI(int cs_io, int dc_io, int sck_io, int sda_io, int sdo_io = -1):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -115,13 +135,11 @@ public:
     }
 
     /**
-     * @brief Construct the SPI bus with separate parameters, the host should be initialized by the user
-     *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
+     * @brief Construct a new SPI bus instance with pre-initialized host
      *
      * @param[in] host_id SPI host ID
-     * @param[in] cs_io   SPI CS pin
-     * @param[in] dc_io   SPI DC pin
+     * @param[in] cs_io GPIO number for CS signal
+     * @param[in] dc_io GPIO number for DC signal
      */
     BusSPI(int host_id, int cs_io, int dc_io):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -140,14 +158,12 @@ public:
     }
 
     /**
-     * @brief Construct the SPI bus with separate parameters, the host will be initialized by the driver
+     * @brief Construct a new SPI bus instance with host initialization
      *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
-     *
-     * @param[in] sck_io               SPI SCK pin
-     * @param[in] sda_io               SPI SDA (MOSI) pin
-     * @param[in] sdo_io               SPI SDO (MISO) pin
-     * @param[in] control_panel_config SPI control panel configuration
+     * @param[in] sck_io GPIO number for SPI SCK signal
+     * @param[in] sda_io GPIO number for SPI SDA (MOSI) signal
+     * @param[in] sdo_io GPIO number for SPI SDO (MISO) signal
+     * @param[in] control_panel_config Full control panel configuration
      */
     BusSPI(int sck_io, int sda_io, int sdo_io, const Config::ControlPanelFullConfig &control_panel_config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -167,12 +183,10 @@ public:
     }
 
     /**
-     * @brief Construct the SPI bus with separate parameters, the host should be initialized by the user
+     * @brief Construct a new SPI bus instance with pre-initialized host
      *
-     * @note  This function uses some default values to config the bus object, use `config*()` functions to change them
-     *
-     * @param[in] host_id              SPI host ID
-     * @param[in] control_panel_config SPI control panel configuration
+     * @param[in] host_id SPI host ID
+     * @param[in] control_panel_config Full control panel configuration
      */
     BusSPI(int host_id, const Config::ControlPanelFullConfig &control_panel_config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
@@ -188,121 +202,182 @@ public:
     }
 
     /**
-     * @brief Construct the SPI bus with configuration
+     * @brief Construct a new SPI bus instance with complete configuration
      *
-     * @param[in] config SPI bus configuration
+     * @param[in] config Complete SPI bus configuration
      */
     BusSPI(const Config &config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config(config)
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
-     * @brief Destroy the SPI bus
+     * @brief Destroy the SPI bus instance
      */
     ~BusSPI() override;
 
     /**
-     * Here are some functions to configure the bus. These functions should be called before `begin()`
+     * @brief Configure SPI mode
+     *
+     * @param[in] mode SPI mode (0-3)
+     * @note This function should be called before `init()`
      */
     void configSPI_Mode(uint8_t mode);
+
+    /**
+     * @brief Configure SPI clock frequency
+     *
+     * @param[in] hz Clock frequency in Hz
+     * @note This function should be called before `init()`
+     */
     void configSPI_FreqHz(uint32_t hz);
+
+    /**
+     * @brief Configure number of bits for SPI commands
+     *
+     * @param[in] num Number of bits for commands
+     * @note This function should be called before `init()`
+     */
     void configSPI_CommandBits(uint32_t num);
+
+    /**
+     * @brief Configure number of bits for SPI parameters
+     *
+     * @param[in] num Number of bits for parameters
+     * @note This function should be called before `init()`
+     */
     void configSPI_ParamBits(uint32_t num);
+
+    /**
+     * @brief Configure SPI transaction queue depth
+     *
+     * @param[in] depth Queue depth for SPI transactions
+     * @note This function should be called before `init()`
+     */
     void configSPI_TransQueueDepth(uint8_t depth);
 
     /**
-     * @brief Initialize the bus
+     * @brief Initialize the SPI bus
      *
-     * @return true if success, otherwise false
+     * @return `true` if initialization succeeds, `false` otherwise
      */
     bool init() override;
 
     /**
-     * @brief Startup the bus
+     * @brief Start the SPI bus operation
      *
-     * @return true if success, otherwise false
+     * @return `true` if startup succeeds, `false` otherwise
      */
     bool begin() override;
 
     /**
-     * @brief Delete the bus object, release the resources
+     * @brief Delete the SPI bus instance and release resources
      *
-     * @return true if success, otherwise false
+     * @return `true` if deletion succeeds, `false` otherwise
      */
     bool del() override;
 
     /**
-     * @brief Get the bus configuration
+     * @brief Get the current bus configuration
      *
-     * @return Bus configuration
+     * @return Reference to the current bus configuration
      */
     const Config &getConfig() const
     {
         return _config;
     }
 
-    // TODO: Remove in the next major version
-    [[deprecated("Deprecated. Please use `configSPI_Mode()` instead")]]
+    /**
+     * @brief Configure SPI mode
+     *
+     * @param[in] mode SPI mode (0-3)
+     * @deprecated Use `configSPI_Mode()` instead
+     */
+    [[deprecated("Use `configSPI_Mode()` instead")]]
     void configSpiMode(uint8_t mode)
     {
         configSPI_Mode(mode);
     }
-    [[deprecated("Deprecated. Please use `configSPI_FreqHz()` instead")]]
+
+    /**
+     * @brief Configure SPI clock frequency
+     *
+     * @param[in] hz Clock frequency in Hz
+     * @deprecated Use `configSPI_FreqHz()` instead
+     */
+    [[deprecated("Use `configSPI_FreqHz()` instead")]]
     void configSpiFreqHz(uint32_t hz)
     {
         configSPI_FreqHz(hz);
     }
-    [[deprecated("Deprecated. Please use `configSPI_CommandBits()` \
-    instead")]]
+
+    /**
+     * @brief Configure number of bits for SPI commands
+     *
+     * @param[in] num Number of bits for commands
+     * @deprecated Use `configSPI_CommandBits()` instead
+     */
+    [[deprecated("Use `configSPI_CommandBits()` instead")]]
     void configSpiCommandBits(uint32_t num)
     {
         configSPI_CommandBits(num);
     }
-    [[deprecated("Deprecated. Please use `configSPI_ParamBits()` \
-    instead")]]
+
+    /**
+     * @brief Configure number of bits for SPI parameters
+     *
+     * @param[in] num Number of bits for parameters
+     * @deprecated Use `configSPI_ParamBits()` instead
+     */
+    [[deprecated("Use `configSPI_ParamBits()` instead")]]
     void configSpiParamBits(uint32_t num)
     {
         configSPI_ParamBits(num);
     }
-    [[deprecated("Deprecated. Please  use `configSPI_TransQueueDepth()` \
-    instead")]]
+
+    /**
+     * @brief Configure SPI transaction queue depth
+     *
+     * @param[in] depth Queue depth for SPI transactions
+     * @deprecated Use `configSPI_TransQueueDepth()` instead
+     */
+    [[deprecated("Use `configSPI_TransQueueDepth()` instead")]]
     void configSpiTransQueueDepth(uint8_t depth)
     {
         configSPI_TransQueueDepth(depth);
     }
 
 protected:
-    Config::HostFullConfig &getHostFullConfig()
-    {
-        if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::HostFullConfig>(_config.host);
-    }
+    /**
+     * @brief Get mutable reference to host full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to host full configuration
+     */
+    Config::HostFullConfig &getHostFullConfig();
 
-    Config::ControlPanelFullConfig &getControlPanelFullConfig()
-    {
-        if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
-    }
+    /**
+     * @brief Get mutable reference to control panel full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to control panel full configuration
+     */
+    Config::ControlPanelFullConfig &getControlPanelFullConfig();
 
 private:
-    Config _config = {};
-    std::shared_ptr<HostSPI> _host = nullptr;
+    Config _config = {};                      ///< SPI bus configuration
+    std::shared_ptr<HostSPI> _host = nullptr; ///< SPI host instance
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::BusSPI`
- *             instead.
+ * @brief Alias for backward compatibility
  *
- * @TODO: Remove in the next major version
+ * @deprecated Use `esp_panel::drivers::BusSPI` instead
  */
-typedef esp_panel::drivers::BusSPI ESP_PanelBusSPI __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::BusSPI` instead.")));
+using ESP_PanelBusSPI [[deprecated("Use `esp_panel::drivers::BusSPI` instead")]] = esp_panel::drivers::BusSPI;

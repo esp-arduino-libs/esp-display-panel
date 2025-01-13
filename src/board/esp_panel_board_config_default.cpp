@@ -5,9 +5,9 @@
  */
 #include "esp_panel_utils.h"
 #include "esp_panel_types.h"
-#include "esp_panel_board_config.hpp"
-#include "esp_panel_board.hpp"
 #include "esp_panel_board_internal.h"
+#include "esp_panel_board.hpp"
+#include "esp_panel_board_config_default.hpp"
 
 #undef _TO_STR
 #undef TO_STR
@@ -23,7 +23,7 @@ namespace esp_panel {
 static const esp_panel_lcd_vendor_init_cmd_t lcd_vendor_init_cmds[] = ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD();
 #endif // ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD
 
-const BoardConfig BOARD_DEFAULT_CONFIG = {
+const Board::Config BOARD_DEFAULT_CONFIG = {
 
     /* General */
     .width = ESP_PANEL_BOARD_WIDTH,
@@ -362,4 +362,4 @@ const BoardConfig BOARD_DEFAULT_CONFIG = {
 } // namespace esp_panel
 
 #endif // ESP_PANEL_BOARD_USE_DEFAULT
-// *INDENT-OFF*
+// *INDENT-ON*

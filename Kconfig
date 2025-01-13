@@ -1,11 +1,11 @@
 menu "ESP Display Panel Configurations"
     config ESP_PANEL_CONF_FILE_SKIP
-        bool "Unckeck this to use `esp_panel_conf.h`"
+        bool "Unckeck this to use `esp_panel_drivers_conf.h`"
         default y
         help
-            If want to use `esp_panel_conf.h` to configure the panel, uncheck this option. Otherwise, the configurations in sdkconfig will be used.
+            If want to use `esp_panel_drivers_conf.h` to configure the panel, uncheck this option. Otherwise, the configurations in sdkconfig will be used.
 
-    config ESP_PANEL_BOARD_FILE_SKIP
+    config ESP_PANEL_CONF_BOARD_FILE_SKIP
         bool "Unckeck this to use `esp_panel_board_*.h`"
         default y
         help
@@ -15,7 +15,7 @@ menu "ESP Display Panel Configurations"
         orsource "./src/panel/Kconfig.panel"
     endif
 
-    if ESP_PANEL_BOARD_FILE_SKIP
+    if ESP_PANEL_CONF_BOARD_FILE_SKIP
         orsource "./src/board/Kconfig.board"
     endif
 

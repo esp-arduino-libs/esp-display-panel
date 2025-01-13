@@ -30,14 +30,14 @@ bool LCD_ST7701::init()
 
     ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
 
-#if SOC_LCD_RGB_SUPPORTED
     // Process the device on initialization
     ESP_UTILS_CHECK_FALSE_RETURN(processDeviceOnInit(_bus_specifications), false, "Process device on init failed");
 
+#if SOC_LCD_RGB_SUPPORTED
     // Create refresh panel
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_new_panel_st7701(
-            bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
+            getBus()->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
         ), false, "Create refresh panel failed"
     );
     ESP_UTILS_LOGD("Create refresh panel(@%p)", refresh_panel);
@@ -47,7 +47,7 @@ bool LCD_ST7701::init()
 
     /* Disable control panel if enable `auto_del_panel_io/enable_io_multiplex` flag */
     if (getConfig().getVendorFullConfig()->flags.auto_del_panel_io) {
-        bus->disableControlPanelHandle();
+        getBus()->disableControlPanelHandle();
     }
 
     setState(State::INIT);

@@ -242,7 +242,7 @@ static const esp_panel_lcd_vendor_init_cmd_t vendor_specific_init_default[] = {
     {0x11, (uint8_t []){0x00}, 0, 120},
     {0x29, (uint8_t []){0x00}, 0, 20},
 };
-// *INDENT-OFF*
+// *INDENT-ON*
 
 static esp_err_t panel_gc9503_send_init_cmds(gc9503_panel_t *gc9503)
 {

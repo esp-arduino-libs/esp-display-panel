@@ -39,7 +39,7 @@ bool LCD_EK79007::init()
     // Create refresh panel
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_new_panel_ek79007(
-            bus->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
+            getBus()->getControlPanelHandle(), getConfig().getDeviceFullConfig(), &refresh_panel
         ), false, "Create refresh panel failed"
     );
     ESP_UTILS_LOGD("Create refresh panel(@%p)", refresh_panel);

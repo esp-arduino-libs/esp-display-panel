@@ -6,23 +6,29 @@
 
 #pragma once
 
-#include "esp_panel_lcd_base.hpp"
+#include "esp_panel_lcd.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief EK79007 LCD device class
+ * @brief LCD driver class for EK79007 display controller
  *
- * @note  This class is a derived class of `LCD`, user can use it directly
  */
 class LCD_EK79007: public LCD {
 public:
     /**
-     * Here are some default values for the device
+     * @brief Default basic attributes for EK79007 LCD controller
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .name = "EK79007",
     };
+
+// *INDENT-OFF*
+    /**
+     * @brief Initialize bus specifications map with supported configurations
+     *
+     * @return Map containing bus specifications for supported bus types
+     */
     static constexpr BasicBusSpecificationMap initBusSpecifications()
     {
         return {
@@ -38,50 +44,47 @@ public:
             },
         };
     }
-// *INDENT-OFF*;
+// *INDENT-ON*
 
     /**
-     * @brief Construct the LCD device with separate parameters
+     * @brief Construct the LCD device with individual parameters
      *
-     * @note  This function uses some default values to config the LCD device, use `config*()` functions to change them
-     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
-     *        supplier for them and use `configVendorCommands()` to configure
-     *
-     * @param[in] panel_bus   Simple pointer of panel bus
-     * @param[in] color_bits  Bits per pixel (16/18/24)
-     * @param[in] rst_io      Reset pin
+     * @param[in] bus Bus interface for communicating with the LCD device
+     * @param[in] color_bits Color depth in bits per pixel (16 for RGB565, 18 for RGB666, 24 for RGB888)
+     * @param[in] rst_io Reset GPIO pin number (-1 if not used)
+     * @note This constructor uses default values for most configuration parameters. Use config*() functions to
+     *       customize
+     * @note Vendor initialization commands may vary between manufacturers. Consult LCD supplier for them and use
+     *       `configVendorCommands()` to configure
      */
-    LCD_EK79007(Bus *panel_bus, uint8_t color_bits, int rst_io = -1):
-        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, color_bits, rst_io)
+    LCD_EK79007(Bus *bus, uint8_t color_bits, int rst_io = -1):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, bus, color_bits, rst_io)
     {
     }
 
     /**
-     * @brief Construct the LCD device with configuration
+     * @brief Construct the LCD device with full configuration
      *
-     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
-     *        supplier for them
-     *
-     * @param[in] panel_bus Smart pointer of panel bus
-     * @param[in] config    LCD configuration
+     * @param[in] bus Bus interface for communicating with the LCD device
+     * @param[in] config Complete LCD configuration structure
+     * @note Vendor initialization commands may vary between manufacturers. Consult LCD supplier for them
      */
-    LCD_EK79007(std::shared_ptr<Bus> panel_bus, const Config &config):
-        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, config)
+    LCD_EK79007(Bus *bus, const Config &config):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, bus, config)
     {
     }
 
     /**
-     * @brief Destroy the LCD device
+     * @brief Destroy the LCD device and free resources
      */
     ~LCD_EK79007() override;
 
     /**
-     * @brief Initialize the LCD device.
+     * @brief Initialize the LCD device
      *
-     * @note  This function should be called after bus is begun
-     * @note  This function typically calls `esp_lcd_new_panel_*()` to create the refresh panel
-     *
-     * @return true if success, otherwise false
+     * @return `true` if initialization successful, `false` otherwise
+     * @note This function must be called after bus interface is initialized
+     * @note Creates panel handle by calling `esp_lcd_new_panel_*()` internally
      */
     bool init() override;
 
@@ -92,8 +95,8 @@ private:
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::LCD_EK79007`
- *             instead.
+ * @brief Backward compatibility type alias for `ESP_PanelLcd_EK79007` class
+ * @deprecated Use `esp_panel::drivers::LCD_EK79007` instead. Will be removed in next major version
  */
-typedef esp_panel::drivers::LCD_EK79007 LCD_EK79007 __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::LCD_EK79007` instead.")));
+using ESP_PanelLcd_EK79007 [[deprecated("Use `esp_panel::drivers::LCD_EK79007` instead")]] =
+    esp_panel::drivers::LCD_EK79007;

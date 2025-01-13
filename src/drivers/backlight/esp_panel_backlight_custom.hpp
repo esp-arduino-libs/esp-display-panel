@@ -6,51 +6,55 @@
 #pragma once
 
 #include "esp_panel_types.h"
-#include "esp_panel_backlight_base.hpp"
+#include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
 
 /**
  * @brief The custom backlight device class
  *
- * @note This class is a derived class of `Backlight`. Users can implement
- *       custom backlight control through callback functions.
+ * This class is a derived class of `Backlight`. Users can implement custom backlight control through callback functions
  */
 class BacklightCustom: public Backlight {
 public:
     /**
-     * Here are some default values for custom backlight device
+     * @brief Default values for custom backlight device
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BACKLIGHT_TYPE_CUSTOM,
         .name = "Custom",
     };
 
-    using FunctionSetBrightnessCallback = bool (*)(uint8_t, void *);
+    /**
+     * @brief Function pointer type for brightness control callback
+     *
+     * @param[in] percent   The brightness percent (0-100)
+     * @param[in] user_data User data passed to the callback function
+     *
+     * @return `true` if successful, `false` otherwise
+     */
+    using FunctionSetBrightnessCallback = bool (*)(uint8_t percent, void *user_data);
 
     /**
      * @brief The custom backlight device configuration structure
      */
     struct Config {
-        /*!< The callback function to set the brightness. Default is `nullptr` */
-        FunctionSetBrightnessCallback callback = nullptr;
-        /*!< The user data passed to the callback function. Default is `nullptr` */
-        void *user_data = nullptr;
+        FunctionSetBrightnessCallback callback = nullptr;  ///< Callback function to set brightness, default is `nullptr`
+        void *user_data = nullptr;                        ///< User data passed to callback function, default is `nullptr`
     };
 
-// *INDENT-OFF*
     /**
      * @brief Construct the custom backlight device with separate parameters
      *
-     * @param[in] callback  The callback function to set the brightness
-     * @param[in] user_data The user data passed to the callback function
+     * @param[in] callback   The callback function to set brightness
+     * @param[in] user_data  The user data passed to the callback function
      */
     BacklightCustom(FunctionSetBrightnessCallback callback, void *user_data):
         Backlight(BASIC_ATTRIBUTES_DEFAULT),
         _config(Config{callback, user_data})
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
      * @brief Construct the custom backlight device with configuration
@@ -65,34 +69,50 @@ public:
     ~BacklightCustom() override;
 
     /**
+     * @brief Configure the callback function and user data
+     *
+     * @param[in] callback  The callback function
+     * @param[in] user_data The user data passed to the callback function
+     */
+    void configCallback(FunctionSetBrightnessCallback callback, void *user_data);
+
+    /**
      * @brief Startup the device
      *
-     * @return true if success, otherwise false
+     * @return `true` if successful, `false` otherwise
      */
     bool begin() override;
 
     /**
      * @brief Delete the device, release the resources
      *
-     * @note  After calling this function, users should call `begin()` to re-init the device
+     * @return `true` if successful, `false` otherwise
      *
-     * @return true if success, otherwise false
+     * @note After calling this function, users should call `begin()` to re-init the device
      */
     bool del() override;
 
     /**
      * @brief Set the brightness by percent
      *
-     * @note  This function should be called after `begin()`
-     *
      * @param[in] percent The brightness percent (0-100)
      *
-     * @return true if success, otherwise false
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note This function should be called after `begin()`
      */
     bool setBrightness(uint8_t percent) override;
 
 private:
-    Config _config = {};
+    Config _config = {};     ///< Custom backlight configuration
 };
 
 } // namespace esp_panel::drivers
+
+/**
+ * @brief Alias for backward compatibility
+ *
+ * @deprecated Use `esp_panel::drivers::BacklightCustom` instead
+ */
+using ESP_PanelBacklightCustom [[deprecated("Use `esp_panel::drivers::BacklightCustom` instead")]] =
+    esp_panel::drivers::BacklightCustom;

@@ -13,14 +13,14 @@
 // *INDENT-OFF*
 
 /* Handle special Kconfig options */
-#ifndef ESP_PANEL_KCONFIG_IGNORE
+#ifndef ESP_PANEL_CONF_KCONFIG_IGNORE
     #include "sdkconfig.h"
-    #ifdef CONFIG_ESP_PANEL_BOARD_FILE_SKIP
-        #define ESP_PANEL_BOARD_FILE_SKIP
+    #ifdef CONFIG_ESP_PANEL_CONF_BOARD_FILE_SKIP
+        #define ESP_PANEL_CONF_BOARD_FILE_SKIP
     #endif
 #endif
 
-#ifndef ESP_PANEL_BOARD_FILE_SKIP
+#ifndef ESP_PANEL_CONF_BOARD_FILE_SKIP
     /* If "ESP_Panel_*_Board.h" are available from here, try to use them later */
     #ifdef __has_include
         #if __has_include("esp_panel_board_supported.h")
@@ -215,7 +215,7 @@
 #if ESP_PANEL_BOARD_USE_DEFAULT
     /* File `esp_panel_board_supported.h` */
     // Only check this file versions if using a supported board and not skip the file
-    #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED && !defined(ESP_PANEL_BOARD_FILE_SKIP)
+    #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED && !defined(ESP_PANEL_CONF_BOARD_FILE_SKIP)
         // If the version is not defined, set it to `0.1.0`
         #if !defined(ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MAJOR) && \
             !defined(ESP_PANEL_BOARD_SUPPORTED_FILE_VERSION_MINOR) && \
@@ -249,7 +249,7 @@
         #error "The file `esp_panel_board_custom.h` version is not compatible. Please update it with the file from the library"
     #endif
     // Only check this file versions if using a custom board and not skip the file
-    #if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM && !defined(ESP_PANEL_BOARD_FILE_SKIP)
+    #if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM && !defined(ESP_PANEL_CONF_BOARD_FILE_SKIP)
         #if ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR < ESP_PANEL_BOARD_CUSTOM_VERSION_MINOR
             #warning "The file `esp_panel_board_custom.h` version is outdated. Some new configurations are missing"
         #elif ESP_PANEL_BOARD_CUSTOM_FILE_VERSION_MINOR > ESP_PANEL_BOARD_CUSTOM_VERSION_MINOR
@@ -258,4 +258,4 @@
     #endif
 #endif /* ESP_PANEL_BOARD_USE_DEFAULT */
 
-// *INDENT-OFF*
+// *INDENT-ON*

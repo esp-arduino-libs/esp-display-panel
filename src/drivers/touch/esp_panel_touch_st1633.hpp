@@ -7,7 +7,7 @@
 #pragma once
 
 #include "port/esp_lcd_touch_st1633.h"
-#include "esp_panel_touch_base.hpp"
+#include "esp_panel_touch.hpp"
 
 namespace esp_panel::drivers {
 
@@ -57,7 +57,7 @@ public:
     /**
      * @brief Startup the touch device
      *
-     * @return true if success, otherwise false
+     * @return `true` if success, otherwise false
      *
      * @note This function should be called after `init()`
      */

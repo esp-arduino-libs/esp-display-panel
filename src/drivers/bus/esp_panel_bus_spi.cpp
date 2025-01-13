@@ -163,6 +163,24 @@ void BusSPI::Config::printControlPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BusSPI::Config::HostFullConfig *BusSPI::Config::getHostFullConfig() const
+{
+    if (std::holds_alternative<HostPartialConfig>(host)) {
+        return nullptr;
+    }
+
+    return &std::get<HostFullConfig>(host);
+}
+
+const BusSPI::Config::ControlPanelFullConfig *BusSPI::Config::getControlPanelFullConfig() const
+{
+    if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
+        return nullptr;
+    }
+
+    return &std::get<ControlPanelFullConfig>(control_panel);
+}
+
 BusSPI::~BusSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -248,8 +266,12 @@ bool BusSPI::init()
     // Get the host instance if not skipped
     auto &config = getConfig();
     if (!config.skip_init_host) {
-        _host = HostSPI::getInstance(config.host_id, *config.getHostFullConfig());
+        auto *host_config = config.getHostFullConfig();
+        ESP_UTILS_CHECK_NULL_RETURN(host_config, false, "Get SPI host(%d) instance failed", config.host_id);
+
+        _host = HostSPI::getInstance(config.host_id, *host_config);
         ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get SPI host(%d) instance failed", config.host_id);
+
         ESP_UTILS_LOGD("Get SPI host(%d) instance", config.host_id);
     }
 
@@ -318,6 +340,24 @@ bool BusSPI::del()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
+}
+
+BusSPI::Config::HostFullConfig &BusSPI::getHostFullConfig()
+{
+    if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::HostFullConfig>(_config.host);
+}
+
+BusSPI::Config::ControlPanelFullConfig &BusSPI::getControlPanelFullConfig()
+{
+    if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
 }
 
 } // namespace esp_panel::drivers

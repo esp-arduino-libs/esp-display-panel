@@ -5,70 +5,136 @@
  */
 #pragma once
 
-#include <unordered_map>
-#include <memory>
 #include <string>
-#include <variant>
-#include "esp_panel_utils.h"
-#include "esp_panel_types.h"
-#include "esp_panel_backlight_base.hpp"
-#include "esp_panel_backlight_custom.hpp"
-#include "esp_panel_backlight_pwm_ledc.hpp"
-#include "esp_panel_backlight_switch_gpio.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The backlight factory class
+ * @brief The backlight base class
+ *
+ * This class is a base class for all backlight devices. Due to it being a virtual class, users cannot construct it
+ * directly
  */
-class BacklightFactory {
+class Backlight {
 public:
     /**
-     * @brief The backlight configuration
+     * @brief The backlight basic attributes structure
      */
-    using Config  = std::variant <
-                    drivers::BacklightCustom::Config,
-                    drivers::BacklightPWM_LEDC::Config,
-                    drivers::BacklightSwitchGPIO::Config
-                    >;
+    struct BasicAttributes {
+        int type = -1;                  ///< The device type, default is `-1`
+        const char *name = "Unknown";   ///< The device name, default is `"Unknown"`
+    };
 
     /**
-     * @brief The constructor function to create the backlight device
+     * @brief The driver state enumeration
      */
-    using FunctionDeviceConstructor = std::shared_ptr<Backlight> (*)(const Config &config);
-
-    BacklightFactory() = default;
-    ~BacklightFactory() = default;
-
-    /**
-     * @brief Create a new backlight device with configuration.
-     *
-     * @param[in] config The backlight configuration
-     *
-     * @return The shared pointer to the device if success, otherwise return `nullptr`
-     */
-    static std::shared_ptr<Backlight> create(const Config &config);
+    enum class State : uint8_t {
+        DEINIT = 0,    ///< Driver is not initialized
+        BEGIN,         ///< Driver is initialized and ready
+    };
 
     /**
-     * @brief Get the backlight type of the configuration
+     * @brief Construct a new backlight device
      *
-     * @param[in] config The backlight configuration
-     *
-     * @return The backlight type (`ESP_PANEL_BACKLIGHT_TYPE_*`) if success, otherwise return `-1`
+     * @param[in] attr The backlight basic attributes
      */
-    static int getConfigType(const Config &config);
+    Backlight(const BasicAttributes &attr): _basic_attributes(attr) {}
 
     /**
-     * @brief Get the backlight type name string
-     *
-     * @param[in] type The backlight type (`ESP_PANEL_BACKLIGHT_TYPE_*`)
-     *
-     * @return The backlight type name string if success, otherwise return `Unknown`
+     * @brief Destroy the backlight device
      */
-    static std::string getTypeNameString(int type);
+    virtual ~Backlight() = default;
+
+    /**
+     * @brief Initialize and start the backlight device
+     *
+     * @return `true` if successful, `false` otherwise
+     */
+    virtual bool begin() = 0;
+
+    /**
+     * @brief Delete the backlight device and release resources
+     *
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note After calling this function, users should call `begin()` to re-init the device
+     */
+    virtual bool del() = 0;
+
+    /**
+     * @brief Set the brightness by percent
+     *
+     * @param[in] percent The brightness percent (0-100)
+     *
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note This function should be called after `begin()`
+     */
+    virtual bool setBrightness(uint8_t percent) = 0;
+
+    /**
+     * @brief Turn on the backlight
+     *
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note This function should be called after `begin()`
+     * @note This function is equivalent to `setBrightness(100)`
+     */
+    bool on();
+
+    /**
+     * @brief Turn off the backlight
+     *
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note This function should be called after `begin()`
+     * @note This function is equivalent to `setBrightness(0)`
+     */
+    bool off();
+
+    /**
+     * @brief Check if the driver has reached or passed the specified state
+     *
+     * @param[in] state The state to check against current state
+     *
+     * @return `true` if current state >= given state, `false` otherwise
+     */
+    bool isOverState(State state)
+    {
+        return (_state >= state);
+    }
+
+    /**
+     * @brief Get the device basic attributes
+     *
+     * @return Reference to the backlight basic attributes
+     */
+    const BasicAttributes &getBasicAttributes()
+    {
+        return _basic_attributes;
+    }
+
+protected:
+    /**
+     * @brief Set the current driver state
+     *
+     * @param[in] state The state to set
+     */
+    void setState(State state)
+    {
+        _state = state;
+    }
 
 private:
-    static const std::unordered_map<int, std::pair<std::string, FunctionDeviceConstructor>> _type_constructor_map;
+    State _state = State::DEINIT;              ///< Current driver state
+    BasicAttributes _basic_attributes = {};     ///< Device basic attributes
 };
 
 } // namespace esp_panel::drivers
+
+/**
+ * @brief Alias for backward compatibility
+ *
+ * @deprecated Use `esp_panel::drivers::Backlight` instead
+ */
+using ESP_PanelBacklight [[deprecated("Use `esp_panel::drivers::Backlight` instead")]] = esp_panel::drivers::Backlight;

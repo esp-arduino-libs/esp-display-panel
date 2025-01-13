@@ -7,7 +7,7 @@
 
 #include <variant>
 #include "esp_panel_types.h"
-#include "esp_panel_backlight_base.hpp"
+#include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
 
@@ -62,7 +62,7 @@ public:
         _config(config)
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
      * @brief Destroy the device
@@ -72,7 +72,7 @@ public:
     /**
      * @brief Startup the device
      *
-     * @return true if success, otherwise false
+     * @return `true` if success, otherwise false
      */
     bool begin() override;
 
@@ -81,7 +81,7 @@ public:
      *
      * @note  After calling this function, users should call `begin()` to re-init the device
      *
-     * @return true if success, otherwise false
+     * @return `true` if success, otherwise false
      */
     bool del() override;
 
@@ -92,7 +92,7 @@ public:
      *
      * @param[in] percent The brightness percent (0-100)
      *
-     * @return true if success, otherwise false
+     * @return `true` if success, otherwise false
      */
     bool setBrightness(uint8_t percent) override;
 

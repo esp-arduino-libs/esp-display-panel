@@ -8,7 +8,7 @@
 #include "esp_io_expander.hpp"
 #include "esp_panel_conf_internal.h"
 #include "esp_panel_io_expander_adapter.hpp"
-#include "esp_panel_io_expander.hpp"
+#include "esp_panel_io_expander_factory.hpp"
 
 namespace esp_panel::drivers {
 

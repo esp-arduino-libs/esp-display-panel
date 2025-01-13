@@ -13,19 +13,19 @@
 #include "esp_lcd_mipi_dsi.h"
 #include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_dsi.hpp"
-#include "esp_panel_bus_base.hpp"
+#include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief The MIPI-DSI bus class
+ * @brief The MIPI-DSI bus class for ESP Panel
  *
- * @note  The class is a derived class of `Bus`, users can use it to construct the MIPI-DSI bus
+ * This class is derived from `Bus` class and provides MIPI-DSI bus implementation for ESP Panel
  */
 class BusDSI: public Bus {
 public:
     /**
-     * Here are some default values for MIPI-DSI bus
+     * @brief Default values for MIPI-DSI bus configuration
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BUS_TYPE_MIPI_DSI,
@@ -38,97 +38,133 @@ public:
      * @brief The MIPI-DSI bus configuration structure
      */
     struct Config {
+        /**
+         * @brief Host configuration types
+         */
         using HostFullConfig = esp_lcd_dsi_bus_config_t;
+
+        /**
+         * @brief Control panel configuration types
+         */
         using ControlPanelFullConfig = esp_lcd_dbi_io_config_t;
+
+        /**
+         * @brief Refresh panel configuration types
+         */
         using RefreshPanelFullConfig = esp_lcd_dpi_panel_config_t;
+
+        /**
+         * @brief PHY LDO configuration types
+         */
         using PHY_LDO_FullConfig = esp_ldo_channel_config_t;
 
+        /**
+         * @brief Partial host configuration structure
+         */
         struct HostPartialConfig {
-            int num_data_lanes = 2;
-            int lane_bit_rate_mbps = 0;
-        };
-        struct RefreshPanelPartialConfig {
-            int dpi_clock_freq_mhz = 0;
-            int bits_per_pixel = 16;
-            int h_size = 0;
-            int v_size = 0;
-            int hsync_pulse_width = 0;
-            int hsync_back_porch = 0;
-            int hsync_front_porch = 0;
-            int vsync_pulse_width = 0;
-            int vsync_back_porch = 0;
-            int vsync_front_porch = 0;
-        };
-        struct PHY_LDO_PartialConfig {
-            int chan_id = -1;
+            int num_data_lanes = 2;        ///< Number of data lanes
+            int lane_bit_rate_mbps = 0;    ///< Bit rate of each lane in Mbps
         };
 
+        /**
+         * @brief Partial refresh panel configuration structure
+         */
+        struct RefreshPanelPartialConfig {
+            int dpi_clock_freq_mhz = 0;    ///< DPI clock frequency in MHz
+            int bits_per_pixel = 16;       ///< Bits per pixel (16/18/24)
+            int h_size = 0;                ///< Horizontal resolution
+            int v_size = 0;                ///< Vertical resolution
+            int hsync_pulse_width = 0;     ///< Horizontal sync pulse width
+            int hsync_back_porch = 0;      ///< Horizontal back porch
+            int hsync_front_porch = 0;     ///< Horizontal front porch
+            int vsync_pulse_width = 0;     ///< Vertical sync pulse width
+            int vsync_back_porch = 0;      ///< Vertical back porch
+            int vsync_front_porch = 0;     ///< Vertical front porch
+        };
+
+        /**
+         * @brief Partial PHY LDO configuration structure
+         */
+        struct PHY_LDO_PartialConfig {
+            int chan_id = -1;              ///< Channel ID of the PHY LDO
+        };
+
+        /**
+         * @brief Convert partial configurations to full configurations
+         */
         void convertPartialToFull();
+
+        /**
+         * @brief Print host configuration for debugging
+         */
         void printHostConfig() const;
+
+        /**
+         * @brief Print control panel configuration for debugging
+         */
         void printControlPanelConfig() const;
+
+        /**
+         * @brief Print refresh panel configuration for debugging
+         */
         void printRefreshPanelConfig() const;
+
+        /**
+         * @brief Print PHY LDO configuration for debugging
+         */
         void printPHY_LDO_Config() const;
 
-        const HostFullConfig *getHostFullConfig() const
-        {
-            if (std::holds_alternative<HostPartialConfig>(host)) {
-                return nullptr;
-            }
+        /**
+         * @brief Get the full host configuration if available
+         *
+         * @return Pointer to full host configuration, `nullptr` if using partial configuration
+         */
+        const HostFullConfig *getHostFullConfig() const;
 
-            return &std::get<HostFullConfig>(host);
-        }
+        /**
+         * @brief Get the full refresh panel configuration if available
+         *
+         * @return Pointer to full refresh panel configuration, `nullptr` if using partial configuration
+         */
+        const RefreshPanelFullConfig *getRefreshPanelFullConfig() const;
 
-        const RefreshPanelFullConfig *getRefreshPanelFullConfig() const
-        {
-            if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
-                return nullptr;
-            }
+        /**
+         * @brief Get the full PHY LDO configuration if available
+         *
+         * @return Pointer to full PHY LDO configuration, `nullptr` if using partial configuration
+         */
+        const PHY_LDO_FullConfig *getPHY_LDO_Config() const;
 
-            return &std::get<RefreshPanelFullConfig>(refresh_panel);
-        }
-
-        const PHY_LDO_FullConfig *getPHY_LDO_Config() const
-        {
-            if (std::holds_alternative<PHY_LDO_PartialConfig>(phy_ldo)) {
-                return nullptr;
-            }
-
-            return &std::get<PHY_LDO_FullConfig>(phy_ldo);
-        }
-
-        // Host
-        std::variant<HostFullConfig, HostPartialConfig> host = {};
-        // Control Panel
-        ControlPanelFullConfig control_panel = {
+        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
+        ControlPanelFullConfig control_panel = {                    ///< Control panel configuration
             .virtual_channel = 0,
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
         };
-        // Refresh Panel
+        ///< Refresh panel configuration
         std::variant<RefreshPanelFullConfig, RefreshPanelPartialConfig> refresh_panel = {};
-        // PHY LDO
-        std::variant<PHY_LDO_FullConfig, PHY_LDO_PartialConfig> phy_ldo = {};
+        std::variant<PHY_LDO_FullConfig, PHY_LDO_PartialConfig> phy_ldo = {};  ///< PHY LDO configuration
     };
 
 // *INDENT-OFF*
     /**
-     * @brief Construct the MIPI-DSI bus with separate parameters, the host will be initialized by the driver
+     * @brief Construct a new MIPI-DSI bus instance with individual parameters
      *
-     * @note  This function uses some default values to config the bus, use `config*()` functions to change them
+     * Uses default values for most configurations. Call `config*()` functions to modify the default settings
      *
-     * @param[in] lane_num        The number of data lanes
-     * @param[in] lane_rate_mbps  The bit rate of each lane in Mbps
-     * @param[in] clk_mhz         The DPI clock frequency in MHz
-     * @param[in] bits_per_pixel  The bits per pixel (16/18/24)
-     * @param[in] h_res           The horizontal resolution
-     * @param[in] v_res           The vertical resolution
-     * @param[in] hpw             The horizontal sync pulse width
-     * @param[in] hbp             The horizontal back porch
-     * @param[in] hfp             The horizontal front porch
-     * @param[in] vpw             The vertical sync pulse width
-     * @param[in] vbp             The vertical back porch
-     * @param[in] vfp             The vertical front porch
-     * @param[in] phy_ldo_id      The channel ID of the PHY LDO, set to `-1` if not used
+     * @param[in] lane_num        Number of data lanes
+     * @param[in] lane_rate_mbps  Bit rate of each lane in Mbps
+     * @param[in] clk_mhz         DPI clock frequency in MHz
+     * @param[in] bits_per_pixel  Bits per pixel (16/18/24)
+     * @param[in] h_res           Horizontal resolution
+     * @param[in] v_res           Vertical resolution
+     * @param[in] hpw             Horizontal sync pulse width
+     * @param[in] hbp             Horizontal back porch
+     * @param[in] hfp             Horizontal front porch
+     * @param[in] vpw             Vertical sync pulse width
+     * @param[in] vbp             Vertical back porch
+     * @param[in] vfp             Vertical front porch
+     * @param[in] phy_ldo_id      Channel ID of the PHY LDO, set to `-1` if not used
      */
     BusDSI(
         /* DSI */
@@ -167,108 +203,126 @@ public:
     }
 
     /**
-     * @brief Construct the MIPI-DSI bus with configuration
+     * @brief Construct a new MIPI-DSI bus instance with complete configuration
      *
-     * @param[in] config The MIPI-DSI bus configuration
+     * @param[in] config Complete MIPI-DSI bus configuration
      */
     BusDSI(const Config &config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config(config)
     {
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
-     * @brief Destroy the MIPI-DSI bus
+     * @brief Destroy the MIPI-DSI bus instance
      */
     ~BusDSI() override;
 
     /**
-     * Here are some functions to configure the bus. These functions should be called before `init()`
+     * @brief Configure DPI frame buffer number
+     *
+     * @param[in] num Number of frame buffers
+     * @note This function should be called before `init()`
      */
     void configDPI_FrameBufferNumber(uint8_t num);
 
     /**
-     * @brief Initialize the bus
+     * @brief Initialize the MIPI-DSI bus
      *
-     * @return true if success, otherwise false
+     * @return `true` if initialization succeeds, `false` otherwise
      */
     bool init() override;
 
     /**
-     * @brief Startup the bus
+     * @brief Start the MIPI-DSI bus operation
      *
-     * @return true if success, otherwise false
+     * @return `true` if startup succeeds, `false` otherwise
      */
     bool begin() override;
 
     /**
-     * @brief Delete the bus, release the resources
+     * @brief Delete the MIPI-DSI bus instance and release resources
      *
-     * @return true if success, otherwise false
+     * @return `true` if deletion succeeds, `false` otherwise
      */
     bool del() override;
 
     /**
-     * @brief Get the bus host Handle
+     * @brief Get the MIPI-DSI bus host handle
      *
-     * @note  Not implement the function here to avoid error: invalid use of incomplete type `HostDSI`
-     *
-     * @return The host handle
+     * @return MIPI-DSI bus host handle
      */
     esp_lcd_dsi_bus_handle_t getHostHandle();
 
     /**
-     * @brief Get the bus configuration
+     * @brief Get the current bus configuration
      *
-     * @return Bus configuration
+     * @return Reference to the current bus configuration
      */
     const Config &getConfig() const
     {
         return _config;
     }
 
-    // TODO: Remove in the next major version
-    [[deprecated("Deprecated. Please use `configDPI_FrameBufferNumber()` \
-    instead")]]
+    /**
+     * @brief Configure DPI frame buffer number
+     *
+     * @param[in] num Number of frame buffers
+     * @deprecated Use `configDPI_FrameBufferNumber()` instead
+     */
+    [[deprecated("Use `configDPI_FrameBufferNumber()` instead")]]
     void configDpiFrameBufferNumber(uint8_t num)
     {
         configDPI_FrameBufferNumber(num);
     }
-    [[deprecated("Deprecated. Please use `getConfig()` instead")]]
+
+    /**
+     * @brief Get the DSI configuration
+     *
+     * @return DSI configuration
+     * @deprecated Use `getConfig()` instead
+     */
+    [[deprecated("Use `getConfig()` instead")]]
     const esp_lcd_dsi_bus_config_t *getDsiConfig()
     {
         return getConfig().getHostFullConfig();
     }
-    [[deprecated("Deprecated. Please use `getConfig()` instead")]]
+
+    /**
+     * @brief Get the DPI configuration
+     *
+     * @return DPI configuration
+     * @deprecated Use `getConfig()` instead
+     */
+    [[deprecated("Use `getConfig()` instead")]]
     const esp_lcd_dpi_panel_config_t *getDpiConfig()
     {
         return getConfig().getRefreshPanelFullConfig();
     }
 
 private:
-    Config::RefreshPanelFullConfig &getRefreshPanelFullConfig()
-    {
-        if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
-    }
+    /**
+     * @brief Get mutable reference to refresh panel full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to refresh panel full configuration
+     */
+    Config::RefreshPanelFullConfig &getRefreshPanelFullConfig();
 
-    Config _config = {};
-    std::shared_ptr<HostDSI> _host = nullptr;
-    esp_ldo_channel_handle_t _phy_ldo_handle = nullptr;
+    Config _config = {};                              ///< MIPI-DSI bus configuration
+    std::shared_ptr<HostDSI> _host = nullptr;         ///< MIPI-DSI host instance
+    esp_ldo_channel_handle_t _phy_ldo_handle = nullptr; ///< PHY LDO handle
 };
 
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::BusDSI`
- *             instead.
+ * @brief Alias for backward compatibility
  *
- * @TODO: Remove in the next major version
+ * @deprecated Use `esp_panel::drivers::BusDSI` instead
  */
-typedef esp_panel::drivers::BusDSI ESP_PanelBusDSI __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::BusDSI` instead.")));
+using ESP_PanelBusDSI [[deprecated("Use `esp_panel::drivers::BusDSI` instead")]] = esp_panel::drivers::BusDSI;
 
 #endif // SOC_MIPI_DSI_SUPPORTED

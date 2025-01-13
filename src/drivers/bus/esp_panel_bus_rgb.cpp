@@ -350,6 +350,24 @@ void BusRGB::Config::printRefreshPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+const BusRGB::Config::ControlPanelFullConfig *BusRGB::Config::getControlPanelFullConfig() const
+{
+    if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
+        return nullptr;
+    }
+
+    return &std::get<ControlPanelFullConfig>(control_panel);
+}
+
+const BusRGB::Config::RefreshPanelFullConfig *BusRGB::Config::getRefreshPanelFullConfig() const
+{
+    if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
+        return nullptr;
+    }
+
+    return &std::get<RefreshPanelFullConfig>(refresh_panel);
+}
+
 BusRGB::~BusRGB()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -633,6 +651,24 @@ bool BusRGB::del()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
+}
+
+BusRGB::Config::ControlPanelFullConfig &BusRGB::getControlPanelFullConfig()
+{
+    if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
+}
+
+BusRGB::Config::RefreshPanelFullConfig &BusRGB::getRefreshPanelFullConfig()
+{
+    if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
 }
 
 } // namespace esp_panel::drivers

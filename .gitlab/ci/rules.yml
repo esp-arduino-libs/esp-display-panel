@@ -11,7 +11,7 @@
 # component common files
 .patterns-component_common: &patterns-component_common
   - "CMakeLists.txt"
-  - "esp_panel_conf.h"
+  - "esp_panel_drivers_conf.h"
   - "idf_component.yml"
   - "Kconfig"
   - "src/*"

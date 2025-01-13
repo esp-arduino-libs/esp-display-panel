@@ -6,24 +6,29 @@
 
 #pragma once
 
-#include "esp_panel_lcd_base.hpp"
+#include "esp_panel_lcd.hpp"
 
 namespace esp_panel::drivers {
 
 /**
- * @brief EK9716B LCD device class
+ * @brief LCD driver class for EK9716B display controller
  *
- * @note  This class is a derived class of `LCD`, user can use it directly
  */
 class LCD_EK9716B: public LCD {
 public:
     /**
-     * Here are some default values for the device
+     * @brief Default basic attributes for EK9716B LCD controller
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
-        .name = "EK7916B",
+        .name = "EK9716B",
     };
+
 // *INDENT-OFF*
+    /**
+     * @brief Initialize bus specifications map with supported configurations
+     *
+     * @return Map containing bus specifications for supported bus types
+     */
     static constexpr BasicBusSpecificationMap initBusSpecifications()
     {
         return {
@@ -39,60 +44,56 @@ public:
             },
         };
     }
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
-     * @brief Construct the LCD device with separate parameters
+     * @brief Construct the LCD device with individual parameters
      *
-     * @note  This function uses some default values to config the LCD device, use `config*()` functions to change them
-     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
-     *        supplier for them and use `configVendorCommands()` to configure
-     *
-     * @param[in] panel_bus   Simple pointer of panel bus
-     * @param[in] color_bits  Bits per pixel. Not used in this driver, can be ignored
-     * @param[in] rst_io      Reset pin, set to -1 if not used
+     * @param[in] bus Bus interface for communicating with the LCD device
+     * @param[in] color_bits Color depth in bits per pixel (not used in RGB interface)
+     * @param[in] rst_io Reset GPIO pin number (-1 if not used)
+     * @note This constructor uses default values for most configuration parameters. Use config*() functions to
+     *       customize
+     * @note Vendor initialization commands may vary between manufacturers. Consult LCD supplier for them and use
+     *       `configVendorCommands()` to configure
      */
-    LCD_EK9716B(Bus *panel_bus, uint8_t color_bits = 0, int rst_io = -1):
-        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, color_bits, rst_io)
+    LCD_EK9716B(Bus *bus, uint8_t color_bits = 0, int rst_io = -1):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, bus, color_bits, rst_io)
     {
     }
 
     /**
-     * @brief Construct the LCD device with configuration
+     * @brief Construct the LCD device with full configuration
      *
-     * @note  Vendor specific initialization commands can be different between manufacturers, should consult the LCD
-     *        supplier for them
-     *
-     * @param[in] panel_bus Smart pointer of panel bus
-     * @param[in] config    LCD configuration
+     * @param[in] bus Bus interface for communicating with the LCD device
+     * @param[in] config Complete LCD configuration structure
+     * @note Vendor initialization commands may vary between manufacturers. Consult LCD supplier for them
      */
-    LCD_EK9716B(std::shared_ptr<Bus> panel_bus, const Config &config):
-        LCD(BASIC_ATTRIBUTES_DEFAULT, panel_bus, config)
+    LCD_EK9716B(Bus *bus, const Config &config):
+        LCD(BASIC_ATTRIBUTES_DEFAULT, bus, config)
     {
     }
 
     /**
-     * @brief Destroy the LCD device
+     * @brief Destroy the LCD device and free resources
      */
     ~LCD_EK9716B() override;
 
     /**
-     * @brief Initialize the LCD device.
+     * @brief Initialize the LCD device
      *
-     * @note  This function should be called after bus is begun
-     * @note  This function typically calls `esp_lcd_new_panel_*()` to create the refresh panel
-     *
-     * @return true if success, otherwise false
+     * @return `true` if initialization successful, `false` otherwise
+     * @note This function must be called after bus interface is initialized
+     * @note Creates panel handle by calling `esp_lcd_new_panel_*()` internally
      */
     bool init() override;
 
     /**
-     * @brief Reset the LCD. If the RESET pin is not set, this function will do reset by software instead of hardware
+     * @brief Reset the LCD device
      *
-     * @note  This function should be called after `init()`
-     * @note  This function typically calls `esp_lcd_panel_reset()` to reset the refresh panel
-     *
-     * @return true if success, otherwise false
+     * @return `true` if reset successful, `false` otherwise
+     * @note This function must be called after `init()`
+     * @note If RESET pin is not set, performs software reset instead of hardware reset
      */
     bool reset();
 
@@ -103,10 +104,8 @@ private:
 } // namespace esp_panel::drivers
 
 /**
- * @deprecated Deprecated. Please use `esp_panel::drivers::LCD_EK9716B`
- *             instead.
- *
- * @TODO Remove in the next major version
+ * @brief Backward compatibility type alias for `ESP_PanelLcd_EK9716B` class
+ * @deprecated Use `esp_panel::drivers::LCD_EK9716B` instead. Will be removed in next major version
  */
-typedef esp_panel::drivers::LCD_EK9716B LCD_EK9716B __attribute__((deprecated("Deprecated and will be removed in the \
-next major version. Please use `esp_panel::drivers::LCD_EK9716B` instead.")));
+using ESP_PanelLcd_EK9716B [[deprecated("Use `esp_panel::drivers::LCD_EK9716B` instead")]] =
+    esp_panel::drivers::LCD_EK9716B;

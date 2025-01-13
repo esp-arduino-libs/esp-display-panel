@@ -9,19 +9,19 @@
 #include "driver/ledc.h"
 #include "esp_idf_version.h"
 #include "esp_panel_types.h"
-#include "esp_panel_backlight_base.hpp"
+#include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
 
 /**
  * @brief The PWM(LEDC) backlight device class
  *
- * @note  The class is a derived class of `Backlight`, users can use it to construct a custom backlight device
+ * This class is a derived class of `Backlight`, users can use it to construct a custom backlight device
  */
 class BacklightPWM_LEDC: public Backlight {
 public:
     /**
-     * Here are some default values for PWM(LEDC) backlight device
+     * @brief Default values for PWM(LEDC) backlight device
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .type = ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC,
@@ -36,30 +36,55 @@ public:
      * @brief The configuration for PWM(LEDC) backlight device
      */
     struct Config {
+        /**
+         * @brief LEDC timer configuration type
+         */
         using LEDC_TimerFullConfig = ledc_timer_config_t;
+
+        /**
+         * @brief LEDC channel configuration type
+         */
         using LEDC_ChannelFullConfig = ledc_channel_config_t;
 
+        /**
+         * @brief Partial LEDC channel configuration structure
+         */
         struct LEDC_ChannelPartialConfig {
-            int io_num = -1;    /*!< GPIO number. Default is `-1` */
-            int on_level = 1;   /*!< Level when light up. Default is `1` */
+            int io_num = -1;    ///< GPIO number, default is `-1`
+            int on_level = 1;   ///< Level when light up, default is `1`
         };
 
+        /**
+         * @brief Convert partial configurations to full configurations
+         */
         void convertPartialToFull();
+
+        /**
+         * @brief Print LEDC timer configuration for debugging
+         */
         void printLEDC_TimerConfig() const;
+
+        /**
+         * @brief Print LEDC channel configuration for debugging
+         */
         void printLEDC_ChannelConfig() const;
 
+        /**
+         * @brief Get the full LEDC timer configuration
+         *
+         * @return Pointer to full LEDC timer configuration
+         */
         const LEDC_TimerFullConfig *getLEDC_FullTimerConfig() const
         {
             return &ledc_timer;
         }
 
-        const LEDC_ChannelFullConfig *getLEDC_FullChannelConfig() const
-        {
-            if (std::holds_alternative<LEDC_ChannelPartialConfig>(ledc_channel)) {
-                return nullptr;
-            }
-            return &std::get<LEDC_ChannelFullConfig>(ledc_channel);
-        }
+        /**
+         * @brief Get the full LEDC channel configuration
+         *
+         * @return Pointer to full LEDC channel configuration
+         */
+        const LEDC_ChannelFullConfig *getLEDC_FullChannelConfig() const;
 
         /*!< LEDC timer configuration */
         LEDC_TimerFullConfig ledc_timer = {
@@ -104,15 +129,7 @@ public:
         _config(config)
     {
     }
-
-    /**
-     * @deprecated Deprecated. Please use other constructors instead
-     *
-     * @TODO: Remove in the next major version
-     */
-    [[deprecated("Deprecated. Please use other constructors instead")]]
-    BacklightPWM_LEDC(int io_num, bool light_up_level, bool use_pwm): BacklightPWM_LEDC(io_num, light_up_level) {}
-// *INDENT-OFF*
+// *INDENT-ON*
 
     /**
      * @brief Destroy the device
@@ -122,45 +139,65 @@ public:
     /**
      * @brief Startup the device
      *
-     * @return true if success, otherwise false
+     * @return `true` if successful, `false` otherwise
      */
     bool begin() override;
 
     /**
      * @brief Delete the device, release the resources
      *
-     * @note  After calling this function, users should call `begin()` to re-init the device
+     * @return `true` if successful, `false` otherwise
      *
-     * @return true if success, otherwise false
+     * @note After calling this function, users should call `begin()` to re-init the device
      */
     bool del() override;
 
     /**
      * @brief Set the brightness by percent
      *
-     * @note  This function should be called after `begin()`
-     *
      * @param[in] percent The brightness percent (0-100)
      *
-     * @return true if success, otherwise false
+     * @return `true` if successful, `false` otherwise
+     *
+     * @note This function should be called after `begin()`
      */
     bool setBrightness(uint8_t percent) override;
 
+    /**
+     * @brief Deprecated constructor
+     *
+     * @deprecated Use other constructors instead
+     */
+    [[deprecated("Use other constructors instead")]]
+    BacklightPWM_LEDC(int io_num, bool light_up_level, bool use_pwm): BacklightPWM_LEDC(io_num, light_up_level) {}
+
 private:
+    /**
+     * @brief Get mutable reference to LEDC timer configuration
+     *
+     * @return Reference to LEDC timer configuration
+     */
     Config::LEDC_TimerFullConfig &getLEDC_TimerConfig()
     {
         return _config.ledc_timer;
     }
 
-    Config::LEDC_ChannelFullConfig &getLEDC_ChannelConfig()
-    {
-        if (std::holds_alternative<Config::LEDC_ChannelPartialConfig>(_config.ledc_channel)) {
-            _config.convertPartialToFull();
-        }
-        return std::get<Config::LEDC_ChannelFullConfig>(_config.ledc_channel);
-    }
+    /**
+     * @brief Get mutable reference to LEDC channel configuration
+     *
+     * @return Reference to LEDC channel configuration
+     */
+    Config::LEDC_ChannelFullConfig &getLEDC_ChannelConfig();
 
-    Config _config = {};
+    Config _config = {};     ///< PWM(LEDC) backlight configuration
 };
 
 } // namespace esp_panel::drivers
+
+/**
+ * @brief Alias for backward compatibility
+ *
+ * @deprecated Use `esp_panel::drivers::BacklightPWM_LEDC` instead
+ */
+using ESP_PanelBacklightPWM_LEDC [[deprecated("Use `esp_panel::drivers::BacklightPWM_LEDC` instead")]] =
+    esp_panel::drivers::BacklightPWM_LEDC;
