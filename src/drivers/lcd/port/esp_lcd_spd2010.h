@@ -1,10 +1,13 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
+
+#include "../esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_SPD2010
 
 #include <stdint.h>
 
@@ -88,3 +91,5 @@ esp_err_t esp_lcd_new_panel_spd2010(const esp_lcd_panel_io_handle_t io, const es
 #ifdef __cplusplus
 }
 #endif
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_SPD2010

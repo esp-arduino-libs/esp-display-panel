@@ -5,8 +5,7 @@
  */
 #pragma once
 
-#include <variant>
-#include "esp_panel_types.h"
+#include "esp_panel_backlight_conf_internal.h"
 #include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
@@ -94,7 +93,7 @@ public:
      *
      * @return `true` if success, otherwise false
      */
-    bool setBrightness(uint8_t percent) override;
+    bool setBrightness(int percent) override;
 
 private:
     Config _config = {};

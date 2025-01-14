@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
+#include "esp_panel_touch_conf_internal.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_FT5x06
+
 #include "esp_panel_utils.h"
 #include "esp_panel_touch_ft5x06.hpp"
 
@@ -47,4 +48,5 @@ bool TouchFT5x06::begin()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_FT5x06

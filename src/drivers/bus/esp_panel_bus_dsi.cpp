@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_bus_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_MIPI_DSI
 #include "soc/soc_caps.h"
 #if SOC_MIPI_DSI_SUPPORTED
+
 #include <stdlib.h>
 #include <string.h>
 #include "esp_panel_utils.h"
@@ -81,7 +84,7 @@ void BusDSI::Config::printHostConfig() const
     if (std::holds_alternative<HostFullConfig>(host)) {
         auto &config = std::get<HostFullConfig>(host);
         ESP_UTILS_LOGI(
-            "\n\t{Full host config}:"
+            "\n\t{Host config}[full]"
             "\n\t\t-> [bus_id]: %d"
             "\n\t\t-> [num_data_lanes]: %d"
             "\n\t\t-> [phy_clk_src]: %d"
@@ -94,7 +97,7 @@ void BusDSI::Config::printHostConfig() const
     } else {
         auto &config = std::get<HostPartialConfig>(host);
         ESP_UTILS_LOGI(
-            "\n\t{Partial host config}"
+            "\n\t{Host config}[partial]"
             "\n\t\t-> [num_data_lanes]: %d"
             "\n\t\t-> [lane_bit_rate_mbps]: %d"
             , config.num_data_lanes
@@ -110,7 +113,7 @@ void BusDSI::Config::printControlPanelConfig() const
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_LOGI(
-        "\n\t{Full control panel config}"
+        "\n\t{Control panel config}[full]"
         "\n\t\t-> [virtual_channel]: %d"
         "\n\t\t-> [lcd_cmd_bits]: %d"
         "\n\t\t-> [lcd_param_bits]: %d"
@@ -130,7 +133,7 @@ void BusDSI::Config::printRefreshPanelConfig() const
         auto &config = std::get<RefreshPanelFullConfig>(refresh_panel);
         // Here to split the log to avoid the log buffer overflow
         ESP_UTILS_LOGI(
-            "\n\t{Full refresh panel config}"
+            "\n\t{Refresh panel config}[full]"
             "\n\t\t-> [virtual_channel]: %d"
             "\n\t\t-> [dpi_clk_src]: %d"
             "\n\t\t-> [dpi_clock_freq_mhz]: %d"
@@ -171,7 +174,7 @@ void BusDSI::Config::printRefreshPanelConfig() const
     } else {
         auto &config = std::get<RefreshPanelPartialConfig>(refresh_panel);
         ESP_UTILS_LOGI(
-            "\n\t{Partial refresh panel config}"
+            "\n\t{Refresh panel config}[partial]"
             "\n\t\t-> [dpi_clock_freq_mhz]: %d"
             "\n\t\t-> [bits_per_pixel]: %d"
             "\n\t\t-> [h_size]: %d"
@@ -207,7 +210,7 @@ void BusDSI::Config::printPHY_LDO_Config() const
     if (std::holds_alternative<PHY_LDO_FullConfig>(phy_ldo)) {
         auto &config = std::get<PHY_LDO_FullConfig>(phy_ldo);
         ESP_UTILS_LOGI(
-            "\n\t{Full PHY LDO config}"
+            "\n\t{PHY LDO config}[full]"
             "\n\t\t-> [chan_id]: %d"
             "\n\t\t-> [voltage_mv]: %d"
             "\n\t\t-> {flags}"
@@ -221,40 +224,13 @@ void BusDSI::Config::printPHY_LDO_Config() const
     } else {
         auto &config = std::get<PHY_LDO_PartialConfig>(phy_ldo);
         ESP_UTILS_LOGI(
-            "\n\t{Partial PHY LDO config}"
+            "\n\t{PHY LDO config}[partial]"
             "\n\t\t-> [chan_id]: %d"
             , config.chan_id
         );
     }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
-}
-
-const BusDSI::Config::HostFullConfig *BusDSI::Config::getHostFullConfig() const
-{
-    if (std::holds_alternative<HostPartialConfig>(host)) {
-        return nullptr;
-    }
-
-    return &std::get<HostFullConfig>(host);
-}
-
-const BusDSI::Config::RefreshPanelFullConfig *BusDSI::Config::getRefreshPanelFullConfig() const
-{
-    if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
-        return nullptr;
-    }
-
-    return &std::get<RefreshPanelFullConfig>(refresh_panel);
-}
-
-const BusDSI::Config::PHY_LDO_FullConfig *BusDSI::Config::getPHY_LDO_Config() const
-{
-    if (std::holds_alternative<PHY_LDO_PartialConfig>(phy_ldo)) {
-        return nullptr;
-    }
-
-    return &std::get<PHY_LDO_FullConfig>(phy_ldo);
 }
 
 BusDSI::~BusDSI()
@@ -266,16 +242,18 @@ BusDSI::~BusDSI()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void BusDSI::configDPI_FrameBufferNumber(uint8_t num)
+bool BusDSI::configDPI_FrameBufferNumber(uint8_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: num(%d)", (int)num);
     getRefreshPanelFullConfig().num_fbs = num;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
 bool BusDSI::init()
@@ -294,12 +272,11 @@ bool BusDSI::init()
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
     // Get the host instance if not skipped
-    auto host_config = getConfig().getHostFullConfig();
-    _host = HostDSI::getInstance(host_config->bus_id, *host_config);
-    ESP_UTILS_CHECK_NULL_RETURN(
-        _host, false, "Get DSI host(%d) instance failed", host_config->bus_id
-    );
-    ESP_UTILS_LOGD("Get DSI host(%d) instance", host_config->bus_id);
+    auto &host_config = getHostFullConfig();
+    auto host_id = host_config.bus_id;
+    _host = HostDSI::getInstance(host_id, host_config);
+    ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get DSI host(%d) instance failed", host_id);
+    ESP_UTILS_LOGD("Get DSI host(%d) instance", host_id);
 
     setState(State::INIT);
 
@@ -320,23 +297,24 @@ bool BusDSI::begin()
     }
 
     // Turn on the power for MIPI DSI PHY
-    auto phy_ldo_config = getConfig().getPHY_LDO_Config();
-    if (phy_ldo_config->chan_id >= 0) {
+    auto &phy_ldo_config = getPHY_LDO_FullConfig();
+    if (phy_ldo_config.chan_id >= 0) {
         // Turn on the power for MIPI DSI PHY, so it can go from "No Power" state to "Shutdown" state
         ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_ldo_acquire_channel(phy_ldo_config, &_phy_ldo_handle), false, "Acquire LDO channel failed"
+            esp_ldo_acquire_channel(&phy_ldo_config, &_phy_ldo_handle), false, "Acquire LDO channel failed"
         );
-        ESP_UTILS_LOGD("MIPI DSI PHY (LDO %d) Powered on", phy_ldo_config->chan_id);
+        ESP_UTILS_LOGD("MIPI DSI PHY (LDO %d) Powered on", phy_ldo_config.chan_id);
     }
 
     // Startup the host
-    auto host_config = getConfig().getHostFullConfig();
-    ESP_UTILS_CHECK_FALSE_RETURN(_host->begin(), false, "init host(%d) failed", host_config->bus_id);
-    ESP_UTILS_LOGD("Begin DSI host(%d)", host_config->bus_id);
+    auto &host_config = getHostFullConfig();
+    auto host_id = host_config.bus_id;
+    ESP_UTILS_CHECK_FALSE_RETURN(_host->begin(), false, "init host(%d) failed", host_id);
+    ESP_UTILS_LOGD("Begin DSI host(%d)", host_id);
 
     // Create the control panel
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_lcd_new_panel_io_dbi(getHostHandle(), &getConfig().control_panel, &control_panel), false,
+        esp_lcd_new_panel_io_dbi(getHostHandle(), &getControlPanelFullConfig(), &control_panel), false,
         "create control panel failed"
     );
     ESP_UTILS_LOGD("Create control panel @%p", control_panel);
@@ -360,20 +338,22 @@ bool BusDSI::del()
     // Release the host instance if valid
     if (_host != nullptr) {
         _host = nullptr;
-        auto host_config = getConfig().getHostFullConfig();
+        auto &host_config = getHostFullConfig();
+        auto host_id = host_config.bus_id;
         ESP_UTILS_CHECK_FALSE_RETURN(
-            HostDSI::tryReleaseInstance(host_config->bus_id), false, "Release DSI host(%d) failed", host_config->bus_id
+            HostDSI::tryReleaseInstance(host_id), false, "Release DSI host(%d) failed", host_id
         );
     }
 
     // Turn off the power for MIPI DSI PHY if valid
     if (_phy_ldo_handle != nullptr) {
-        auto phy_ldo_config = getConfig().getPHY_LDO_Config();
+        auto &phy_ldo_config = getPHY_LDO_FullConfig();
+        auto chan_id = phy_ldo_config.chan_id;
         ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_ldo_release_channel(_phy_ldo_handle), false, "Release LDO channel(%d) failed", phy_ldo_config->chan_id
+            esp_ldo_release_channel(_phy_ldo_handle), false, "Release LDO channel(%d) failed", chan_id
         );
         _phy_ldo_handle = nullptr;
-        ESP_UTILS_LOGD("MIPI DSI PHY (LDO %d) Powered off", phy_ldo_config->chan_id);
+        ESP_UTILS_LOGD("Release LDO channel(%d)", chan_id);
     }
 
     setState(State::DEINIT);
@@ -383,21 +363,39 @@ bool BusDSI::del()
     return true;
 }
 
-/* Implement the function here to avoid error: invalid use of incomplete type `HostDSI` */
-esp_lcd_dsi_bus_handle_t BusDSI::getHostHandle()
+BusDSI::HostFullConfig &BusDSI::getHostFullConfig()
 {
-    return (_host == nullptr) ? nullptr : static_cast<esp_lcd_dsi_bus_handle_t>(_host->getHandle());
-}
-
-BusDSI::Config::RefreshPanelFullConfig &BusDSI::getRefreshPanelFullConfig()
-{
-    if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
+    if (std::holds_alternative<HostPartialConfig>(_config.host)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
+    return std::get<HostFullConfig>(_config.host);
+}
+
+BusDSI::ControlPanelFullConfig &BusDSI::getControlPanelFullConfig()
+{
+    return _config.control_panel;
+}
+
+BusDSI::RefreshPanelFullConfig &BusDSI::getRefreshPanelFullConfig()
+{
+    if (std::holds_alternative<RefreshPanelPartialConfig>(_config.refresh_panel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<RefreshPanelFullConfig>(_config.refresh_panel);
+}
+
+BusDSI::PHY_LDO_FullConfig &BusDSI::getPHY_LDO_FullConfig()
+{
+    if (std::holds_alternative<PHY_LDO_PartialConfig>(_config.phy_ldo)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<PHY_LDO_FullConfig>(_config.phy_ldo);
 }
 
 } // namespace esp_panel::drivers
 
 #endif // SOC_MIPI_DSI_SUPPORTED
+#endif // ESP_PANEL_DRIVERS_BUS_ENABLE_MIPI_DSI

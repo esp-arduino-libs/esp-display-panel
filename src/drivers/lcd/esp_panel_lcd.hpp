@@ -15,8 +15,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_panel_utils.h"
-#include "drivers/bus/esp_panel_bus.hpp"
+#include "drivers/bus/esp_panel_bus_factory.hpp"
 #include "port/esp_panel_lcd_vendor_types.h"
+#include "esp_panel_lcd_conf_internal.h"
 
 namespace esp_panel::drivers {
 
@@ -99,8 +100,8 @@ public:
             return functions.test(func);
         }
 
-        int x_coord_align = 1;              /*!< Required X coordinate alignment in pixels */
-        int y_coord_align = 1;              /*!< Required Y coordinate alignment in pixels */
+        int x_coord_align = 1;              /*!< Required X coordinate alignment in pixels (default: 1, must be power of 2) */
+        int y_coord_align = 1;              /*!< Required Y coordinate alignment in pixels (default: 1, must be power of 2) */
         std::vector<int> color_bits;        /*!< List of supported color bit depths */
         std::bitset<FUNC_MAX> functions;    /*!< Bitmap of supported functions */
     };
@@ -119,39 +120,34 @@ public:
     };
 
     /**
+     * @brief Simplified device configuration structure
+     */
+    struct DevicePartialConfig {
+        int reset_gpio_num = -1;                    /*!< Reset GPIO pin number (-1 if unused) */
+        int rgb_ele_order = static_cast<int>(LCD_RGB_ELEMENT_ORDER_RGB); /*!< RGB color element order */
+        int bits_per_pixel = 16;                    /*!< Color depth in bits per pixel */
+        bool flags_reset_active_high = 0;           /*!< Reset signal active high flag */
+    };
+    using DeviceFullConfig = esp_lcd_panel_dev_config_t;
+
+    /**
+     * @brief Simplified vendor configuration structure
+     */
+    struct VendorPartialConfig {
+        const esp_panel_lcd_vendor_init_cmd_t *init_cmds = nullptr; /*!< Vendor initialization commands */
+        int init_cmds_size = 0;                     /*!< Size of initialization commands array (in bytes) */
+        bool flags_mirror_by_cmd = 1;               /*!< Enable mirroring via commands */
+        bool flags_enable_io_multiplex = 0;         /*!< Enable IO pin multiplexing */
+    };
+    using VendorFullConfig = esp_panel_lcd_vendor_config_t;
+
+    using DeviceConfig = std::variant<DevicePartialConfig, DeviceFullConfig>;
+    using VendorConfig = std::variant<VendorPartialConfig, VendorFullConfig>;
+
+    /**
      * @brief Configuration structure for LCD device
      */
     struct Config {
-        /**
-         * @brief Full configuration type aliases for ESP LCD panel
-         */
-        using DeviceFullConfig = esp_lcd_panel_dev_config_t;
-
-        /**
-         * @brief Full configuration type aliases for ESP LCD vendor
-         */
-        using VendorFullConfig = esp_panel_lcd_vendor_config_t;
-
-        /**
-         * @brief Simplified device configuration structure
-         */
-        struct DevicePartialConfig {
-            int reset_gpio_num = -1;                    /*!< Reset GPIO pin number (-1 if unused) */
-            int rgb_ele_order = static_cast<int>(LCD_RGB_ELEMENT_ORDER_RGB); /*!< RGB color element order */
-            int bits_per_pixel = 16;                    /*!< Color depth in bits per pixel */
-            bool flags_reset_active_high = 0;           /*!< Reset signal active high flag */
-        };
-
-        /**
-         * @brief Simplified vendor configuration structure
-         */
-        struct VendorPartialConfig {
-            const esp_panel_lcd_vendor_init_cmd_t *init_cmds = nullptr; /*!< Vendor initialization commands */
-            int init_cmds_size = 0;                     /*!< Size of initialization commands array (in bytes) */
-            bool flags_mirror_by_cmd = 1;               /*!< Enable mirroring via commands */
-            bool flags_enable_io_multiplex = 0;         /*!< Enable IO pin multiplexing */
-        };
-
         /**
          * @brief Convert partial configurations to full configurations
          */
@@ -181,8 +177,8 @@ public:
          */
         const VendorFullConfig *getVendorFullConfig() const;
 
-        std::variant<DeviceFullConfig, DevicePartialConfig> device = {};     /*!< Device configuration storage */
-        std::variant<VendorFullConfig, VendorPartialConfig> vendor = {};     /*!< Vendor configuration storage */
+        DeviceConfig device = DevicePartialConfig{};     /*!< Device configuration storage */
+        VendorConfig vendor = VendorPartialConfig{};     /*!< Vendor configuration storage */
     };
 
     /**
@@ -235,7 +231,7 @@ public:
         _basic_attributes(attr),
         _bus(bus),
         _config{
-            .device = Config::DevicePartialConfig{
+            .device = DevicePartialConfig{
                 .reset_gpio_num = rst_io,
                 .bits_per_pixel = color_bits,
             },
@@ -745,14 +741,22 @@ private:
      *
      * @return Reference to full device configuration
      */
-    Config::DeviceFullConfig &getDeviceFullConfig();
+    DeviceFullConfig &getDeviceFullConfig();
 
     /**
      * @brief Get vendor full configuration
      *
      * @return Reference to full vendor configuration
      */
-    Config::VendorFullConfig &getVendorFullConfig();
+    VendorFullConfig &getVendorFullConfig();
+
+#if SOC_LCD_RGB_SUPPORTED
+    const BusRGB::RefreshPanelFullConfig *getBusRGB_RefreshPanelFullConfig();
+#endif
+
+#if SOC_MIPI_DSI_SUPPORTED
+    const BusDSI::RefreshPanelFullConfig *getBusDSI_RefreshPanelFullConfig();
+#endif
 
     IRAM_ATTR static bool onDrawBitmapFinish(void *panel_io, void *edata, void *user_ctx);
     IRAM_ATTR static bool onRefreshFinish(void *panel_io, void *edata, void *user_ctx);
@@ -774,7 +778,7 @@ private:
  *             major version.
  */
 using DsiPatternType [[deprecated("Please use `esp_panel::drivers::LCD::DSI_ColorBarPattern` instead")]] =
-esp_panel::drivers::LCD::DSI_ColorBarPattern;
+    esp_panel::drivers::LCD::DSI_ColorBarPattern;
 #endif
 
 /**

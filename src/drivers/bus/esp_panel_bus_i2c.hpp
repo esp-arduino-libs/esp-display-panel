@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <optional>
 #include <memory>
 #include <variant>
 #include "driver/i2c.h"
 #include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_i2c.hpp"
+#include "esp_panel_bus_conf_internal.h"
 #include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
@@ -32,40 +34,29 @@ public:
     static constexpr int I2C_HOST_ID_DEFAULT = static_cast<int>(I2C_NUM_0);
     static constexpr int I2C_CLK_SPEED_DEFAULT = 400 * 1000;
 
+
+    struct HostPartialConfig {
+        int sda_io_num = -1;         ///< GPIO number for SDA signal
+        int scl_io_num = -1;         ///< GPIO number for SCL signal
+        bool sda_pullup_en = GPIO_PULLUP_ENABLE;  ///< Enable internal pullup for SDA
+        bool scl_pullup_en = GPIO_PULLUP_ENABLE;  ///< Enable internal pullup for SCL
+        int clk_speed = I2C_CLK_SPEED_DEFAULT;    ///< I2C clock frequency in Hz
+    };
+    using HostFullConfig = i2c_config_t;
+
+    using ControlPanelFullConfig = esp_lcd_panel_io_i2c_config_t;
+
+    using HostConfig = std::variant<HostPartialConfig, HostFullConfig>;
+    using ControlPanelConfig = ControlPanelFullConfig;
+
     /**
      * @brief The I2C bus configuration structure
      */
     struct Config {
         /**
-         * @brief Host configuration types
-         */
-        using HostFullConfig = i2c_config_t;
-
-        /**
-         * @brief Control panel configuration types
-         */
-        using ControlPanelFullConfig = esp_lcd_panel_io_i2c_config_t;
-
-        /**
-         * @brief Partial host configuration structure
-         */
-        struct HostPartialConfig {
-            int sda_io_num = -1;         ///< GPIO number for SDA signal
-            int scl_io_num = -1;         ///< GPIO number for SCL signal
-            bool sda_pullup_en = GPIO_PULLUP_ENABLE;  ///< Enable internal pullup for SDA
-            bool scl_pullup_en = GPIO_PULLUP_ENABLE;  ///< Enable internal pullup for SCL
-            int clk_speed = I2C_CLK_SPEED_DEFAULT;    ///< I2C clock frequency in Hz
-        };
-
-        /**
          * @brief Convert partial configurations to full configurations
          */
         void convertPartialToFull();
-
-        /**
-         * @brief Print general configuration for debugging
-         */
-        void printGeneralConfig() const;
 
         /**
          * @brief Print host configuration for debugging
@@ -78,16 +69,18 @@ public:
         void printControlPanelConfig() const;
 
         /**
-         * @brief Get the full host configuration if available
+         * @brief Check if host configuration is valid
          *
-         * @return Pointer to full host configuration, `nullptr` if using partial configuration
+         * @return `true` if host configuration is valid, `false` otherwise
          */
-        const HostFullConfig *getHostFullConfig() const;
+        bool isHostConfigValid() const
+        {
+            return host.has_value();
+        }
 
-        int host_id = I2C_HOST_ID_DEFAULT;    ///< I2C host ID
-        bool skip_init_host = false;          ///< Skip host initialization if true
-        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
-        ControlPanelFullConfig control_panel = {};  ///< Control panel configuration
+        int host_id = I2C_HOST_ID_DEFAULT;      ///< I2C host ID
+        std::optional<HostConfig> host;         ///< Host configuration. If not set, the host will not be initialized
+        ControlPanelConfig control_panel = {};  ///< Control panel configuration
     };
 
 // *INDENT-OFF*
@@ -98,20 +91,18 @@ public:
      *
      * @param[in] scl_io I2C SCL pin
      * @param[in] sda_io I2C SDA pin
-     * @param[in] control_panel_config I2C control panel configuration
+     * @param[in] config I2C control panel configuration
      */
-    BusI2C(int scl_io, int sda_io, const Config::ControlPanelFullConfig &control_panel_config):
+    BusI2C(int scl_io, int sda_io, const ControlPanelFullConfig &config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config{
-            // General
-            .skip_init_host = false,
             // Host
-            .host = Config::HostPartialConfig{
+            .host = HostPartialConfig{
                 .sda_io_num = sda_io,
                 .scl_io_num = scl_io,
             },
             // Control Panel
-            .control_panel = control_panel_config,
+            .control_panel = config,
         }
     {
     }
@@ -120,16 +111,15 @@ public:
      * @brief Construct a new I2C bus instance with pre-initialized host
      *
      * @param[in] host_id I2C host ID
-     * @param[in] control_panel_config I2C control panel configuration
+     * @param[in] config  I2C control panel configuration
      */
-    BusI2C(int host_id, const Config::ControlPanelFullConfig &control_panel_config):
+    BusI2C(int host_id, const ControlPanelFullConfig &config):
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config{
             // General
             .host_id = host_id,
-            .skip_init_host = true,
             // Control Panel
-            .control_panel = control_panel_config,
+            .control_panel = config,
         }
     {
     }
@@ -152,70 +142,85 @@ public:
     ~BusI2C() override;
 
     /**
+     * @brief Configure I2C host skip initialization
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
+    bool configI2C_HostSkipInit();
+
+    /**
      * @brief Configure I2C internal pullup
      *
      * @param[in] sda_pullup_en Enable internal pullup for SDA
      * @param[in] scl_pullup_en Enable internal pullup for SCL
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_PullupEnable(bool sda_pullup_en, bool scl_pullup_en);
+    bool configI2C_PullupEnable(bool sda_pullup_en, bool scl_pullup_en);
 
     /**
      * @brief Configure I2C clock frequency
      *
      * @param[in] hz Clock frequency in Hz
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_FreqHz(uint32_t hz);
+    bool configI2C_FreqHz(uint32_t hz);
 
     /**
      * @brief Configure I2C device address
      *
      * @param[in] address 7-bit I2C device address
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_Address(uint32_t address);
+    bool configI2C_Address(uint8_t address);
 
     /**
      * @brief Configure number of bytes in control phase
      *
      * @param[in] num Number of bytes in control phase
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_CtrlPhaseBytes(uint32_t num);
+    bool configI2C_CtrlPhaseBytes(uint8_t num);
 
     /**
      * @brief Configure DC bit offset in control phase
      *
      * @param[in] num DC bit offset
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_DC_BitOffset(uint32_t num);
+    bool configI2C_DC_BitOffset(uint8_t num);
 
     /**
      * @brief Configure number of bits for I2C commands
      *
      * @param[in] num Number of bits for commands
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_CommandBits(uint32_t num);
+    bool configI2C_CommandBits(uint8_t num);
 
     /**
      * @brief Configure number of bits for I2C parameters
      *
      * @param[in] num Number of bits for parameters
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_ParamBits(uint32_t num);
+    bool configI2C_ParamBits(uint8_t num);
 
     /**
      * @brief Configure I2C flags
      *
      * @param[in] dc_low_on_data Set DC low on data phase
      * @param[in] disable_control_phase Disable control phase
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configI2C_Flags(bool dc_low_on_data, bool disable_control_phase);
+    bool configI2C_Flags(bool dc_low_on_data, bool disable_control_phase);
 
     /**
      * @brief Initialize the I2C bus
@@ -358,20 +363,30 @@ public:
 
 private:
     /**
+     * @brief Check if host is skipped initialization
+     *
+     * @return `true` if host is skipped initialization, `false` otherwise
+     */
+    bool isHostSkipInit() const
+    {
+        return !_config.isHostConfigValid();
+    }
+
+    /**
      * @brief Get mutable reference to host full configuration
      *
      * Converts partial configuration to full configuration if necessary
      *
      * @return Reference to host full configuration
      */
-    Config::HostFullConfig &getHostFullConfig();
+    HostFullConfig &getHostFullConfig();
 
     /**
      * @brief Get mutable reference to control panel full configuration
      *
      * @return Reference to control panel full configuration
      */
-    Config::ControlPanelFullConfig &getControlPanelFullConfig();
+    ControlPanelFullConfig &getControlPanelFullConfig();
 
     Config _config = {};                      ///< I2C bus configuration
     std::shared_ptr<HostI2C> _host = nullptr; ///< I2C host instance

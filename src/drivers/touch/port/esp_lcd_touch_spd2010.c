@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_SPD2010
+#include "../esp_panel_touch_conf_internal.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_SPD2010
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -486,4 +487,5 @@ hdp_done_check:
 
     return ESP_OK;
 }
-#endif // ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_SPD2010
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_SPD2010

@@ -84,9 +84,9 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
                     TEST_TOUCH_PIN_NUM_SPI_SCK, TEST_TOUCH_PIN_NUM_SPI_MOSI, TEST_TOUCH_PIN_NUM_SPI_MISO, \
                     (esp_lcd_panel_io_spi_config_t)ESP_PANEL_BOARD_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS) \
                 ); \
-        TEST_ASSERT_NOT_NULL_MESSAGE(touch_bus, "Create panel bus object failed"); \
+        TEST_ASSERT_NOT_NULL_MESSAGE(touch_bus, "Create bus object failed"); \
         touch_bus->configSpiFreqHz(TEST_TOUCH_SPI_FREQ_HZ); \
-        TEST_ASSERT_TRUE_MESSAGE(touch_bus->begin(), "Panel bus begin failed"); \
+        TEST_ASSERT_TRUE_MESSAGE(touch_bus->begin(), "Bus begin failed"); \
         touch_bus; \
     })
 #define CREATE_TOUCH(name, touch_bus) \

@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include <optional>
 #include <memory>
 #include <variant>
 #include "driver/spi_master.h"
-#include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_spi.hpp"
+#include "esp_panel_bus_conf_internal.h"
 #include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
@@ -33,41 +34,36 @@ public:
     static constexpr int QSPI_PCLK_HZ_DEFAULT = SPI_MASTER_FREQ_40M;
 
     /**
+     * @brief Partial host configuration structure
+     */
+    struct HostPartialConfig {
+        int sclk_io_num = -1;    ///< GPIO number for SCLK signal
+        int data0_io_num = -1;   ///< GPIO number for DATA0 signal
+        int data1_io_num = -1;   ///< GPIO number for DATA1 signal
+        int data2_io_num = -1;   ///< GPIO number for DATA2 signal
+        int data3_io_num = -1;   ///< GPIO number for DATA3 signal
+    };
+    using HostFullConfig = spi_bus_config_t;
+
+    /**
+     * @brief Partial control panel configuration structure
+     */
+    struct ControlPanelPartialConfig {
+        int cs_gpio_num = -1;        ///< GPIO number for CS signal
+        int spi_mode = 0;            ///< QSPI mode (0-3)
+        int pclk_hz = QSPI_PCLK_HZ_DEFAULT;  ///< QSPI clock frequency in Hz
+        int lcd_cmd_bits = 32;       ///< Bits for LCD commands
+        int lcd_param_bits = 8;      ///< Bits for LCD parameters
+    };
+    using ControlPanelFullConfig = esp_lcd_panel_io_spi_config_t;
+
+    using HostConfig = std::variant<HostPartialConfig, HostFullConfig>;
+    using ControlPanelConfig = std::variant<ControlPanelPartialConfig, ControlPanelFullConfig>;
+
+    /**
      * @brief The QSPI bus configuration structure
      */
     struct Config {
-        /**
-         * @brief Host configuration types
-         */
-        using HostFullConfig = spi_bus_config_t;
-
-        /**
-         * @brief Control panel configuration types
-         */
-        using ControlPanelFullConfig = esp_lcd_panel_io_spi_config_t;
-
-        /**
-         * @brief Partial host configuration structure
-         */
-        struct HostPartialConfig {
-            int sclk_io_num = -1;    ///< GPIO number for SCLK signal
-            int data0_io_num = -1;   ///< GPIO number for DATA0 signal
-            int data1_io_num = -1;   ///< GPIO number for DATA1 signal
-            int data2_io_num = -1;   ///< GPIO number for DATA2 signal
-            int data3_io_num = -1;   ///< GPIO number for DATA3 signal
-        };
-
-        /**
-         * @brief Partial control panel configuration structure
-         */
-        struct ControlPanelPartialConfig {
-            int cs_gpio_num = -1;        ///< GPIO number for CS signal
-            int spi_mode = 0;            ///< QSPI mode (0-3)
-            int pclk_hz = QSPI_PCLK_HZ_DEFAULT;  ///< QSPI clock frequency in Hz
-            int lcd_cmd_bits = 8;        ///< Bits for LCD commands
-            int lcd_param_bits = 8;      ///< Bits for LCD parameters
-        };
-
         /**
          * @brief Convert partial configurations to full configurations
          */
@@ -84,24 +80,18 @@ public:
         void printControlPanelConfig() const;
 
         /**
-         * @brief Get the full host configuration if available
+         * @brief Check if host configuration is valid
          *
-         * @return Pointer to full host configuration, `nullptr` if using partial configuration
+         * @return `true` if host configuration is valid, `false` otherwise
          */
-        const HostFullConfig *getHostFullConfig() const;
+        bool isHostConfigValid() const
+        {
+            return host.has_value();
+        }
 
-        /**
-         * @brief Get the full control panel configuration if available
-         *
-         * @return Pointer to full control panel configuration, `nullptr` if using partial configuration
-         */
-        const ControlPanelFullConfig *getControlPanelFullConfig() const;
-
-        int host_id = QSPI_HOST_ID_DEFAULT;    ///< QSPI host ID
-        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
-        ///< Control panel configuration
-        std::variant<ControlPanelFullConfig, ControlPanelPartialConfig> control_panel = {};
-        bool skip_init_host = false;          ///< Skip host initialization if true
+        int host_id = QSPI_HOST_ID_DEFAULT;     ///< QSPI host ID
+        std::optional<HostConfig> host;         ///< Host configuration. If not set, the host will not be initialized
+        ControlPanelConfig control_panel = ControlPanelPartialConfig{}; ///< Control panel configuration
     };
 
 // *INDENT-OFF*
@@ -121,7 +111,7 @@ public:
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config{
             // Host
-            .host = Config::HostPartialConfig{
+            .host = HostPartialConfig{
                 .sclk_io_num = sck_io,
                 .data0_io_num = d0_io,
                 .data1_io_num = d1_io,
@@ -129,11 +119,9 @@ public:
                 .data3_io_num = d3_io,
             },
             // Control Panel
-            .control_panel = Config::ControlPanelPartialConfig{
+            .control_panel = ControlPanelPartialConfig{
                 .cs_gpio_num = cs_io,
             },
-            // Flags
-            .skip_init_host = false,
         }
     {
     }
@@ -150,11 +138,9 @@ public:
             // General
             .host_id = host_id,
             // Control Panel
-            .control_panel = Config::ControlPanelPartialConfig{
+            .control_panel = ControlPanelPartialConfig{
                 .cs_gpio_num = cs_io,
             },
-            // Flags
-            .skip_init_host = true,
         }
     {
     }
@@ -175,6 +161,13 @@ public:
      * @brief Destroy the QSPI bus instance
      */
     ~BusQSPI() override;
+
+    /**
+     * @brief Configure QSPI host skip initialization
+     *
+     * @return `true` if configuration succeeds, `false` otherwise
+     */
+    bool configQSPI_HostSkipInit();
 
     /**
      * @brief Configure QSPI mode
@@ -269,13 +262,23 @@ public:
 
 private:
     /**
+     * @brief Check if host is skipped initialization
+     *
+     * @return `true` if host is skipped initialization, `false` otherwise
+     */
+    bool isHostSkipInit() const
+    {
+        return !_config.isHostConfigValid();
+    }
+
+    /**
      * @brief Get mutable reference to control panel full configuration
      *
      * Converts partial configuration to full configuration if necessary
      *
      * @return Reference to control panel full configuration
      */
-    Config::ControlPanelFullConfig &getControlPanelFullConfig();
+    ControlPanelFullConfig &getControlPanelFullConfig();
 
     /**
      * @brief Get mutable reference to host full configuration
@@ -284,7 +287,7 @@ private:
      *
      * @return Reference to host full configuration
      */
-    Config::HostFullConfig &getHostFullConfig();
+    HostFullConfig &getHostFullConfig();
 
     Config _config = {};                      ///< QSPI bus configuration
     std::shared_ptr<HostSPI> _host = nullptr; ///< QSPI host instance

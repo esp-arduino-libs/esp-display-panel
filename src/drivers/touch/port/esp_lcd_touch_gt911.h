@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +12,7 @@
 #pragma once
 
 #include "esp_lcd_touch.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_GT911
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,3 +91,5 @@ typedef struct {
 #ifdef __cplusplus
 }
 #endif
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_GT911

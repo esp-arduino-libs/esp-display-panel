@@ -6,6 +6,7 @@
 #pragma once
 
 #include <string>
+#include "esp_panel_backlight_conf_internal.h"
 
 namespace esp_panel::drivers {
 
@@ -28,7 +29,7 @@ public:
     /**
      * @brief The driver state enumeration
      */
-    enum class State : uint8_t {
+    enum class State : int {
         DEINIT = 0,    ///< Driver is not initialized
         BEGIN,         ///< Driver is initialized and ready
     };
@@ -70,7 +71,7 @@ public:
      *
      * @note This function should be called after `begin()`
      */
-    virtual bool setBrightness(uint8_t percent) = 0;
+    virtual bool setBrightness(int percent) = 0;
 
     /**
      * @brief Turn on the backlight
@@ -114,6 +115,16 @@ public:
         return _basic_attributes;
     }
 
+    /**
+     * @brief Get the current brightness percent
+     *
+     * @return The current brightness percent (0-100)
+     */
+    int getBrightness() const
+    {
+        return _brightness;
+    }
+
 protected:
     /**
      * @brief Set the current driver state
@@ -125,9 +136,20 @@ protected:
         _state = state;
     }
 
+    /**
+     * @brief Set the current brightness percent
+     *
+     * @param[in] percent The brightness percent (0-100)
+     */
+    void setBrightnessValue(int percent)
+    {
+        _brightness = std::clamp(percent, 0, 100);
+    }
+
 private:
-    State _state = State::DEINIT;              ///< Current driver state
+    State _state = State::DEINIT;               ///< Current driver state
     BasicAttributes _basic_attributes = {};     ///< Device basic attributes
+    int _brightness = 0;                        ///< Current brightness percent (0-100)
 };
 
 } // namespace esp_panel::drivers

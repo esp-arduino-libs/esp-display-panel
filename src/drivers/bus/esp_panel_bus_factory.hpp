@@ -10,7 +10,7 @@
 #include <string>
 #include <variant>
 #include "soc/soc_caps.h"
-#include "esp_panel_types.h"
+#include "esp_panel_bus_conf_internal.h"
 #include "esp_panel_bus.hpp"
 #include "esp_panel_bus_dsi.hpp"
 #include "esp_panel_bus_i2c.hpp"
@@ -36,10 +36,10 @@ public:
                    BusI2C::Config, BusSPI::Config, BusQSPI::Config
 #if SOC_LCD_RGB_SUPPORTED
                    , BusRGB::Config
-#endif // SOC_LCD_RGB_SUPPORTED
+#endif
 #if SOC_MIPI_DSI_SUPPORTED
                    , BusDSI::Config
-#endif // SOC_MIPI_DSI_SUPPORTED
+#endif
                    >;
 
     /**
@@ -78,11 +78,18 @@ public:
 
 private:
     /**
+     * @brief Map of bus types to their type names
+     *
+     * Maps each bus type to its type name string
+     */
+    static const std::unordered_map<int, std::string> _type_name_map;
+
+    /**
      * @brief Map of bus types to their constructors and type names
      *
-     * Maps each bus type to a pair containing its name string and constructor function
+     * Maps each bus type to its constructor function
      */
-    static const std::unordered_map<int, std::pair<std::string, FunctionDeviceConstructor>> _type_constructor_map;
+    static const std::unordered_map<int, FunctionDeviceConstructor> _type_constructor_map;
 };
 
 } // namespace esp_panel::drivers

@@ -87,7 +87,7 @@
  *   2. Formatter: ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, { data0, data1, ... }) and
  *                ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command)
  */
-const esp_lcd_panel_vendor_init_cmd_t lcd_init_cmd[] = {
+const esp_panel_lcd_vendor_init_cmd_t lcd_init_cmd[] = {
     // {0xFF, (uint8_t []){0x77, 0x01, 0x00, 0x00, 0x10}, 5, 0},
     // {0xC0, (uint8_t []){0x3B, 0x00}, 2, 0},
     // {0xC1, (uint8_t []){0x0D, 0x02}, 2, 0},

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,6 +12,7 @@
 #pragma once
 
 #include "esp_lcd_touch.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_TT21100
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,3 +61,5 @@ esp_err_t esp_lcd_touch_new_i2c_tt21100(const esp_lcd_panel_io_handle_t io, cons
 #ifdef __cplusplus
 }
 #endif
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_TT21100

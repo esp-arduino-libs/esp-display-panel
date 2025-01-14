@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9341
+#include "esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9341
+
 #include "esp_panel_utils.h"
 #include "port/esp_lcd_ili9341.h"
 #include "esp_panel_lcd_ili9341.hpp"
@@ -48,4 +49,5 @@ bool LCD_ILI9341::init()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9341
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9341

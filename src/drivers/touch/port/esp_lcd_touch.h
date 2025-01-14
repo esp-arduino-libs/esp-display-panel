@@ -19,7 +19,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-#include "esp_panel_conf_internal.h"
+#include "../esp_panel_touch_conf_internal.h"
+#include "esp_lcd_touch_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +30,8 @@ extern "C" {
 #define ESP_LCD_TOUCH_VER_MINOR    (1)
 #define ESP_LCD_TOUCH_VER_PATCH    (2)
 
-#define CONFIG_ESP_LCD_TOUCH_MAX_POINTS     (ESP_PANEL_CONF_TOUCH_MAX_POINTS)
-#define CONFIG_ESP_LCD_TOUCH_MAX_BUTTONS    (ESP_PANEL_CONF_TOUCH_MAX_BUTTONS)
+#define CONFIG_ESP_LCD_TOUCH_MAX_POINTS     (ESP_PANEL_DRIVERS_TOUCH_MAX_POINTS)
+#define CONFIG_ESP_LCD_TOUCH_MAX_BUTTONS    (ESP_PANEL_DRIVERS_TOUCH_MAX_BUTTONS)
 
 /**
  * @brief Touch controller type

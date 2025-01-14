@@ -1,45 +1,106 @@
-menu "Driver - Touch"
-    config ESP_PANEL_CONF_TOUCH_MAX_POINTS
+menu "Touch"
+    config ESP_PANEL_DRIVERS_TOUCH_MAX_POINTS
         int "Max point number"
         default 5
         help
             Maximum number of touch points that can be handled by the touch driver.
             This value should be set to the maximum number of touch points supported by the touch controller.
 
-    config ESP_PANEL_CONF_TOUCH_MAX_BUTTONS
+    config ESP_PANEL_DRIVERS_TOUCH_MAX_BUTTONS
         int "Max button number"
-        default 1
+        default 5
         help
             Maximum number of buttons that can be handled by the touch driver.
             This value should be set to the maximum number of buttons supported by the touch controller.
 
-    menu "XPT2046"
-        config ESP_PANEL_CONF_TOUCH_XPT2046_Z_THRESHOLD
+    menu "Enable used drivers in factory"
+        config ESP_PANEL_DRIVERS_TOUCH_USE_AXS15231B
+            bool "Use AXS15231B"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_CST816S
+            bool "Use CST816S"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_FT5x06
+            bool "Use FT5x06"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_GT911
+            bool "Use GT911"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_GT1151
+            bool "Use GT1151"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_SPD2010
+            bool "Use SPD2010"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_ST1633
+            bool "Use ST1633"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_ST7123
+            bool "Use ST7123"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_STMPE610
+            bool "Use STMPE610"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_TT21100
+            bool "Use TT21100"
+            default n
+
+        config ESP_PANEL_DRIVERS_TOUCH_USE_XPT2046
+            bool "Use XPT2046"
+            default n
+    endmenu
+
+    config ESP_PANEL_DRIVERS_TOUCH_COMPILE_UNUSED_DRIVERS
+        bool "Compile unused drivers"
+        default y
+        help
+            When disabled, code for unused drivers will be excluded to speed up compilation.
+            Make sure the driver is not used when this option is disabled.
+
+    menu "XPT2046 Configuration"
+        depends on ESP_PANEL_DRIVERS_TOUCH_USE_XPT2046 || ESP_PANEL_DRIVERS_TOUCH_COMPILE_UNUSED_DRIVERS
+
+        config ESP_PANEL_DRIVERS_TOUCH_XPT2046_Z_THRESHOLD
             int "Minimum Z pressure threshold"
             default 400
+            help
+                Minimum pressure threshold for touch detection.
 
-        config ESP_PANEL_CONF_TOUCH_XPT2046_INTERRUPT_MODE
-            bool "Enable Interrupt (PENIRQ) output"
+        config ESP_PANEL_DRIVERS_TOUCH_XPT2046_INTERRUPT_MODE
+            bool "Use Interrupt (PENIRQ) output"
             default n
             help
-                Also called Full Power Mode. Enable this to configure the XPT2046 to output low on the PENIRQ output if a touch is detected. This mode uses more power when enabled. Note that this signal goes low normally when a read is active.
+                When enabled, XPT2046 outputs low on PENIRQ when touch is detected (Full Power Mode).
+                Consumes more power but provides interrupt capability.
 
-        config ESP_PANEL_CONF_TOUCH_XPT2046_VREF_ON_MODE
+        config ESP_PANEL_DRIVERS_TOUCH_XPT2046_VREF_ON_MODE
             bool "Keep internal Vref enabled"
             default n
             help
-                Enable this to keep the internal Vref enabled between conversions. This uses slightly more power, but requires fewer transactions when reading the battery voltage, aux voltage and temperature.
+                When enabled, internal Vref remains on between conversions. Slightly higher power consumption,
+                but requires fewer transactions for battery voltage, aux voltage and temperature readings.
 
-        config ESP_PANEL_CONF_TOUCH_XPT2046_CONVERT_ADC_TO_COORDS
+        config ESP_PANEL_DRIVERS_TOUCH_XPT2046_CONVERT_ADC_TO_COORDS
             bool "Convert touch coordinates to screen coordinates"
             default y
             help
-                When this option is enabled the raw ADC values will be converted from 0-4096 to 0-{screen width} or 0-{screen height}. When this option is disabled the process_coordinates method will need to be used to convert the raw ADC values into a screen coordinate.
+                When enabled, raw ADC values (0-4096) are converted to screen coordinates.
+                When disabled, process_coordinates must be called manually to convert values.
 
-        config ESP_PANEL_CONF_TOUCH_XPT2046_ENABLE_LOCKING
-            bool "Enable data structure locking"
+        config ESP_PANEL_DRIVERS_TOUCH_XPT2046_ENABLE_LOCKING
+            bool "Use data structure locking"
             default n
             help
-                By enabling this option the XPT2046 driver will lock the touch position data structures when reading values from the XPT2046 and when reading position data via API. WARNING: enabling this option may result in unintended crashes.
+                When enabled, driver locks touch position data structures during reads.
+                Warning: May cause unexpected crashes.
     endmenu
 endmenu

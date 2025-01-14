@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -19,8 +19,8 @@
 //////////////////////////// Please update the following macros to configure the LCD panel /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using a LCD panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_LCD     (1)     // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#define ESP_PANEL_BOARD_USE_LCD     (1)     // 0/1
+#if ESP_PANEL_BOARD_USE_LCD
 /**
  * LCD controller name.
  */
@@ -50,7 +50,7 @@
      */
     #define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST  (0)     // 0/1. Typically set to 0
     /* For general */
-    #define ESP_PANEL_BOARD_LCD_BUS_HOST_ID         (1)     // Typically set to 1
+    #define ESP_PANEL_BOARD_LCD_SPI_HOST_ID         (1)     // Typically set to 1
 #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
     /* For host */
     #define ESP_PANEL_BOARD_LCD_SPI_IO_SCK          (1)
@@ -113,20 +113,20 @@
 #define ESP_PANEL_BOARD_LCD_RST_IO          (-1)    // Reset IO pin num. Set to -1 if not use
 #define ESP_PANEL_BOARD_LCD_RST_LEVEL       (0)     // Reset active level. 0: low level, 1: high level
 
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#endif // ESP_PANEL_BOARD_USE_LCD
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Please update the following macros to configure the touch panel ///////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using a touch panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_TOUCH   (0)     // 0/1
+#define ESP_PANEL_BOARD_USE_TOUCH   (0)     // 0/1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the backlight ////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using the backlight */
-#define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT       (1)     // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+#define ESP_PANEL_BOARD_USE_BACKLIGHT       (1)     // 0/1
+#if ESP_PANEL_BOARD_USE_BACKLIGHT
 /**
  * Backlight control mode. Choose one of the following:
  *      - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
@@ -147,13 +147,13 @@
 /* Set to 1 if want to turn off the backlight after initializing. Otherwise, the backlight will be on */
 #define ESP_PANEL_BOARD_BACKLIGHT_IDLE_OFF      (0)     // 0/1
 
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+#endif // ESP_PANEL_BOARD_USE_BACKLIGHT
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the IO expander //////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 0 if not using an IO Expander */
-#define ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER    (0)     // 0/1
+#define ESP_PANEL_BOARD_USE_EXPANDER    (0)     // 0/1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////// Please utilize the following macros to execute any additional code if required /////////////////

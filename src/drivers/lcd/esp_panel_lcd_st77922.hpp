@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "esp_panel_lcd_conf_internal.h"
 #include "esp_panel_lcd.hpp"
 
 namespace esp_panel::drivers {
@@ -34,6 +35,7 @@ public:
         return {
             {
                 ESP_PANEL_BUS_TYPE_SPI, BasicBusSpecification{
+                    .x_coord_align = 4,
                     .color_bits = {
                         ESP_PANEL_LCD_COLOR_BITS_RGB565,
                         ESP_PANEL_LCD_COLOR_BITS_RGB666,
@@ -43,6 +45,49 @@ public:
                                  (1U << BasicBusSpecification::FUNC_MIRROR_X) |
                                  (1U << BasicBusSpecification::FUNC_MIRROR_Y) |
                                  (1U << BasicBusSpecification::FUNC_GAP) |
+                                 (1U << BasicBusSpecification::FUNC_DISPLAY_ON_OFF),
+                },
+            },
+            {
+                ESP_PANEL_BUS_TYPE_QSPI, BasicBusSpecification{
+                    .x_coord_align = 4,
+                    .color_bits = {
+                        ESP_PANEL_LCD_COLOR_BITS_RGB565,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB666,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB888
+                    },
+                    .functions = (1U << BasicBusSpecification::FUNC_INVERT_COLOR) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_X) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_Y) |
+                                 (1U << BasicBusSpecification::FUNC_GAP) |
+                                 (1U << BasicBusSpecification::FUNC_DISPLAY_ON_OFF),
+                },
+            },
+            {
+                ESP_PANEL_BUS_TYPE_RGB, BasicBusSpecification{
+                    .color_bits = {
+                        ESP_PANEL_LCD_COLOR_BITS_RGB565,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB666,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB888
+                    },
+                    .functions = (1U << BasicBusSpecification::FUNC_INVERT_COLOR) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_X) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_Y) |
+                                 (1U << BasicBusSpecification::FUNC_SWAP_XY) |
+                                 (1U << BasicBusSpecification::FUNC_GAP) |
+                                 (1U << BasicBusSpecification::FUNC_DISPLAY_ON_OFF),
+                },
+            },
+            {
+                ESP_PANEL_BUS_TYPE_MIPI_DSI, BasicBusSpecification{
+                    .color_bits = {
+                        ESP_PANEL_LCD_COLOR_BITS_RGB565,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB666,
+                        ESP_PANEL_LCD_COLOR_BITS_RGB888
+                    },
+                    .functions = (1U << BasicBusSpecification::FUNC_INVERT_COLOR) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_X) |
+                                 (1U << BasicBusSpecification::FUNC_MIRROR_Y) |
                                  (1U << BasicBusSpecification::FUNC_DISPLAY_ON_OFF),
                 },
             },

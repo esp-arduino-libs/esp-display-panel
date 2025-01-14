@@ -18,6 +18,6 @@
 #include "drivers/io_expander/esp_panel_io_expander_factory.hpp"
 
 /* Board */
-#include "board/esp_panel_board_internal.h"
+#include "board/esp_panel_board_conf_internal.h"
 #include "board/esp_panel_board.hpp"
-#include "board/esp_panel_board_config_default.hpp"
+#include "board/esp_panel_board_config_internal.hpp"

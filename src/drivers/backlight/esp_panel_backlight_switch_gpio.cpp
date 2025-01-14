@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_backlight_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_GPIO
+
 #include "driver/gpio.h"
 #include "esp_panel_utils.h"
 #include "esp_panel_backlight_switch_gpio.hpp"
@@ -74,20 +77,18 @@ bool BacklightSwitchGPIO::del()
     return true;
 }
 
-bool BacklightSwitchGPIO::setBrightness(uint8_t percent)
+bool BacklightSwitchGPIO::setBrightness(int percent)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
     ESP_UTILS_LOGD("Param: percent(%d)", percent);
-    if (percent > 100) {
-        ESP_UTILS_LOGW("Percent out of range, force to 100");
-        percent = 100;
-    }
 
     bool level = (percent > 0) ? _config.on_level : !_config.on_level;
     ESP_UTILS_CHECK_ERROR_RETURN(gpio_set_level((gpio_num_t)_config.io_num, level), false, "GPIO set level failed");
+
+    setBrightnessValue(percent);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
@@ -95,3 +96,5 @@ bool BacklightSwitchGPIO::setBrightness(uint8_t percent)
 }
 
 } // namespace esp_panel::drivers
+
+#endif // ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_GPIO

@@ -3,11 +3,73 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+#include "esp_panel_backlight_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_FACTORY
+
 #include "esp_panel_types.h"
 #include "esp_panel_utils.h"
 #include "esp_panel_backlight_factory.hpp"
 
 namespace esp_panel::drivers {
+
+struct ConfigVisitor {
+    auto operator()(const BacklightSwitchGPIO::Config &config) const
+    {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_GPIO
+        return BacklightSwitchGPIO::BASIC_ATTRIBUTES_DEFAULT.type;
+#else
+        return -1;
+#endif
+    }
+
+    auto operator()(const BacklightSwitchExpander::Config &config) const
+    {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_EXPANDER
+        return BacklightSwitchExpander::BASIC_ATTRIBUTES_DEFAULT.type;
+#else
+        return -1;
+#endif
+    }
+
+    auto operator()(const BacklightPWM_LEDC::Config &config) const
+    {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_PWM_LEDC
+        return BacklightPWM_LEDC::BASIC_ATTRIBUTES_DEFAULT.type;
+#else
+        return -1;
+#endif
+    }
+
+    auto operator()(const BacklightCustom::Config &config) const
+    {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_CUSTOM
+        return BacklightCustom::BASIC_ATTRIBUTES_DEFAULT.type;
+#else
+        return -1;
+#endif
+    }
+};
+
+#define TYPE_NAME_MAP_ITEM(type_name)                                      \
+    {                                                                      \
+        Backlight ##type_name::BASIC_ATTRIBUTES_DEFAULT.type, #type_name   \
+    }
+
+const std::unordered_map<int, std::string> BacklightFactory::_type_name_map = {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_GPIO
+    TYPE_NAME_MAP_ITEM(SwitchGPIO),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_SWITCH_EXPANDER
+    TYPE_NAME_MAP_ITEM(SwitchExpander),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_PWM_LEDC
+    TYPE_NAME_MAP_ITEM(PWM_LEDC),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_CUSTOM
+    TYPE_NAME_MAP_ITEM(Custom),
+#endif
+};
 
 #define DEVICE_CREATOR(type_name)                                                                           \
     [](const Config &config) {                                                                              \
@@ -24,17 +86,24 @@ namespace esp_panel::drivers {
         ESP_UTILS_LOG_TRACE_EXIT();                                                                         \
         return device;                                                                                      \
     }
-#define ITEM_CONTROLLER(type_name)                                                        \
-    {                                                                                     \
-        Backlight ##type_name::BASIC_ATTRIBUTES_DEFAULT.type,                             \
-        {Backlight ##type_name::BASIC_ATTRIBUTES_DEFAULT.name, DEVICE_CREATOR(type_name)} \
+#define TYPE_CREATOR_MAP_ITEM(type_name)                                                 \
+    {                                                                               \
+        Backlight ##type_name::BASIC_ATTRIBUTES_DEFAULT.type, DEVICE_CREATOR(type_name)   \
     }
 
-const std::unordered_map<int, std::pair<std::string, BacklightFactory::FunctionDeviceConstructor>>
-BacklightFactory::_type_constructor_map = {
-    ITEM_CONTROLLER(SwitchGPIO),
-    ITEM_CONTROLLER(PWM_LEDC),
-    ITEM_CONTROLLER(Custom),
+const std::unordered_map<int, BacklightFactory::FunctionDeviceConstructor> BacklightFactory::_type_constructor_map = {
+#if ESP_PANEL_DRIVERS_BACKLIGHT_USE_SWITCH_GPIO
+    TYPE_CREATOR_MAP_ITEM(SwitchGPIO),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_USE_SWITCH_EXPANDER
+    TYPE_CREATOR_MAP_ITEM(SwitchExpander),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_USE_PWM_LEDC
+    TYPE_CREATOR_MAP_ITEM(PWM_LEDC),
+#endif
+#if ESP_PANEL_DRIVERS_BACKLIGHT_USE_CUSTOM
+    TYPE_CREATOR_MAP_ITEM(Custom),
+#endif
 };
 
 std::shared_ptr<Backlight> BacklightFactory::create(const Config &config)
@@ -43,14 +112,18 @@ std::shared_ptr<Backlight> BacklightFactory::create(const Config &config)
 
     ESP_UTILS_LOGD("Param: config(@%p)", &config);
 
+    auto name = getTypeNameString(getConfigType(config)).c_str();
+
     auto type = getConfigType(config);
-    ESP_UTILS_LOGD("Get config type: %d", type);
+    ESP_UTILS_LOGD("Get config type: %d(%s)", type, name);
 
     auto it = _type_constructor_map.find(type);
-    ESP_UTILS_CHECK_FALSE_RETURN(it != _type_constructor_map.end(), nullptr, "Unsupported type: %d", type);
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        it != _type_constructor_map.end(), nullptr, "Disabled or unsupported type: %d(%s)", type, name
+    );
 
-    std::shared_ptr<Backlight> device = it->second.second(config);
-    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device(%s) failed", it->second.first.c_str());
+    std::shared_ptr<Backlight> device = it->second(config);
+    ESP_UTILS_CHECK_NULL_RETURN(device, nullptr, "Create device(%s) failed", name);
 
     ESP_UTILS_LOG_TRACE_EXIT();
 
@@ -59,25 +132,18 @@ std::shared_ptr<Backlight> BacklightFactory::create(const Config &config)
 
 int BacklightFactory::getConfigType(const Config &config)
 {
-    if (std::holds_alternative<BacklightSwitchGPIO::Config>(config)) {
-        return BacklightSwitchGPIO::BASIC_ATTRIBUTES_DEFAULT.type;
-    } else if (std::holds_alternative<BacklightPWM_LEDC::Config>(config)) {
-        return BacklightPWM_LEDC::BASIC_ATTRIBUTES_DEFAULT.type;
-    } else if (std::holds_alternative<BacklightCustom::Config>(config)) {
-        return BacklightCustom::BASIC_ATTRIBUTES_DEFAULT.type;
-    }
-
-    return -1;
+    return std::visit(ConfigVisitor{}, config);
 }
 
 std::string BacklightFactory::getTypeNameString(int type)
 {
-    auto it = _type_constructor_map.find(type);
-    if (it != _type_constructor_map.end()) {
-        return it->second.first;
+    auto it = _type_name_map.find(type);
+    if (it != _type_name_map.end()) {
+        return it->second;
     }
 
     return "Unknown";
 }
 
 } // namespace esp_panel::drivers
+#endif // ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_FACTORY

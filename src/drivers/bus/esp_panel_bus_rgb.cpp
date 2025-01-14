@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_bus_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_RGB
 #include "soc/soc_caps.h"
-
 #if SOC_LCD_RGB_SUPPORTED
+
 #include <cstdlib>
 #include <cstring>
 #include "esp_lcd_panel_io.h"
@@ -19,11 +21,11 @@ void BusRGB::Config::convertPartialToFull()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (use_control_panel && std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
+    if (isControlPanelValid() && std::holds_alternative<ControlPanelPartialConfig>(control_panel.value())) {
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
         printControlPanelConfig();
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
-        auto &config = std::get<ControlPanelPartialConfig>(control_panel);
+        auto &config = std::get<ControlPanelPartialConfig>(control_panel.value());
         control_panel =  ControlPanelFullConfig{
             .line_config = {
                 .cs_io_type = static_cast<panel_io_type_t>(config.cs_io_type),
@@ -34,11 +36,11 @@ void BusRGB::Config::convertPartialToFull()
                 .sda_gpio_num = config.sda_gpio_num,
             },
             .expect_clk_speed = PANEL_IO_SPI_CLK_MAX,
-            .spi_mode = static_cast<uint32_t>(config.flags_scl_active_falling_edge ? 1 : 0),
-            .lcd_cmd_bytes = 1,
-            .lcd_param_bytes = 1,
+            .spi_mode = static_cast<uint32_t>(config.spi_mode),
+            .lcd_cmd_bytes = static_cast<uint32_t>(config.lcd_cmd_bytes),
+            .lcd_param_bytes = static_cast<uint32_t>(config.lcd_param_bytes),
             .flags = {
-                .use_dc_bit = 1,
+                .use_dc_bit = static_cast<uint32_t>(config.flags_use_dc_bit),
                 .dc_zero_on_data = 0,
                 .lsb_first = 0,
                 .cs_high_active = 0,
@@ -76,7 +78,7 @@ void BusRGB::Config::convertPartialToFull()
             .bits_per_pixel = static_cast<size_t>(config.bits_per_pixel),
             .num_fbs = 1,
             .bounce_buffer_size_px = static_cast<size_t>(config.bounce_buffer_size_px),
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
             .dma_burst_size = 64,
 #else
             .sram_trans_align = 4,
@@ -117,10 +119,15 @@ void BusRGB::Config::printControlPanelConfig() const
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (std::holds_alternative<ControlPanelFullConfig>(control_panel)) {
-        auto &config = std::get<ControlPanelFullConfig>(control_panel);
+    if (!isControlPanelValid()) {
+        ESP_UTILS_LOGI("\n\t{Control panel config}[skipped]");
+        goto end;
+    }
+
+    if (std::holds_alternative<ControlPanelFullConfig>(control_panel.value())) {
+        auto &config = std::get<ControlPanelFullConfig>(control_panel.value());
         ESP_UTILS_LOGI(
-            "\n\t{Full control panel config}"
+            "\n\t{Control panel config}[full]"
             "\n\t\t-> {line_config}"
             "\n\t\t\t-> [cs_io_type]: %d"
             "\n\t\t\t-> [cs_gpio_num]: %d"
@@ -159,26 +166,35 @@ void BusRGB::Config::printControlPanelConfig() const
             , config.flags.del_keep_cs_inactive
         );
     } else {
-        auto &config = std::get<ControlPanelPartialConfig>(control_panel);
+        auto &config = std::get<ControlPanelPartialConfig>(control_panel.value());
         ESP_UTILS_LOGI(
-            "\n\t{Partial control panel config}"
+            "\n\t{Control panel config}[partial]"
             "\n\t\t-> [cs_io_type]: %d"
             "\n\t\t-> [cs_gpio_num]: %d"
             "\n\t\t-> [scl_io_type]: %d"
             "\n\t\t-> [scl_gpio_num]: %d"
             "\n\t\t-> [sda_io_type]: %d"
             "\n\t\t-> [sda_gpio_num]: %d"
-            "\n\t\t-> [flags_scl_active_falling_edge]: %d"
             , config.cs_io_type
             , config.cs_gpio_num
             , config.scl_io_type
             , config.scl_gpio_num
             , config.sda_io_type
             , config.sda_gpio_num
-            , config.flags_scl_active_falling_edge
+        );
+        ESP_UTILS_LOGI(
+            "\n\t\t-> [spi_mode]: %d"
+            "\n\t\t-> [lcd_cmd_bytes]: %d"
+            "\n\t\t-> [lcd_param_bytes]: %d"
+            "\n\t\t-> [flags_use_dc_bit]: %d"
+            , config.spi_mode
+            , config.lcd_cmd_bytes
+            , config.lcd_param_bytes
+            , config.flags_use_dc_bit
         );
     }
 
+end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
@@ -189,7 +205,7 @@ void BusRGB::Config::printRefreshPanelConfig() const
     if (std::holds_alternative<RefreshPanelFullConfig>(refresh_panel)) {
         auto &config = std::get<RefreshPanelFullConfig>(refresh_panel);
         ESP_UTILS_LOGI(
-            "\n\t{Full refresh panel config}"
+            "\n\t{Refresh panel config}[full]"
             "\n\t\t-> [clk_src]: %d"
             , config.clk_src
         );
@@ -232,7 +248,7 @@ void BusRGB::Config::printRefreshPanelConfig() const
             "\n\t\t-> [bits_per_pixel]: %d"
             "\n\t\t-> [num_fbs]: %d"
             "\n\t\t-> [bounce_buffer_size_px]: %d"
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
             "\n\t\t-> [dma_burst_size]: %d"
 #else
             "\n\t\t-> [sram_trans_align]: %d"
@@ -247,7 +263,7 @@ void BusRGB::Config::printRefreshPanelConfig() const
             , config.bits_per_pixel
             , config.num_fbs
             , config.bounce_buffer_size_px
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
             , config.dma_burst_size
 #else
             , config.sram_trans_align
@@ -290,7 +306,7 @@ void BusRGB::Config::printRefreshPanelConfig() const
     } else {
         auto &config = std::get<RefreshPanelPartialConfig>(refresh_panel);
         ESP_UTILS_LOGI(
-            "\n\t{Partial refresh panel config}"
+            "\n\t{Refresh panel config}[partial]"
             "\n\t\t-> [pclk_hz]: %d"
             "\n\t\t-> [h_res]: %d"
             "\n\t\t-> [v_res]: %d"
@@ -350,24 +366,6 @@ void BusRGB::Config::printRefreshPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-const BusRGB::Config::ControlPanelFullConfig *BusRGB::Config::getControlPanelFullConfig() const
-{
-    if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
-        return nullptr;
-    }
-
-    return &std::get<ControlPanelFullConfig>(control_panel);
-}
-
-const BusRGB::Config::RefreshPanelFullConfig *BusRGB::Config::getRefreshPanelFullConfig() const
-{
-    if (std::holds_alternative<RefreshPanelPartialConfig>(refresh_panel)) {
-        return nullptr;
-    }
-
-    return &std::get<RefreshPanelFullConfig>(refresh_panel);
-}
-
 BusRGB::~BusRGB()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -381,10 +379,8 @@ bool BusRGB::configSPI_IO_Type(bool cs_use_expander, bool sck_use_expander, bool
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(
-        !isOverState(State::INIT), false, "Should be called before `init()`"
-    );
-    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(isControlPanelUsed(), false, "Not using control panel");
 
     ESP_UTILS_LOGD(
         "Param: cs_use_expander(%d), sck_use_expander(%d), sda_use_expander(%d)",
@@ -419,10 +415,8 @@ bool BusRGB::configSPI_IO_Expander(esp_io_expander_t *handle)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(
-        !isOverState(State::INIT), false, "Should be called before `init()`"
-    );
-    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(isControlPanelUsed(), false, "Not using control panel");
 
     ESP_UTILS_LOGD("Param: handle(@%p)", handle);
     getControlPanelFullConfig().line_config.io_expander = handle;
@@ -432,17 +426,45 @@ bool BusRGB::configSPI_IO_Expander(esp_io_expander_t *handle)
     return true;
 }
 
-bool BusRGB::configSPI_SCL_ActiveFallingEdge(bool enable)
+bool BusRGB::configSPI_Mode(uint8_t mode)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(
-        !isOverState(State::INIT), false, "Should be called before `init()`"
-    );
-    ESP_UTILS_CHECK_FALSE_RETURN(getConfig().use_control_panel, false, "Not using control panel");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(isControlPanelUsed(), false, "Not using control panel");
 
-    ESP_UTILS_LOGD("Param: enable(%d)", enable);
-    getControlPanelFullConfig().spi_mode = enable ? 1 : 0;
+    ESP_UTILS_LOGD("Param: mode(%d)", mode);
+    getControlPanelFullConfig().spi_mode = mode;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configSPI_CommandDataBytes(uint8_t command_bytes, uint8_t data_bytes)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(isControlPanelUsed(), false, "Not using control panel");
+
+    ESP_UTILS_LOGD("Param: command_bytes(%d), data_bytes(%d)", command_bytes, data_bytes);
+    getControlPanelFullConfig().lcd_cmd_bytes = command_bytes;
+    getControlPanelFullConfig().lcd_param_bytes = data_bytes;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusRGB::configRGB_FreqHz(uint32_t hz)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+
+    ESP_UTILS_LOGD("Param: hz(%d)", hz);
+    getRefreshPanelFullConfig().timings.pclk_hz = hz;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
@@ -453,9 +475,7 @@ bool BusRGB::configRGB_FrameBufferNumber(uint8_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(
-        !isOverState(State::INIT), false, "Should be called before `init()`"
-    );
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: num(%d)", num);
     ESP_UTILS_CHECK_FALSE_RETURN(num > 0, false, "Frame buffer number must be greater than 0");
@@ -509,7 +529,7 @@ bool BusRGB::configRGB_TimingFlags(
 }
 
 bool BusRGB::configSpiLine(
-    bool cs_use_expander, bool sck_use_expander, bool sda_use_expander, ESP_IOExpander *io_expander
+    bool cs_use_expander, bool sck_use_expander, bool sda_use_expander, esp_expander::Base *io_expander
 )
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -621,10 +641,9 @@ bool BusRGB::begin()
     }
 
     // Create the control panel if needed
-    auto &config = getConfig();
-    if (config.use_control_panel) {
+    if (isControlPanelUsed()) {
         ESP_UTILS_CHECK_ERROR_RETURN(
-            esp_lcd_new_panel_io_3wire_spi(config.getControlPanelFullConfig(), &control_panel), false,
+            esp_lcd_new_panel_io_3wire_spi(&getControlPanelFullConfig(), &control_panel), false,
             "create control panel failed"
         );
         ESP_UTILS_LOGD("Create control panel @%p", control_panel);
@@ -642,7 +661,7 @@ bool BusRGB::del()
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     // Delete the control panel if valid
-    if (getConfig().use_control_panel && isControlPanelValid()) {
+    if (isControlPanelUsed() && isControlPanelValid()) {
         ESP_UTILS_CHECK_FALSE_RETURN(delControlPanel(), false, "Delete control panel failed");
     }
 
@@ -653,24 +672,25 @@ bool BusRGB::del()
     return true;
 }
 
-BusRGB::Config::ControlPanelFullConfig &BusRGB::getControlPanelFullConfig()
+BusRGB::ControlPanelFullConfig &BusRGB::getControlPanelFullConfig()
 {
-    if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
+    if (std::holds_alternative<ControlPanelPartialConfig>(_config.control_panel.value())) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
+    return std::get<ControlPanelFullConfig>(_config.control_panel.value());
 }
 
-BusRGB::Config::RefreshPanelFullConfig &BusRGB::getRefreshPanelFullConfig()
+BusRGB::RefreshPanelFullConfig &BusRGB::getRefreshPanelFullConfig()
 {
-    if (std::holds_alternative<Config::RefreshPanelPartialConfig>(_config.refresh_panel)) {
+    if (std::holds_alternative<RefreshPanelPartialConfig>(_config.refresh_panel)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::RefreshPanelFullConfig>(_config.refresh_panel);
+    return std::get<RefreshPanelFullConfig>(_config.refresh_panel);
 }
 
 } // namespace esp_panel::drivers
 
 #endif // SOC_LCD_RGB_SUPPORTED
+#endif // ESP_PANEL_DRIVERS_BUS_ENABLE_RGB

@@ -14,11 +14,11 @@
 #pragma once
 
 /**
- * @brief Flag to enable supported board configuration
+ * @brief Flag to enable supported board configuration (0/1 )
  *
- * Set to `1` to use supported board configuration
+ * Set to `1` to enable supported board configuration, `0` to disable
  */
-#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (0)         // 0/1
+#define ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED       (0)
 
 #if ESP_PANEL_BOARD_DEFAULT_USE_SUPPORTED
 /**
@@ -111,11 +111,8 @@
 /////////////////////////////////////////////// File Version ///////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * Do not change the following versions, they are used to check if the configurations in this file are compatible with
- * the current version of `esp_panel_board_supported.h` in the library. The detailed rules are as follows:
- *
- * These version numbers are used to check compatibility between this configuration file and the library.
- * Rules for version numbers:
+ * Do not change the following versions. These version numbers are used to check compatibility between this
+ * configuration file and the library. Rules for version numbers:
  * 1. Major version mismatch: Configurations are incompatible, must use library version
  * 2. Minor version mismatch: May be missing new configurations, recommended to update
  * 3. Patch version mismatch: No impact on functionality

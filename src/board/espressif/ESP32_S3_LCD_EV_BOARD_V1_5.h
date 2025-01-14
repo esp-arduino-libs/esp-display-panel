@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,9 +12,9 @@
 //////////////////////////// Please update the following macros to configure the LCD panel /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using an LCD panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_LCD           (1)     // 0/1
+#define ESP_PANEL_BOARD_USE_LCD           (1)     // 0/1
 
-#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#if ESP_PANEL_BOARD_USE_LCD
 /**
  * LCD Controller Name.
  */
@@ -29,7 +29,7 @@
  * If set to 1, the bus will skip to initialize the corresponding host. Users need to initialize the host in advance.
  * It is useful if other devices use the same host. Please ensure that the host is initialized only once.
  */
-#define ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST    (0)     // 0/1
+#define ESP_PANEL_BOARD_LCD_RGB_USE_CONTROL_PANEL    (1)     // 0/1
 /**
  * LCD Bus Type.
  */
@@ -80,21 +80,17 @@
     #define ESP_PANEL_BOARD_LCD_RGB_IO_DATA14         (2)
     #define ESP_PANEL_BOARD_LCD_RGB_IO_DATA15         (1)
 #endif
-#if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
-    #define ESP_PANEL_BOARD_LCD_SPI_IO_CS               (1)
-    #define ESP_PANEL_BOARD_LCD_SPI_IO_SCK              (2)
-    #define ESP_PANEL_BOARD_LCD_SPI_IO_SDA              (3)
-    #define ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER     (1)     // 0/1
-    #define ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER    (1)     // 0/1
-    #define ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER    (1)     // 0/1
-    #define ESP_PANEL_BOARD_LCD_SPI_SCL_ACTIVE_EDGE     (0)     // 0: rising edge, 1: falling edge
-    #define ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX       (1)     // Delete the control panel instance automatically if set to 1.
-                                                                // If the 3-wire SPI pins are sharing other pins of the RGB
-                                                                // interface to save GPIOs, Please set it to 1 to release
-                                                                // the control panel and its pins (except CS signal).
-    #define ESP_PANEL_BOARD_LCD_FLAGS_MIRROR_BY_CMD           (!ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX)
-                                                                // The `mirror()` function will be implemented by LCD
-                                                                // command if set to 1.
+#if ESP_PANEL_BOARD_LCD_RGB_USE_CONTROL_PANEL
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_IO_CS               (1)
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SCK              (2)
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SDA              (3)
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_CS_USE_EXPNADER     (1)     // 0/1
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_SCL_USE_EXPNADER    (1)     // 0/1
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_SDA_USE_EXPNADER    (1)     // 0/1
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_MODE                (0)     // 0: rising edge, 1: falling edge
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_CMD_BYTES           (1)
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_PARAM_BYTES         (1)
+    #define ESP_PANEL_BOARD_LCD_RGB_SPI_USE_DC_BIT          (1)
 #endif
 
 #endif /* ESP_PANEL_BOARD_LCD_BUS_TYPE */
@@ -147,14 +143,14 @@
 #define ESP_PANEL_BOARD_LCD_RST_IO        (-1)
 #define ESP_PANEL_BOARD_LCD_RST_LEVEL     (0)         // 0: low level, 1: high level
 
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_LCD */
+#endif /* ESP_PANEL_BOARD_USE_LCD */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Please update the following macros to configure the touch panel ///////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using an touch panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_TOUCH         (1)         // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
+#define ESP_PANEL_BOARD_USE_TOUCH         (1)         // 0/1
+#if ESP_PANEL_BOARD_USE_TOUCH
 /**
  * Touch controller name.
  */
@@ -177,7 +173,7 @@
 /* Touch panel bus parameters */
 #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 
-    #define ESP_PANEL_BOARD_TOUCH_BUS_HOST_ID     (0)     // Typically set to 0
+    #define ESP_PANEL_BOARD_TOUCH_I2C_HOST_ID     (0)     // Typically set to 0
     #define ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS     (0)     // Typically set to 0 to use default address
 #if !ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
     #define ESP_PANEL_BOARD_TOUCH_I2C_CLK_HZ      (400 * 1000)
@@ -203,21 +199,21 @@
 #define ESP_PANEL_BOARD_TOUCH_INT_IO          (-1)
 #define ESP_PANEL_BOARD_TOUCH_INT_LEVEL       (0)         // 0: low level, 1: high level
 
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_TOUCH */
+#endif /* ESP_PANEL_BOARD_USE_TOUCH */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the backlight ////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// #define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT         (0)         // 0/1
-#define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT         (1)         // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+// #define ESP_PANEL_BOARD_USE_BACKLIGHT         (0)         // 0/1
+#define ESP_PANEL_BOARD_USE_BACKLIGHT         (1)         // 0/1
+#if ESP_PANEL_BOARD_USE_BACKLIGHT
     /**
      * Backlight control mode. Choose one of the following:
      *  - ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO: Use GPIO switch to control the backlight, only support on/off
      *  - ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC:    Use LEDC PWM to control the backlight, support brightness adjustment
      *  - ESP_PANEL_BACKLIGHT_TYPE_CUSTOM:      Use custom function to control the backlight
      */
-    #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_CUSTOM)
+    #define ESP_PANEL_BOARD_BACKLIGHT_TYPE        (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
     #if ESP_PANEL_BOARD_BACKLIGHT_TYPE != ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
 
@@ -247,14 +243,14 @@
 
     /* Set to 1 if you want to turn off the backlight after initializing the panel; otherwise, set it to turn on */
     #define ESP_PANEL_BOARD_BACKLIGHT_IDLE_OFF    (0)         // 0: on, 1: off
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+#endif // ESP_PANEL_BOARD_USE_BACKLIGHT
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the IO expander //////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 0 if not using IO Expander */
-#define ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER          (1)         // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER
+#define ESP_PANEL_BOARD_USE_EXPANDER          (1)         // 0/1
+#if ESP_PANEL_BOARD_USE_EXPANDER
 /**
  * IO expander name.
  */
@@ -269,7 +265,7 @@
 /* IO expander parameters */
 #define ESP_PANEL_BOARD_EXPANDER_I2C_ADDRESS          (0x20)
 #if !ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST
-    #define ESP_PANEL_BOARD_EXPANDER_HOST_ID          (0)     // Typically set to 0
+    #define ESP_PANEL_BOARD_EXPANDER_I2C_HOST_ID          (0)     // Typically set to 0
     #define ESP_PANEL_BOARD_EXPANDER_I2C_CLK_HZ       (400 * 1000)
                                                         // Typically set to 400K
     #define ESP_PANEL_BOARD_EXPANDER_I2C_SCL_PULLUP   (0)     // 0/1
@@ -277,7 +273,7 @@
     #define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SCL       (48)
     #define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SDA       (47)
 #endif
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER */
+#endif /* ESP_PANEL_BOARD_USE_EXPANDER */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please utilize the following macros to execute any additional code if required. //////////

@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_TT21100
+#include "esp_panel_touch_conf_internal.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_TT21100
+
 #include "esp_panel_utils.h"
 #include "esp_panel_touch_tt21100.hpp"
 
@@ -47,4 +48,5 @@ bool TouchTT21100::begin()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_TT21100
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_TT21100

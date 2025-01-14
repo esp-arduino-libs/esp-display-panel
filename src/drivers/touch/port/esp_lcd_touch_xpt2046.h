@@ -10,6 +10,8 @@
 #include "esp_lcd_touch.h"
 #include "esp_lcd_panel_io.h"
 
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_XPT2046
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -255,3 +257,5 @@ esp_err_t esp_lcd_touch_xpt2046_read_temp1_level(const esp_lcd_touch_handle_t ha
 #ifdef __cplusplus
 }
 #endif
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_XPT2046

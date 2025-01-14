@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,9 +12,9 @@
 //////////////////////////// Please update the following macros to configure the LCD panel /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using an LCD panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_LCD           (1)     // 0/1
+#define ESP_PANEL_BOARD_USE_LCD           (1)     // 0/1
 
-#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#if ESP_PANEL_BOARD_USE_LCD
 /**
  * LCD Controller Name.
  */
@@ -42,7 +42,7 @@
  */
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
-    #define ESP_PANEL_BOARD_LCD_BUS_HOST_ID           (1)     // Typically set to 1
+    #define ESP_PANEL_BOARD_LCD_SPI_HOST_ID           (1)     // Typically set to 1
     #define ESP_PANEL_BOARD_LCD_SPI_IO_CS             (-1)
 #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
     #define ESP_PANEL_BOARD_LCD_SPI_IO_SCK            (1)
@@ -107,14 +107,14 @@
 #define ESP_PANEL_BOARD_LCD_RST_IO        (-1)
 #define ESP_PANEL_BOARD_LCD_RST_LEVEL     (0)         // 0: low level, 1: high level
 
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_LCD */
+#endif /* ESP_PANEL_BOARD_USE_LCD */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Please update the following macros to configure the touch panel ///////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 1 when using an touch panel */
-#define ESP_PANEL_BOARD_DEFAULT_USE_TOUCH         (1)         // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
+#define ESP_PANEL_BOARD_USE_TOUCH         (1)         // 0/1
+#if ESP_PANEL_BOARD_USE_TOUCH
 /**
  * Touch controller name.
  */
@@ -134,7 +134,7 @@
 /* Touch panel bus parameters */
 #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 
-    #define ESP_PANEL_BOARD_TOUCH_BUS_HOST_ID     (0)     // Typically set to 0
+    #define ESP_PANEL_BOARD_TOUCH_I2C_HOST_ID     (0)     // Typically set to 0
     #define ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS     (0)     // Typically set to 0 to use default address
 #if !ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
     #define ESP_PANEL_BOARD_TOUCH_I2C_CLK_HZ      (400 * 1000)
@@ -164,19 +164,19 @@
 #define ESP_PANEL_BOARD_TOUCH_INT_IO          (-1)
 #define ESP_PANEL_BOARD_TOUCH_INT_LEVEL       (0)         // 0: low level, 1: high level
 
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_TOUCH */
+#endif /* ESP_PANEL_BOARD_USE_TOUCH */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the backlight ////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT         (0)         // 0/1
+#define ESP_PANEL_BOARD_USE_BACKLIGHT         (0)         // 0/1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please update the following macros to configure the IO expander //////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* Set to 0 if not using IO Expander */
-#define ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER          (1)         // 0/1
-#if ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER
+#define ESP_PANEL_BOARD_USE_EXPANDER          (1)         // 0/1
+#if ESP_PANEL_BOARD_USE_EXPANDER
 /**
  * IO expander name.
  */
@@ -191,7 +191,7 @@
 /* IO expander parameters */
 #define ESP_PANEL_BOARD_EXPANDER_I2C_ADDRESS          (0x20)//38
 #if !ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST
-    #define ESP_PANEL_BOARD_EXPANDER_HOST_ID          (0)     // Typically set to 0
+    #define ESP_PANEL_BOARD_EXPANDER_I2C_HOST_ID          (0)     // Typically set to 0
     #define ESP_PANEL_BOARD_EXPANDER_I2C_CLK_HZ       (400 * 1000)
                                                         // Typically set to 400K
     #define ESP_PANEL_BOARD_EXPANDER_I2C_SCL_PULLUP   (0)     // 0/1
@@ -199,7 +199,7 @@
     #define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SCL       (18)
     #define ESP_PANEL_BOARD_EXPANDER_I2C_IO_SDA       (17)
 #endif
-#endif /* ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER */
+#endif /* ESP_PANEL_BOARD_USE_EXPANDER */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Please utilize the following macros to execute any additional code if required. //////////

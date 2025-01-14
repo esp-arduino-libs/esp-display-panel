@@ -7,31 +7,27 @@
 #include <memory>
 #include "esp_panel_utils.h"
 #include "esp_panel_board.hpp"
-#include "esp_panel_board_internal.h"
-#include "esp_panel_board_config_default.hpp"
+#include "esp_panel_board_private.hpp"
 
-#define _LCD_NAME_CLASS(name) drivers::LCD_##name
-#define LCD_NAME_CLASS(name) _LCD_NAME_CLASS(name)
+#undef _TO_DRIVERS_CLASS
+#undef TO_DRIVERS_CLASS
+#define _TO_DRIVERS_CLASS(type, name)  drivers::type ## name
+#define TO_DRIVERS_CLASS(type, name)   _TO_DRIVERS_CLASS(type, name)
 
-#define _TOUCH_NAME_CLASS(name) drivers::Touch ## name
-#define TOUCH_NAME_CLASS(name) _TOUCH_NAME_CLASS(name)
+#undef _TO_STR
+#undef TO_STR
+#define _TO_STR(name) #name
+#define TO_STR(name) _TO_STR(name)
 
 namespace esp_panel {
 
 #if ESP_PANEL_BOARD_USE_DEFAULT
 Board::Board():
-    Board(BOARD_DEFAULT_CONFIG)
+    Board(ESP_PANEL_BOARD_DEFAULT_CONFIG)
 {
     _use_default_config = true;
 }
-#else
-Board::Board()
-{
-    static_assert(false, "No default board is provided. There are three ways to provide a board: 1. Use the \
-    constructor with the configuration parameter; 2. Use the `esp_panel_board_supported.h` file to enable a supported \
-    board; 3. Use the `esp_panel_board_custom.h` file to define a custom board");
-}
-#endif // ESP_PANEL_BOARD_USE_DEFAULT
+#endif
 
 bool Board::init()
 {
@@ -43,86 +39,167 @@ bool Board::init()
     std::shared_ptr<drivers::Bus> lcd_bus = nullptr;
     std::shared_ptr<drivers::LCD> lcd_device = nullptr;
     if (_config.flags.use_lcd) {
-        ESP_UTILS_LOGI("Create LCD");
+        ESP_UTILS_LOGI("Creating LCD(%s)", _config.lcd.device_name.c_str());
 
-        lcd_bus = drivers::BusFactory::create(_config.lcd.bus_config);
-        ESP_UTILS_CHECK_NULL_RETURN(lcd_bus, false, "Create LCD bus failed");
-
-#if ESP_PANEL_BOARD_USE_DEFAULT && defined(ESP_PANEL_BOARD_LCD_CONTROLLER)
-        // If the LCD is configured by default, it will be created by the default constructor
+#if ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_LCD
+        // If the LCD is configured by default, it will be created by the constructor
         if (_use_default_config) {
+            using Bus_Class = TO_DRIVERS_CLASS(Bus, ESP_PANEL_BOARD_LCD_BUS_NAME);
+            using LCD_Class = TO_DRIVERS_CLASS(LCD_, ESP_PANEL_BOARD_LCD_CONTROLLER);
+
+            ESP_UTILS_CHECK_FALSE_RETURN(
+                std::holds_alternative<Bus_Class::Config>(_config.lcd.bus_config), false,
+                "LCD bus config is not a " TO_STR(ESP_PANEL_BOARD_LCD_BUS_NAME) " bus config"
+            );
             ESP_UTILS_CHECK_EXCEPTION_RETURN(
-                (lcd_device = utils::make_shared<LCD_NAME_CLASS(ESP_PANEL_BOARD_LCD_CONTROLLER)>(
-                                  lcd_bus.get(), _config.lcd.device_config
-                              )), false, "Create LCD device failed"
+                (lcd_bus = utils::make_shared<Bus_Class>(std::get<Bus_Class::Config>(_config.lcd.bus_config))), false,
+                "Create LCD bus failed"
+            );
+            ESP_UTILS_CHECK_EXCEPTION_RETURN(
+                (lcd_device = utils::make_shared<LCD_Class>(lcd_bus.get(), _config.lcd.device_config)), false,
+                "Create LCD device failed"
             );
         }
-#endif // ESP_PANEL_BOARD_LCD_CONTROLLER
+#endif // ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_LCD
+
         // If the LCD is not configured by default, it will be created by the factory function
         if (!_use_default_config) {
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+            lcd_bus = drivers::BusFactory::create(_config.lcd.bus_config);
+            ESP_UTILS_CHECK_NULL_RETURN(lcd_bus, false, "Create LCD bus failed");
+#endif // ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_FACTORY
             lcd_device =
                 drivers::LCD_Factory::create(_config.lcd.device_name, lcd_bus.get(), _config.lcd.device_config);
             ESP_UTILS_CHECK_NULL_RETURN(lcd_device, false, "Create LCD device failed");
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_FACTORY
         }
+
+        ESP_UTILS_CHECK_NULL_RETURN(lcd_device, false, "Create LCD failed");
+        ESP_UTILS_LOGI("LCD create success");
     }
 
     // Create touch device if it is used
     std::shared_ptr<drivers::Bus> touch_bus = nullptr;
     std::shared_ptr<drivers::Touch> touch_device = nullptr;
     if (_config.flags.use_touch) {
-        ESP_UTILS_LOGI("Create touch");
+        ESP_UTILS_LOGI("Creating touch(%s)", _config.touch.device_name.c_str());
 
-        touch_bus = drivers::BusFactory::create(_config.touch.bus_config);
-        ESP_UTILS_CHECK_NULL_RETURN(touch_bus, false, "Create touch bus failed");
-
-#if ESP_PANEL_BOARD_USE_DEFAULT && defined(ESP_PANEL_BOARD_TOUCH_CONTROLLER)
-        // If the touch is configured by default, it will be created by the default constructor
+#if ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_TOUCH
+        // If the touch is configured by default, it will be created by the constructor
         if (_use_default_config) {
+            using Bus_Class = TO_DRIVERS_CLASS(Bus, ESP_PANEL_BOARD_TOUCH_BUS_NAME);
+            using Touch_Class = TO_DRIVERS_CLASS(Touch, ESP_PANEL_BOARD_TOUCH_CONTROLLER);
+
+            ESP_UTILS_CHECK_FALSE_RETURN(
+                std::holds_alternative<Bus_Class::Config>(_config.touch.bus_config), false,
+                "Touch bus config is not a " TO_STR(ESP_PANEL_BOARD_TOUCH_BUS_NAME) " bus config"
+            );
             ESP_UTILS_CHECK_EXCEPTION_RETURN(
-                (touch_device = utils::make_shared<TOUCH_NAME_CLASS(ESP_PANEL_BOARD_TOUCH_CONTROLLER)>(
-                                    touch_bus.get(), _config.touch.device_config
-                                )), false, "Create touch device failed"
+                (touch_bus = utils::make_shared<Bus_Class>(std::get<Bus_Class::Config>(_config.touch.bus_config))),
+                false, "Create touch bus failed"
+            );
+            ESP_UTILS_CHECK_EXCEPTION_RETURN(
+                (touch_device = utils::make_shared<Touch_Class>(touch_bus.get(), _config.touch.device_config)),
+                false, "Create touch device failed"
             );
         }
-#endif // ESP_PANEL_BOARD_TOUCH_CONTROLLER
+#endif // ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_TOUCH
+
         // If the touch is not configured by default, it will be created by the factory function
         if (!_use_default_config) {
-            touch_device = drivers::TouchFactory::create(
-                               _config.touch.device_name, touch_bus.get(), _config.touch.device_config
-                           );
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+            touch_bus = drivers::BusFactory::create(_config.touch.bus_config);
+            ESP_UTILS_CHECK_NULL_RETURN(touch_bus, false, "Create touch bus failed");
+#endif // ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_FACTORY
+            touch_device =
+                drivers::TouchFactory::create(_config.touch.device_name, touch_bus.get(), _config.touch.device_config);
             ESP_UTILS_CHECK_NULL_RETURN(touch_device, false, "Create touch device failed");
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_FACTORY
         }
+
+        ESP_UTILS_CHECK_NULL_RETURN(touch_device, false, "Create touch failed");
+        ESP_UTILS_LOGI("Touch create success");
     }
 
     // Create backlight device if it is used
     std::shared_ptr<drivers::Backlight> backlight = nullptr;
     if (_config.flags.use_backlight) {
-        ESP_UTILS_LOGI("Create backlight");
+        auto type = drivers::BacklightFactory::getConfigType(_config.backlight.config);
+        ESP_UTILS_LOGI("Creating backlight(%d)", type);
 
         // If the backlight is a custom backlight, the user data should be set to the board instance `this`
-        if (drivers::BacklightFactory::getConfigType(_config.backlight.config) == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM) {
+        if (type == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM) {
             using BacklightConfig = drivers::BacklightCustom::Config;
+
             ESP_UTILS_CHECK_FALSE_RETURN(
                 std::holds_alternative<BacklightConfig>(_config.backlight.config), false,
                 "Backlight config is not a custom backlight config"
             );
-
             auto &config = std::get<BacklightConfig>(_config.backlight.config);
             config.user_data = this;
         }
 
-        backlight = drivers::BacklightFactory::create(_config.backlight.config);
-        ESP_UTILS_CHECK_NULL_RETURN(backlight, false, "Create backlight device failed");
+#if ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_BACKLIGHT
+        // If the backlight is configured by default, it will be created by the constructor
+        if (_use_default_config) {
+            using BacklightClass = TO_DRIVERS_CLASS(Backlight, ESP_PANEL_BOARD_BACKLIGHT_NAME);
+
+            ESP_UTILS_CHECK_FALSE_RETURN(
+                std::holds_alternative<BacklightClass::Config>(_config.backlight.config), false,
+                "Backlight config is not a " TO_STR(ESP_PANEL_BOARD_BACKLIGHT_NAME) " backlight config"
+            );
+            ESP_UTILS_CHECK_EXCEPTION_RETURN(
+                (backlight =
+                     utils::make_shared<BacklightClass>(std::get<BacklightClass::Config>(_config.backlight.config))),
+                false, "Create backlight device failed"
+            );
+        }
+#endif // ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_BACKLIGHT
+
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_FACTORY
+        // If the backlight is not configured by default, it will be created by the factory function
+        if (!_use_default_config) {
+            backlight = drivers::BacklightFactory::create(_config.backlight.config);
+            ESP_UTILS_CHECK_NULL_RETURN(backlight, false, "Create backlight device failed");
+        }
+#endif // ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_FACTORY
+        ESP_UTILS_CHECK_NULL_RETURN(backlight, false, "Create backlight failed");
+        ESP_UTILS_LOGI("Backlight create success");
     }
 
     // Create IO expander device if it is used
     // If the IO expander is already configured, it will not be created again
     std::shared_ptr<drivers::IO_Expander> io_expander = nullptr;
     if (_config.flags.use_io_expander && getIO_Expander() == nullptr) {
-        ESP_UTILS_LOGI("Create IO Expander");
+        ESP_UTILS_LOGI("Create IO Expander(%s)", _config.io_expander.name.c_str());
 
-        io_expander = drivers::IO_ExpanderFactory::create(_config.io_expander.name, _config.io_expander.config);
-        ESP_UTILS_CHECK_NULL_RETURN(io_expander, false, "Create IO expander device failed");
+#if ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_EXPANDER
+        // If the IO expander is configured by default, it will be created by the default constructor
+        if (_use_default_config) {
+            using IO_ExpanderClass = drivers::IO_ExpanderAdapter<esp_expander::ESP_PANEL_BOARD_EXPANDER_CHIP>;
+            ESP_UTILS_CHECK_EXCEPTION_RETURN(
+                (io_expander =
+                     utils::make_shared<IO_ExpanderClass>(
+                         drivers::IO_Expander::BasicAttributes{TO_STR(ESP_PANEL_BOARD_EXPANDER_CHIP)},
+                         _config.io_expander.config
+                     )), false, "Create IO expander device failed"
+            );
+        }
+#endif // ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_EXPANDER
+
+#if ESP_PANEL_DRIVERS_EXPANDER_ENABLE_FACTORY
+        // If the IO expander is not configured by default, it will be created by the factory function
+        if (!_use_default_config) {
+            io_expander = drivers::IO_ExpanderFactory::create(_config.io_expander.name, _config.io_expander.config);
+            ESP_UTILS_CHECK_NULL_RETURN(io_expander, false, "Create IO expander device failed");
+        }
+#endif // ESP_PANEL_DRIVERS_IO_EXPANDER_ENABLE_FACTORY
+
+        ESP_UTILS_CHECK_NULL_RETURN(io_expander, false, "Create IO expander failed");
+
+        ESP_UTILS_LOGI("IO Expander create success");
     }
 
     _lcd_bus = lcd_bus;
@@ -286,6 +363,16 @@ bool Board::begin()
             ESP_UTILS_CHECK_FALSE_RETURN(
                 config.callbacks.pre_backlight_begin(this), false, "Backlight pre-begin failed"
             );
+        }
+
+        // If the backlight is a switch expander, the IO expander should be configured
+        if (drivers::BacklightFactory::getConfigType(config.backlight.config) ==
+                ESP_PANEL_BACKLIGHT_TYPE_SWITCH_EXPANDER) {
+            auto *temp_backlight = static_cast<drivers::BacklightSwitchExpander *>(backlight);
+            // Only configure the IO expander if it is not already configured
+            if (temp_backlight->getIO_Expander() == nullptr) {
+                temp_backlight->configIO_Expander(getIO_Expander()->getBase());
+            }
         }
 
         ESP_UTILS_CHECK_FALSE_RETURN(backlight->begin(), false, "Backlight begin failed");

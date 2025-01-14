@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9341
+#include "../esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9341
+
 #include <stdlib.h>
 #include <sys/cdefs.h>
 #include "freertos/FreeRTOS.h"
@@ -386,4 +387,5 @@ static esp_err_t panel_ili9341_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
     ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(io, command, NULL, 0), TAG, "send command failed");
     return ESP_OK;
 }
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9341
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9341

@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_NV3022B
+#include "esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_NV3022B
+
 #include "esp_panel_utils.h"
 #include "port/esp_lcd_nv3022b.h"
 #include "esp_panel_lcd_nv3022b.hpp"
@@ -48,4 +49,5 @@ bool LCD_NV3022B::init()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_NV3022B
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_NV3022B

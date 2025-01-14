@@ -14,6 +14,7 @@
 #include "esp_display_panel.hpp"
 
 using namespace std;
+using namespace esp_panel::drivers;
 
 // *INDENT-OFF*
 
@@ -79,13 +80,11 @@ using namespace std;
 
 static const char *TAG = "test_rgb_lcd";
 
-static shared_ptr<ESP_PanelBacklight> init_backlight(void)
+static shared_ptr<Backlight> init_backlight(void)
 {
 #if TEST_LCD_PIN_NUM_BK_LIGHT >= 0
     ESP_LOGI(TAG, "Initialize backlight control pin and turn it on");
-    shared_ptr<ESP_PanelBacklight> backlight = make_shared<ESP_PanelBacklight>(
-                TEST_LCD_PIN_NUM_BK_LIGHT, TEST_LCD_BK_LIGHT_ON_LEVEL, true
-            );
+    auto backlight = make_shared<BacklightPWM_LEDC>(TEST_LCD_PIN_NUM_BK_LIGHT, TEST_LCD_BK_LIGHT_ON_LEVEL);
     TEST_ASSERT_NOT_NULL_MESSAGE(backlight, "Create backlight object failed");
 
     TEST_ASSERT_TRUE_MESSAGE(backlight->begin(), "Backlight begin failed");
@@ -97,37 +96,40 @@ static shared_ptr<ESP_PanelBacklight> init_backlight(void)
 #endif
 }
 
-static shared_ptr<ESP_PanelBusRGB> init_panel_bus(void)
+static shared_ptr<Bus> init_bus(void)
 {
     ESP_LOGI(TAG, "Create LCD bus");
-    shared_ptr<ESP_PanelBusRGB> panel_bus = make_shared<ESP_PanelBusRGB>(
+    auto bus = make_shared<BusRGB>(
+// *INDENT-OFF*
 #if TEST_LCD_RGB_DATA_WIDTH == 8
-            TEST_LCD_WIDTH, TEST_LCD_HEIGHT,
-            TEST_LCD_PIN_NUM_RGB_DATA0, TEST_LCD_PIN_NUM_RGB_DATA1, TEST_LCD_PIN_NUM_RGB_DATA2, TEST_LCD_PIN_NUM_RGB_DATA3,
-            TEST_LCD_PIN_NUM_RGB_DATA4, TEST_LCD_PIN_NUM_RGB_DATA5, TEST_LCD_PIN_NUM_RGB_DATA6, TEST_LCD_PIN_NUM_RGB_DATA7,
-            TEST_LCD_PIN_NUM_RGB_HSYNC, TEST_LCD_PIN_NUM_RGB_VSYNC, TEST_LCD_PIN_NUM_RGB_PCLK, TEST_LCD_PIN_NUM_RGB_DE,
-            TEST_LCD_PIN_NUM_RGB_DISP
+        /* 8-bit RGB IOs */
+        TEST_LCD_PIN_NUM_RGB_DATA0, TEST_LCD_PIN_NUM_RGB_DATA1, TEST_LCD_PIN_NUM_RGB_DATA2, TEST_LCD_PIN_NUM_RGB_DATA3,
+        TEST_LCD_PIN_NUM_RGB_DATA4, TEST_LCD_PIN_NUM_RGB_DATA5, TEST_LCD_PIN_NUM_RGB_DATA6, TEST_LCD_PIN_NUM_RGB_DATA7,
+        TEST_LCD_PIN_NUM_RGB_HSYNC, TEST_LCD_PIN_NUM_RGB_VSYNC, TEST_LCD_PIN_NUM_RGB_PCLK, TEST_LCD_PIN_NUM_RGB_DE,
+        TEST_LCD_PIN_NUM_RGB_DISP,
+        /* RGB timings */
+        TEST_LCD_RGB_TIMING_FREQ_HZ, TEST_LCD_WIDTH, TEST_LCD_HEIGHT, TEST_LCD_RGB_TIMING_HPW, TEST_LCD_RGB_TIMING_HBP,
+        TEST_LCD_RGB_TIMING_HFP, TEST_LCD_RGB_TIMING_VPW, TEST_LCD_RGB_TIMING_VBP, TEST_LCD_RGB_TIMING_VFP
 #elif TEST_LCD_RGB_DATA_WIDTH == 16
-            TEST_LCD_WIDTH, TEST_LCD_HEIGHT,
-            TEST_LCD_PIN_NUM_RGB_DATA0, TEST_LCD_PIN_NUM_RGB_DATA1, TEST_LCD_PIN_NUM_RGB_DATA2, TEST_LCD_PIN_NUM_RGB_DATA3,
-            TEST_LCD_PIN_NUM_RGB_DATA4, TEST_LCD_PIN_NUM_RGB_DATA5, TEST_LCD_PIN_NUM_RGB_DATA6, TEST_LCD_PIN_NUM_RGB_DATA7,
-            TEST_LCD_PIN_NUM_RGB_DATA8, TEST_LCD_PIN_NUM_RGB_DATA9, TEST_LCD_PIN_NUM_RGB_DATA10, TEST_LCD_PIN_NUM_RGB_DATA11,
-            TEST_LCD_PIN_NUM_RGB_DATA12, TEST_LCD_PIN_NUM_RGB_DATA13, TEST_LCD_PIN_NUM_RGB_DATA14, TEST_LCD_PIN_NUM_RGB_DATA15,
-            TEST_LCD_PIN_NUM_RGB_HSYNC, TEST_LCD_PIN_NUM_RGB_VSYNC, TEST_LCD_PIN_NUM_RGB_PCLK, TEST_LCD_PIN_NUM_RGB_DE,
-            TEST_LCD_PIN_NUM_RGB_DISP
+        /* 16-bit RGB IOs */
+        TEST_LCD_PIN_NUM_RGB_DATA0, TEST_LCD_PIN_NUM_RGB_DATA1, TEST_LCD_PIN_NUM_RGB_DATA2, TEST_LCD_PIN_NUM_RGB_DATA3,
+        TEST_LCD_PIN_NUM_RGB_DATA4, TEST_LCD_PIN_NUM_RGB_DATA5, TEST_LCD_PIN_NUM_RGB_DATA6, TEST_LCD_PIN_NUM_RGB_DATA7,
+        TEST_LCD_PIN_NUM_RGB_DATA8, TEST_LCD_PIN_NUM_RGB_DATA9, TEST_LCD_PIN_NUM_RGB_DATA10, TEST_LCD_PIN_NUM_RGB_DATA11,
+        TEST_LCD_PIN_NUM_RGB_DATA12, TEST_LCD_PIN_NUM_RGB_DATA13, TEST_LCD_PIN_NUM_RGB_DATA14, TEST_LCD_PIN_NUM_RGB_DATA15,
+        TEST_LCD_PIN_NUM_RGB_HSYNC, TEST_LCD_PIN_NUM_RGB_VSYNC, TEST_LCD_PIN_NUM_RGB_PCLK, TEST_LCD_PIN_NUM_RGB_DE,
+        TEST_LCD_PIN_NUM_RGB_DISP,
+        /* RGB timings */
+        TEST_LCD_RGB_TIMING_FREQ_HZ, TEST_LCD_WIDTH, TEST_LCD_HEIGHT, TEST_LCD_RGB_TIMING_HPW, TEST_LCD_RGB_TIMING_HBP,
+        TEST_LCD_RGB_TIMING_HFP, TEST_LCD_RGB_TIMING_VPW, TEST_LCD_RGB_TIMING_VBP, TEST_LCD_RGB_TIMING_VFP
 #endif
-                                            );
-    TEST_ASSERT_NOT_NULL_MESSAGE(panel_bus, "Create panel bus object failed");
-
-    panel_bus->configRgbTimingFreqHz(TEST_LCD_RGB_TIMING_FREQ_HZ);
-    panel_bus->configRgbTimingPorch(
-        TEST_LCD_RGB_TIMING_HPW, TEST_LCD_RGB_TIMING_HBP, TEST_LCD_RGB_TIMING_HFP,
-        TEST_LCD_RGB_TIMING_VPW, TEST_LCD_RGB_TIMING_VBP, TEST_LCD_RGB_TIMING_VFP
     );
-    panel_bus->configRgbBounceBufferSize(TEST_LCD_RGB_BOUNCE_BUFFER_SIZE); // Set bounce buffer to avoid screen drift
-    TEST_ASSERT_TRUE_MESSAGE(panel_bus->begin(), "Panel bus begin failed");
+// *INDENT-ON*
+    TEST_ASSERT_NOT_NULL_MESSAGE(bus, "Create bus object failed");
 
-    return panel_bus;
+    bus->configRGB_BounceBufferSize(TEST_LCD_RGB_BOUNCE_BUFFER_SIZE); // Set bounce buffer to avoid screen drift
+    TEST_ASSERT_TRUE_MESSAGE(bus->begin(), "Bus begin failed");
+
+    return bus;
 }
 
 #if TEST_ENABLE_PRINT_LCD_FPS
@@ -160,7 +162,7 @@ IRAM_ATTR bool onVsyncEndCallback(void *user_data)
 }
 #endif /* TEST_ENABLE_PRINT_LCD_FPS */
 
-static void run_test(shared_ptr<ESP_PanelLcd> lcd)
+static void run_test(shared_ptr<LCD> lcd)
 {
 #if TEST_LCD_USE_EXTERNAL_CMD
     // Configure external initialization commands, should called before `init()`
@@ -169,7 +171,9 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
     TEST_ASSERT_TRUE_MESSAGE(lcd->init(), "LCD init failed");
     TEST_ASSERT_TRUE_MESSAGE(lcd->reset(), "LCD reset failed");
     TEST_ASSERT_TRUE_MESSAGE(lcd->begin(), "LCD begin failed");
-    TEST_ASSERT_TRUE_MESSAGE(lcd->displayOn(), "LCD display on failed");
+    if (lcd->getBasicAttributes().basic_bus_spec.isFunctionValid(LCD::BasicBusSpecification::FUNC_DISPLAY_ON_OFF)) {
+        TEST_ASSERT_TRUE_MESSAGE(lcd->setDisplayOnOff(true), "LCD display on failed");
+    }
 #if TEST_ENABLE_PRINT_LCD_FPS
     TEST_ASSERT_TRUE_MESSAGE(
         lcd->attachRefreshFinishCallback(onVsyncEndCallback, (void *)&start_time), "Attach refresh callback failed"
@@ -191,19 +195,19 @@ static void run_test(shared_ptr<ESP_PanelLcd> lcd)
 #endif
 }
 
-#define CREATE_LCD(name, panel_bus) \
+#define CREATE_LCD(name, bus) \
     ({ \
         ESP_LOGI(TAG, "Create LCD device: " #name); \
-        shared_ptr<ESP_PanelLcd> lcd = make_shared<ESP_PanelLcd_##name>(panel_bus, TEST_LCD_COLOR_BITS, TEST_LCD_PIN_NUM_RST); \
+        auto lcd = make_shared<LCD_##name>(bus, TEST_LCD_COLOR_BITS, TEST_LCD_PIN_NUM_RST); \
         TEST_ASSERT_NOT_NULL_MESSAGE(lcd, "Create LCD object failed"); \
         lcd; \
     })
 #define CREATE_TEST_CASE(name) \
     TEST_CASE("Test LCD (" #name ") to draw color bar", "[rgb_lcd][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBacklight> backlight = init_backlight(); \
-        shared_ptr<ESP_PanelBusRGB> panel_bus = init_panel_bus(); \
-        shared_ptr<ESP_PanelLcd> lcd = CREATE_LCD(name, panel_bus.get()); \
+        auto backlight = init_backlight(); \
+        auto bus = init_bus(); \
+        auto lcd = CREATE_LCD(name, bus.get()); \
         run_test(lcd); \
     }
 

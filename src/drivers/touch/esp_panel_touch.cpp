@@ -43,13 +43,9 @@ void Touch::Config::convertPartialToFull()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-const Touch::Config::DeviceFullConfig *Touch::Config::getDeviceFullConfig() const
+const Touch::DeviceFullConfig *Touch::Config::getDeviceFullConfig() const
 {
-    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
-
     ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<DeviceFullConfig>(device), nullptr, "Partial config");
-
-    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return &std::get<DeviceFullConfig>(device);
 }
@@ -470,17 +466,26 @@ int Touch::readButtonState(uint8_t index, int timeout_ms)
     return ret_state;
 }
 
-Touch::Config::DeviceFullConfig &Touch::getDeviceFullConfig()
+bool Touch::isInterruptEnabled() const
+{
+    if (std::holds_alternative<DeviceFullConfig>(_config.device)) {
+        return (std::get<DeviceFullConfig>(_config.device).int_gpio_num >= 0);
+    }
+
+    return (std::get<DevicePartialConfig>(_config.device).int_gpio_num >= 0);
+}
+
+Touch::DeviceFullConfig &Touch::getDeviceFullConfig()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (std::holds_alternative<Config::DevicePartialConfig>(_config.device)) {
+    if (std::holds_alternative<DevicePartialConfig>(_config.device)) {
         _config.convertPartialToFull();
     }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
-    return std::get<Config::DeviceFullConfig>(_config.device);
+    return std::get<DeviceFullConfig>(_config.device);
 }
 
 bool Touch::readRawDataPoints(int points_num)
@@ -506,9 +511,9 @@ bool Touch::readRawDataPoints(int points_num)
     }
     ESP_UTILS_LOGD("Try to read %d points", points_num);
 
-    std::shared_ptr <uint16_t[]> x_ptr = utils::make_shared<uint16_t[]>(points_num);
-    std::shared_ptr <uint16_t[]> y_ptr = utils::make_shared<uint16_t[]>(points_num);
-    std::shared_ptr <uint16_t[]> strength_ptr = utils::make_shared<uint16_t[]>(points_num);
+    auto x_ptr = utils::make_shared<uint16_t[]>(points_num);
+    auto y_ptr = utils::make_shared<uint16_t[]>(points_num);
+    auto strength_ptr = utils::make_shared<uint16_t[]>(points_num);
     auto x = x_ptr.get();
     auto y = y_ptr.get();
     auto strength = strength_ptr.get();

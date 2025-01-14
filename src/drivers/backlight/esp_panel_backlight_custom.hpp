@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "esp_panel_types.h"
+#include "esp_panel_backlight_conf_internal.h"
 #include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
@@ -33,7 +33,7 @@ public:
      *
      * @return `true` if successful, `false` otherwise
      */
-    using FunctionSetBrightnessCallback = bool (*)(uint8_t percent, void *user_data);
+    using FunctionSetBrightnessCallback = bool (*)(int percent, void *user_data);
 
     /**
      * @brief The custom backlight device configuration structure
@@ -101,7 +101,7 @@ public:
      *
      * @note This function should be called after `begin()`
      */
-    bool setBrightness(uint8_t percent) override;
+    bool setBrightness(int percent) override;
 
 private:
     Config _config = {};     ///< Custom backlight configuration

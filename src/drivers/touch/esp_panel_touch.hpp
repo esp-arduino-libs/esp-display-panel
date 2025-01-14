@@ -15,6 +15,7 @@
 #include "esp_panel_utils.h"
 #include "drivers/bus/esp_panel_bus.hpp"
 #include "port/esp_lcd_touch.h"
+#include "esp_panel_touch_conf_internal.h"
 
 namespace esp_panel::drivers {
 
@@ -78,8 +79,8 @@ public:
     /**
      * @brief Default maximum values for touch points and buttons
      */
-    static constexpr int POINTS_MAX_NUM = ESP_PANEL_CONF_TOUCH_MAX_POINTS;
-    static constexpr int BUTTONS_MAX_NUM = ESP_PANEL_CONF_TOUCH_MAX_BUTTONS;
+    static constexpr int POINTS_MAX_NUM = ESP_PANEL_DRIVERS_TOUCH_MAX_POINTS;
+    static constexpr int BUTTONS_MAX_NUM = ESP_PANEL_DRIVERS_TOUCH_MAX_BUTTONS;
 
     /**
      * @brief Panel handle type definition
@@ -104,27 +105,24 @@ public:
     };
 
     /**
+     * @brief Simplified partial configuration structure for touch device
+     */
+    struct DevicePartialConfig {
+        int x_max = 0;              /*!< Maximum X coordinate value */
+        int y_max = 0;              /*!< Maximum Y coordinate value */
+        int rst_gpio_num = -1;      /*!< Reset GPIO pin number (-1 if unused) */
+        int int_gpio_num = -1;      /*!< Interrupt GPIO pin number (-1 if unused) */
+        int levels_reset = 0;       /*!< Reset signal active level */
+        int levels_interrupt = 0;   /*!< Interrupt signal active level */
+    };
+    using DeviceFullConfig = esp_lcd_touch_config_t;
+
+    using DeviceConfig = std::variant<DevicePartialConfig, DeviceFullConfig>;
+
+    /**
      * @brief Configuration structure for touch device
      */
     struct Config {
-
-        /**
-         * @brief Full configuration type alias for ESP LCD touch configuration
-         */
-        using DeviceFullConfig = esp_lcd_touch_config_t;
-
-        /**
-         * @brief Simplified partial configuration structure for touch device
-         */
-        struct DevicePartialConfig {
-            int x_max = 0;              /*!< Maximum X coordinate value */
-            int y_max = 0;              /*!< Maximum Y coordinate value */
-            int rst_gpio_num = -1;      /*!< Reset GPIO pin number (-1 if unused) */
-            int int_gpio_num = -1;      /*!< Interrupt GPIO pin number (-1 if unused) */
-            int levels_reset = 0;       /*!< Reset signal active level */
-            int levels_interrupt = 0;   /*!< Interrupt signal active level */
-        };
-
         /**
          * @brief Convert partial configuration to full configuration
          *
@@ -144,10 +142,7 @@ public:
          */
         const DeviceFullConfig *getDeviceFullConfig() const;
 
-        /**
-         * @brief Device configuration storage using variant to hold either full or partial config
-         */
-        std::variant<DeviceFullConfig, DevicePartialConfig> device = {};
+        DeviceConfig device = DevicePartialConfig{};  /*!< Device configuration */
     };
 
     /**
@@ -183,7 +178,7 @@ public:
         _basic_attributes(attr),
         _bus(bus),
         _config{
-            .device = Config::DevicePartialConfig{
+            .device = DevicePartialConfig{
                 .x_max = width,
                 .y_max = height,
                 .rst_gpio_num = rst_io,
@@ -463,13 +458,7 @@ public:
      *
      * @return `true` if enabled, `false` otherwise
      */
-    bool isInterruptEnabled() const
-    {
-        if (std::holds_alternative<Config::DeviceFullConfig>(_config.device)) {
-            return (std::get<Config::DeviceFullConfig>(_config.device).int_gpio_num >= 0);
-        }
-        return (std::get<Config::DevicePartialConfig>(_config.device).int_gpio_num >= 0);
-    }
+    bool isInterruptEnabled() const;
 
     /**
      * @brief Get touch basic attributes
@@ -697,7 +686,7 @@ private:
         StaticSemaphore_t on_active_sem_buffer = {};            /*!< Static buffer for semaphore */
     };
 
-    Config::DeviceFullConfig &getDeviceFullConfig();
+    DeviceFullConfig &getDeviceFullConfig();
     bool readRawDataPoints(int points_num);
     bool readRawDataButtons(int max_buttons_num);
     static void onInterruptActive(PanelHandle handle);

@@ -3,19 +3,22 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #include "esp_panel_utils.h"
 #include "esp_panel_types.h"
-#include "esp_panel_board_internal.h"
-#include "esp_panel_board.hpp"
-#include "esp_panel_board_config_default.hpp"
+#include "board/esp_panel_board_conf_internal.h"
+#include "board/esp_panel_board_config.hpp"
+#include "board/esp_panel_board.hpp"
+// Replace the following header file if creating a new board configuration
+#if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM
+#include "esp_panel_board_config_custom.h"
+#endif
 
+// *INDENT-OFF*
 #undef _TO_STR
 #undef TO_STR
 #define _TO_STR(name) #name
 #define TO_STR(name) _TO_STR(name)
-
-// *INDENT-OFF*
-#if ESP_PANEL_BOARD_USE_DEFAULT
 
 namespace esp_panel {
 
@@ -23,28 +26,32 @@ namespace esp_panel {
 static const esp_panel_lcd_vendor_init_cmd_t lcd_vendor_init_cmds[] = ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD();
 #endif // ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD
 
-const Board::Config BOARD_DEFAULT_CONFIG = {
+const BoardConfig BOARD_CUSTOM_CONFIG = {
 
     /* General */
+#ifdef ESP_PANEL_BOARD_WIDTH
     .width = ESP_PANEL_BOARD_WIDTH,
+#endif
+#ifdef ESP_PANEL_BOARD_HEIGHT
     .height = ESP_PANEL_BOARD_HEIGHT,
+#endif
 
     /* LCD */
-#if ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#if ESP_PANEL_BOARD_USE_LCD
     .lcd = {
     #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
         .bus_config = drivers::BusSPI::Config{
-            .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
+            .host_id = ESP_PANEL_BOARD_LCD_SPI_HOST_ID,
             // Host
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
-            .host = drivers::BusSPI::HostPartialConfig{
+            .host = drivers::BusSPI::Config::HostPartialConfig{
                 .mosi_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_MOSI,
                 .miso_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_MISO,
                 .sclk_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_SCK,
             },
         #endif // ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Control Panel
-            .control_panel = drivers::BusSPI::ControlPanelPartialConfig{
+            .control_panel = drivers::BusSPI::Config::ControlPanelPartialConfig{
                 .cs_gpio_num = ESP_PANEL_BOARD_LCD_SPI_IO_CS,
                 .dc_gpio_num = ESP_PANEL_BOARD_LCD_SPI_IO_DC,
                 .spi_mode = ESP_PANEL_BOARD_LCD_SPI_MODE,
@@ -57,7 +64,7 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
         },
     #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_QSPI
         .bus_config = drivers::BusQSPI::Config{
-            .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
+            .host_id = ESP_PANEL_BOARD_LCD_QSPI_HOST_ID,
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Host
             .host = drivers::BusQSPI::Config::HostPartialConfig{
@@ -84,16 +91,19 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
         #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Control Panel
             .control_panel = drivers::BusRGB::Config::ControlPanelPartialConfig{
-                .cs_io_type = ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
-                .scl_io_type = ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
-                .sda_io_type = ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
-                .cs_gpio_num = ESP_PANEL_BOARD_LCD_SPI_CS_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_SPI_IO_CS) :
-                                                                        ESP_PANEL_BOARD_LCD_SPI_IO_CS,
-                .scl_gpio_num = ESP_PANEL_BOARD_LCD_SPI_SCL_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_SPI_IO_SCK) :
-                                                                        ESP_PANEL_BOARD_LCD_SPI_IO_SCK,
-                .sda_gpio_num = ESP_PANEL_BOARD_LCD_SPI_SDA_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_SPI_IO_SDA) :
-                                                                        ESP_PANEL_BOARD_LCD_SPI_IO_SDA,
-                .flags_scl_active_falling_edge = ESP_PANEL_BOARD_LCD_SPI_SCL_ACTIVE_EDGE,
+                .cs_io_type = ESP_PANEL_BOARD_LCD_RGB_SPI_CS_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
+                .scl_io_type = ESP_PANEL_BOARD_LCD_RGB_SPI_SCL_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
+                .sda_io_type = ESP_PANEL_BOARD_LCD_RGB_SPI_SDA_USE_EXPNADER ? IO_TYPE_EXPANDER : IO_TYPE_GPIO,
+                .cs_gpio_num = ESP_PANEL_BOARD_LCD_RGB_SPI_CS_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_RGB_SPI_IO_CS) :
+                                                                        ESP_PANEL_BOARD_LCD_RGB_SPI_IO_CS,
+                .scl_gpio_num = ESP_PANEL_BOARD_LCD_RGB_SPI_SCL_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SCK) :
+                                                                        ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SCK,
+                .sda_gpio_num = ESP_PANEL_BOARD_LCD_RGB_SPI_SDA_USE_EXPNADER ? BIT64(ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SDA) :
+                                                                        ESP_PANEL_BOARD_LCD_RGB_SPI_IO_SDA,
+                .spi_mode = ESP_PANEL_BOARD_LCD_RGB_SPI_MODE,
+                .lcd_cmd_bytes = ESP_PANEL_BOARD_LCD_RGB_SPI_CMD_BYTES,
+                .lcd_param_bytes = ESP_PANEL_BOARD_LCD_RGB_SPI_PARAM_BYTES,
+                .flags_use_dc_bit = ESP_PANEL_BOARD_LCD_RGB_SPI_USE_DC_BIT,
             },
         #endif // ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
             // Refresh Panel
@@ -128,7 +138,7 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
                 .flags_pclk_active_neg = ESP_PANEL_BOARD_LCD_RGB_PCLK_ACTIVE_NEG,
             },
             // Extra
-            .use_control_panel = !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST,
+            .use_control_panel = !ESP_PANEL_BOARD_LCD_RGB_USE_CONTROL_PANEL,
         },
     #elif (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI) && SOC_MIPI_DSI_SUPPORTED
         .bus_config = drivers::BusDSI::Config{
@@ -192,15 +202,15 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
     #endif // ESP_PANEL_BOARD_LCD_MIRROR_Y
         },
     },
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_LCD
+#endif // ESP_PANEL_BOARD_USE_LCD
 
     /* Touch */
-#if ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
+#if ESP_PANEL_BOARD_USE_TOUCH
     .touch = {
     #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
         .bus_config = drivers::BusI2C::Config{
             // General
-            .host_id = ESP_PANEL_BOARD_TOUCH_BUS_HOST_ID,
+            .host_id = ESP_PANEL_BOARD_TOUCH_I2C_HOST_ID,
             .skip_init_host = ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST,
             // Host
         #if !ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
@@ -223,24 +233,24 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
                 ),
         #endif // ESP_PANEL_BOARD_TOUCH_I2C_ADDRESS
         },
-    #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
+    #elif ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
         .bus_config = drivers::BusSPI::Config{
-            .host_id = ESP_PANEL_BOARD_LCD_BUS_HOST_ID,
+            .host_id = ESP_PANEL_BOARD_TOUCH_SPI_HOST_ID,
             // Host
-        #if !ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
-            .mosi_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_MOSI,
-            .miso_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_MISO,
-            .sclk_io_num = ESP_PANEL_BOARD_LCD_SPI_IO_SCK,
-        #endif // ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST
+        #if !ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
+            .mosi_io_num = ESP_PANEL_BOARD_TOUCH_SPI_IO_MOSI,
+            .miso_io_num = ESP_PANEL_BOARD_TOUCH_SPI_IO_MISO,
+            .sclk_io_num = ESP_PANEL_BOARD_TOUCH_SPI_IO_SCK,
+        #endif // ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST
             // Control Panel
             .control_panel = ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(
                 ESP_PANEL_BOARD_TOUCH_CONTROLLER, ESP_PANEL_BOARD_TOUCH_SPI_IO_CS
             ),
             // Extra
-            .skip_init_host = ESP_PANEL_BOARD_LCD_BUS_SKIP_INIT_HOST,
+            .skip_init_host = ESP_PANEL_BOARD_TOUCH_BUS_SKIP_INIT_HOST,
             .use_complete_io_config = true,
         },
-    #endif // ESP_PANEL_BOARD_LCD_BUS_TYPE
+    #endif // ESP_PANEL_BOARD_TOUCH_BUS_TYPE
         .device_name = TO_STR(ESP_PANEL_BOARD_TOUCH_CONTROLLER),
         .device_config = {
             .device = drivers::Touch::Config::DevicePartialConfig{
@@ -264,13 +274,18 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
     #endif // ESP_PANEL_BOARD_TOUCH_MIRROR_Y
         },
     },
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_TOUCH
+#endif // ESP_PANEL_BOARD_USE_TOUCH
 
     /* Backlight */
-#if ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+#if ESP_PANEL_BOARD_USE_BACKLIGHT
     .backlight = {
     #if ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO
         .config = drivers::BacklightSwitchGPIO::Config{
+            .io_num = ESP_PANEL_BOARD_BACKLIGHT_IO,
+            .on_level = ESP_PANEL_BOARD_BACKLIGHT_ON_LEVEL,
+        },
+    #elif ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_SWITCH_EXPANDER
+        .config = drivers::BacklightSwitchExpander::Config{
             .io_num = ESP_PANEL_BOARD_BACKLIGHT_IO,
             .on_level = ESP_PANEL_BOARD_BACKLIGHT_ON_LEVEL,
         },
@@ -283,7 +298,7 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
         },
     #elif ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_CUSTOM
         .config = drivers::BacklightCustom::Config{
-            .callback = [](uint8_t percent, void *user_data)
+            .callback = [](int percent, void *user_data)
                 ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data),
             .user_data = nullptr,
         },
@@ -292,16 +307,16 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
             .idle_off = ESP_PANEL_BOARD_BACKLIGHT_IDLE_OFF,
         },
     },
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT
+#endif // ESP_PANEL_BOARD_USE_BACKLIGHT
 
     /* IO expander */
-#if ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER
+#if ESP_PANEL_BOARD_USE_EXPANDER
     .io_expander = {
         .name = TO_STR(ESP_PANEL_BOARD_EXPANDER_CHIP),
         .config = {
     #if !ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST
             // Host
-            .host_id = ESP_PANEL_BOARD_EXPANDER_HOST_ID,
+            .host_id = ESP_PANEL_BOARD_EXPANDER_I2C_HOST_ID,
             .host = drivers::IO_Expander::Config::HostPartialConfig{
                 .sda_io_num = ESP_PANEL_BOARD_EXPANDER_I2C_IO_SDA,
                 .scl_io_num = ESP_PANEL_BOARD_EXPANDER_I2C_IO_SCL,
@@ -316,7 +331,7 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
             .skip_init_host = ESP_PANEL_BOARD_EXPANDER_SKIP_INIT_HOST,
         },
     },
-#endif // ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER
+#endif // ESP_PANEL_BOARD_USE_EXPANDER
 
     /* Others */
     .callbacks = {
@@ -352,14 +367,20 @@ const Board::Config BOARD_DEFAULT_CONFIG = {
 #endif // ESP_PANEL_BOARD_BACKLIGHT_POST_BEGIN_FUNCTION
     },
     .flags = {
-        .use_lcd = ESP_PANEL_BOARD_DEFAULT_USE_LCD,
-        .use_touch = ESP_PANEL_BOARD_DEFAULT_USE_TOUCH,
-        .use_backlight = ESP_PANEL_BOARD_DEFAULT_USE_BACKLIGHT,
-        .use_io_expander = ESP_PANEL_BOARD_DEFAULT_USE_EXPANDER,
+#ifdef ESP_PANEL_BOARD_USE_LCD
+        .use_lcd = ESP_PANEL_BOARD_USE_LCD,
+#endif
+#ifdef ESP_PANEL_BOARD_USE_TOUCH
+        .use_touch = ESP_PANEL_BOARD_USE_TOUCH,
+#endif
+#ifdef ESP_PANEL_BOARD_USE_BACKLIGHT
+        .use_backlight = ESP_PANEL_BOARD_USE_BACKLIGHT,
+#endif
+#ifdef ESP_PANEL_BOARD_USE_EXPANDER
+        .use_io_expander = ESP_PANEL_BOARD_USE_EXPANDER,
+#endif
     },
 };
 
 } // namespace esp_panel
-
-#endif // ESP_PANEL_BOARD_USE_DEFAULT
 // *INDENT-ON*

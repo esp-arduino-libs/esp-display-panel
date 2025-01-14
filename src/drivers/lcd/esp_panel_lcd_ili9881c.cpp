@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9881C
+#include "esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9881C
+
 #include "soc/soc_caps.h"
 #include "esp_panel_utils.h"
 #include "port/esp_lcd_ili9881c.h"
@@ -53,4 +54,5 @@ bool LCD_ILI9881C::init()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ILI9881C
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ILI9881C

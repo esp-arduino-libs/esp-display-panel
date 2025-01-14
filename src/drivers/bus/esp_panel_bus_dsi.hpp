@@ -7,12 +7,14 @@
 
 #include "soc/soc_caps.h"
 #if SOC_MIPI_DSI_SUPPORTED
+
 #include <memory>
 #include <variant>
 #include "esp_ldo_regulator.h"
 #include "esp_lcd_mipi_dsi.h"
 #include "esp_panel_types.h"
 #include "drivers/host/esp_panel_host_dsi.hpp"
+#include "esp_panel_bus_conf_internal.h"
 #include "esp_panel_bus.hpp"
 
 namespace esp_panel::drivers {
@@ -34,61 +36,53 @@ public:
     static constexpr int HOST_ID_DEFAULT = 0;
     static constexpr int PHY_LDO_VOLTAGE_MV_DEFAULT = 2500;
 
+    using HostHandle = esp_lcd_dsi_bus_handle_t;
+
+    /**
+     * @brief Partial host configuration structure
+     */
+    struct HostPartialConfig {
+        int num_data_lanes = 2;        ///< Number of data lanes
+        int lane_bit_rate_mbps = 0;    ///< Bit rate of each lane in Mbps
+    };
+    using HostFullConfig = esp_lcd_dsi_bus_config_t;
+
+    using ControlPanelFullConfig = esp_lcd_dbi_io_config_t;
+
+    /**
+     * @brief Partial refresh panel configuration structure
+     */
+    struct RefreshPanelPartialConfig {
+        int dpi_clock_freq_mhz = 0;    ///< DPI clock frequency in MHz
+        int bits_per_pixel = 16;       ///< Bits per pixel (16/18/24)
+        int h_size = 0;                ///< Horizontal resolution
+        int v_size = 0;                ///< Vertical resolution
+        int hsync_pulse_width = 0;     ///< Horizontal sync pulse width
+        int hsync_back_porch = 0;      ///< Horizontal back porch
+        int hsync_front_porch = 0;     ///< Horizontal front porch
+        int vsync_pulse_width = 0;     ///< Vertical sync pulse width
+        int vsync_back_porch = 0;      ///< Vertical back porch
+        int vsync_front_porch = 0;     ///< Vertical front porch
+    };
+    using RefreshPanelFullConfig = esp_lcd_dpi_panel_config_t;
+
+    /**
+     * @brief Partial PHY LDO configuration structure
+     */
+    struct PHY_LDO_PartialConfig {
+        int chan_id = -1;              ///< Channel ID of the PHY LDO
+    };
+    using PHY_LDO_FullConfig = esp_ldo_channel_config_t;
+
+    using HostConfig = std::variant<HostPartialConfig, HostFullConfig>;
+    using ControlPanelConfig = ControlPanelFullConfig;
+    using RefreshPanelConfig = std::variant<RefreshPanelPartialConfig, RefreshPanelFullConfig>;
+    using PHY_LDO_Config = std::variant<PHY_LDO_PartialConfig, PHY_LDO_FullConfig>;
+
     /**
      * @brief The MIPI-DSI bus configuration structure
      */
     struct Config {
-        /**
-         * @brief Host configuration types
-         */
-        using HostFullConfig = esp_lcd_dsi_bus_config_t;
-
-        /**
-         * @brief Control panel configuration types
-         */
-        using ControlPanelFullConfig = esp_lcd_dbi_io_config_t;
-
-        /**
-         * @brief Refresh panel configuration types
-         */
-        using RefreshPanelFullConfig = esp_lcd_dpi_panel_config_t;
-
-        /**
-         * @brief PHY LDO configuration types
-         */
-        using PHY_LDO_FullConfig = esp_ldo_channel_config_t;
-
-        /**
-         * @brief Partial host configuration structure
-         */
-        struct HostPartialConfig {
-            int num_data_lanes = 2;        ///< Number of data lanes
-            int lane_bit_rate_mbps = 0;    ///< Bit rate of each lane in Mbps
-        };
-
-        /**
-         * @brief Partial refresh panel configuration structure
-         */
-        struct RefreshPanelPartialConfig {
-            int dpi_clock_freq_mhz = 0;    ///< DPI clock frequency in MHz
-            int bits_per_pixel = 16;       ///< Bits per pixel (16/18/24)
-            int h_size = 0;                ///< Horizontal resolution
-            int v_size = 0;                ///< Vertical resolution
-            int hsync_pulse_width = 0;     ///< Horizontal sync pulse width
-            int hsync_back_porch = 0;      ///< Horizontal back porch
-            int hsync_front_porch = 0;     ///< Horizontal front porch
-            int vsync_pulse_width = 0;     ///< Vertical sync pulse width
-            int vsync_back_porch = 0;      ///< Vertical back porch
-            int vsync_front_porch = 0;     ///< Vertical front porch
-        };
-
-        /**
-         * @brief Partial PHY LDO configuration structure
-         */
-        struct PHY_LDO_PartialConfig {
-            int chan_id = -1;              ///< Channel ID of the PHY LDO
-        };
-
         /**
          * @brief Convert partial configurations to full configurations
          */
@@ -114,36 +108,14 @@ public:
          */
         void printPHY_LDO_Config() const;
 
-        /**
-         * @brief Get the full host configuration if available
-         *
-         * @return Pointer to full host configuration, `nullptr` if using partial configuration
-         */
-        const HostFullConfig *getHostFullConfig() const;
-
-        /**
-         * @brief Get the full refresh panel configuration if available
-         *
-         * @return Pointer to full refresh panel configuration, `nullptr` if using partial configuration
-         */
-        const RefreshPanelFullConfig *getRefreshPanelFullConfig() const;
-
-        /**
-         * @brief Get the full PHY LDO configuration if available
-         *
-         * @return Pointer to full PHY LDO configuration, `nullptr` if using partial configuration
-         */
-        const PHY_LDO_FullConfig *getPHY_LDO_Config() const;
-
-        std::variant<HostFullConfig, HostPartialConfig> host = {};  ///< Host configuration
-        ControlPanelFullConfig control_panel = {                    ///< Control panel configuration
+        HostConfig host = HostPartialConfig{};  ///< Host configuration
+        ControlPanelConfig control_panel = {    ///< Control panel configuration
             .virtual_channel = 0,
             .lcd_cmd_bits = 8,
             .lcd_param_bits = 8,
         };
-        ///< Refresh panel configuration
-        std::variant<RefreshPanelFullConfig, RefreshPanelPartialConfig> refresh_panel = {};
-        std::variant<PHY_LDO_FullConfig, PHY_LDO_PartialConfig> phy_ldo = {};  ///< PHY LDO configuration
+        RefreshPanelConfig refresh_panel = RefreshPanelPartialConfig{}; ///< Refresh panel configuration
+        PHY_LDO_Config phy_ldo = PHY_LDO_PartialConfig{};               ///< PHY LDO configuration
     };
 
 // *INDENT-OFF*
@@ -177,12 +149,12 @@ public:
         Bus(BASIC_ATTRIBUTES_DEFAULT),
         _config{
             // Host
-            .host = Config::HostPartialConfig{
+            .host = HostPartialConfig{
                 .num_data_lanes = lane_num,
                 .lane_bit_rate_mbps = lane_rate_mbps,
             },
             // Refresh Panel
-            .refresh_panel = Config::RefreshPanelPartialConfig{
+            .refresh_panel = RefreshPanelPartialConfig{
                 .dpi_clock_freq_mhz = clk_mhz,
                 .bits_per_pixel = bits_per_pixel,
                 .h_size = h_res,
@@ -195,7 +167,7 @@ public:
                 .vsync_front_porch = vfp,
             },
             // PHY LDO
-            .phy_ldo = Config::PHY_LDO_PartialConfig{
+            .phy_ldo = PHY_LDO_PartialConfig{
                 .chan_id = phy_ldo_id,
             },
         }
@@ -223,9 +195,10 @@ public:
      * @brief Configure DPI frame buffer number
      *
      * @param[in] num Number of frame buffers
+     * @return `true` if configuration succeeds, `false` otherwise
      * @note This function should be called before `init()`
      */
-    void configDPI_FrameBufferNumber(uint8_t num);
+    bool configDPI_FrameBufferNumber(uint8_t num);
 
     /**
      * @brief Initialize the MIPI-DSI bus
@@ -249,13 +222,6 @@ public:
     bool del() override;
 
     /**
-     * @brief Get the MIPI-DSI bus host handle
-     *
-     * @return MIPI-DSI bus host handle
-     */
-    esp_lcd_dsi_bus_handle_t getHostHandle();
-
-    /**
      * @brief Get the current bus configuration
      *
      * @return Reference to the current bus configuration
@@ -263,6 +229,16 @@ public:
     const Config &getConfig() const
     {
         return _config;
+    }
+
+    /**
+     * @brief Get the MIPI-DSI bus host handle
+     *
+     * @return MIPI-DSI bus host handle
+     */
+    HostHandle getHostHandle()
+    {
+        return (_host == nullptr) ? nullptr : static_cast<esp_lcd_dsi_bus_handle_t>(_host->getHandle());
     }
 
     /**
@@ -286,7 +262,7 @@ public:
     [[deprecated("Use `getConfig()` instead")]]
     const esp_lcd_dsi_bus_config_t *getDsiConfig()
     {
-        return getConfig().getHostFullConfig();
+        return &getHostFullConfig();
     }
 
     /**
@@ -298,10 +274,28 @@ public:
     [[deprecated("Use `getConfig()` instead")]]
     const esp_lcd_dpi_panel_config_t *getDpiConfig()
     {
-        return getConfig().getRefreshPanelFullConfig();
+        return &getRefreshPanelFullConfig();
     }
 
 private:
+    /**
+     * @brief Get mutable reference to host full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to host full configuration
+     */
+    HostFullConfig &getHostFullConfig();
+
+    /**
+     * @brief Get mutable reference to control panel full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to control panel full configuration
+     */
+    ControlPanelFullConfig &getControlPanelFullConfig();
+
     /**
      * @brief Get mutable reference to refresh panel full configuration
      *
@@ -309,7 +303,16 @@ private:
      *
      * @return Reference to refresh panel full configuration
      */
-    Config::RefreshPanelFullConfig &getRefreshPanelFullConfig();
+    RefreshPanelFullConfig &getRefreshPanelFullConfig();
+
+    /**
+     * @brief Get mutable reference to PHY LDO full configuration
+     *
+     * Converts partial configuration to full configuration if necessary
+     *
+     * @return Reference to PHY LDO full configuration
+     */
+    PHY_LDO_FullConfig &getPHY_LDO_FullConfig();
 
     Config _config = {};                              ///< MIPI-DSI bus configuration
     std::shared_ptr<HostDSI> _host = nullptr;         ///< MIPI-DSI host instance

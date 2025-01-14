@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7262
+#include "esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ST7262
+
 #include "soc/soc_caps.h"
 #include "esp_check.h"
 #include "esp_lcd_panel_io.h"
@@ -39,9 +40,14 @@ bool LCD_ST7262::init()
 
     ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Already initialized");
 
+    // Process the device on initialization
+    ESP_UTILS_CHECK_FALSE_RETURN(processDeviceOnInit(_bus_specifications), false, "Process device on init failed");
+
 #if SOC_LCD_RGB_SUPPORTED
-    /* Initialize RST pin */
     auto device_config = getConfig().getDeviceFullConfig();
+    ESP_UTILS_CHECK_NULL_RETURN(device_config, false, "Invalid device config");
+
+    /* Initialize RST pin */
     if (device_config->reset_gpio_num >= 0) {
         gpio_config_t gpio_conf = {
             .pin_bit_mask = BIT64(device_config->reset_gpio_num),
@@ -53,11 +59,10 @@ bool LCD_ST7262::init()
         ESP_UTILS_CHECK_ERROR_RETURN(gpio_config(&gpio_conf), false, "`Config Reset GPIO failed");
     }
 
-    // Process the device on initialization
-    ESP_UTILS_CHECK_FALSE_RETURN(processDeviceOnInit(_bus_specifications), false, "Process device on init failed");
-
     // Create refresh panel
     auto vendor_config = getConfig().getVendorFullConfig();
+    ESP_UTILS_CHECK_NULL_RETURN(vendor_config, false, "Invalid vendor config");
+
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_new_rgb_panel(vendor_config->rgb_config, &refresh_panel), false, "Create refresh panel failed"
     );
@@ -95,4 +100,5 @@ bool LCD_ST7262::reset()
 }
 
 } // namespace esp_panel::drivers
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7262
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ST7262

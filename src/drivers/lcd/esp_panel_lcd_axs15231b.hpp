@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "esp_panel_lcd_conf_internal.h"
 #include "esp_panel_lcd.hpp"
 
 namespace esp_panel::drivers {
@@ -109,7 +110,6 @@ public:
 private:
     static const BasicBusSpecificationMap _bus_specifications;
 };
-
 } // namespace esp_panel::drivers
 
 /**

@@ -1,9 +1,9 @@
 menu "Board"
     choice
         prompt "Select the default board type"
-        default ESP_PANEL_IGNORE_BOARD
+        default ESP_PANEL_BOARD_DEFAULT_USE_NONE
 
-        config ESP_PANEL_IGNORE_BOARD
+        config ESP_PANEL_BOARD_DEFAULT_USE_NONE
             bool "None"
             help
                 Enable this option if not using a board.

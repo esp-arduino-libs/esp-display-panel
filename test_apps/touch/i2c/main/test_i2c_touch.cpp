@@ -13,19 +13,20 @@
 #include "esp_display_panel.hpp"
 
 using namespace std;
+using namespace esp_panel::drivers;
 
+// *INDENT-OFF*
 /* The following default configurations are for the board 'Espressif: ESP32_S3_LCD_EV_BOARD_V1_5, GT1151' */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////// Please update the following configuration according to your touch_device spec ////////////////////////////
+//////////////////// Please update the following configuration according to your touch spec ////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define TEST_TOUCH_ADDRESS          (0)     // Typically set to 0 to use the default address.
-// - For touchs with only one address, set to 0
-// - For touchs with multiple addresses, set to 0 or the address
-//   Like GT911, there are two addresses: 0x5D(default) and 0x14
+                                            // - For touchs with only one address, set to 0
+                                            // - For touchs with multiple addresses, set to 0 or the address
+                                            //   Like GT911, there are two addresses: 0x5D(default) and 0x14
 #define TEST_TOUCH_WIDTH            (480)
 #define TEST_TOUCH_HEIGHT           (480)
 #define TEST_TOUCH_I2C_FREQ_HZ      (400 * 1000)
-#define TEST_TOUCH_READ_POINTS_NUM  (5)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your board spec ////////////////////////////
@@ -33,12 +34,13 @@ using namespace std;
 #define TEST_TOUCH_PIN_NUM_I2C_SCL  (48)
 #define TEST_TOUCH_PIN_NUM_I2C_SDA  (47)
 #define TEST_TOUCH_PIN_NUM_RST      (-1)    // Set to `-1` if not used
-// For GT911, the RST pin is also used to configure the I2C address
+                                            // For GT911, the RST pin is also used to configure the I2C address
 #define TEST_TOUCH_PIN_NUM_INT      (-1)    // Set to `-1` if not used
-// For GT911, the INT pin is also used to configure the I2C address
+                                            // For GT911, the INT pin is also used to configure the I2C address
 
 #define TEST_READ_TOUCH_DELAY_MS    (30)
 #define TEST_READ_TOUCH_TIME_MS     (3000)
+// *INDENT-ON*
 
 static const char *TAG = "test_i2c_touch";
 
@@ -53,27 +55,30 @@ IRAM_ATTR static bool onTouchInterruptCallback(void *user_data)
 }
 #endif
 
-static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
+static void run_test(shared_ptr<Touch> touch)
 {
-    touch_device->init();
-    touch_device->begin();
+    touch->init();
+    touch->begin();
 #if TEST_TOUCH_PIN_NUM_INT >= 0
-    touch_device->attachInterruptCallback(onTouchInterruptCallback, NULL);
+    touch->attachInterruptCallback(onTouchInterruptCallback, NULL);
 #endif
 
-    ESP_LOGI(TAG, "Reading touch_device point...");
+    ESP_LOGI(TAG, "Reading touch point...");
+
+    auto point_ptr = std::make_shared<TouchPoint []>(touch->getBasicAttributes().max_points_num);
+    TEST_ASSERT_NOT_NULL_MESSAGE(point_ptr, "Create point array failed");
 
     uint32_t t = 0;
+    auto point = point_ptr.get();
+    int touch_cnt = 0;
     while (t++ < TEST_READ_TOUCH_TIME_MS / TEST_READ_TOUCH_DELAY_MS) {
-        ESP_PanelTouchPoint point[TEST_TOUCH_READ_POINTS_NUM];
-        int read_touch_result = touch_device->readPoints(point, TEST_TOUCH_READ_POINTS_NUM, TEST_READ_TOUCH_DELAY_MS);
-
-        if (read_touch_result > 0) {
-            for (int i = 0; i < read_touch_result; i++) {
-                ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d\n", i, point[i].x, point[i].y, point[i].strength);
+        touch_cnt = touch->readPoints(point, -1, TEST_READ_TOUCH_DELAY_MS);
+        if (touch_cnt > 0) {
+            for (int i = 0; i < touch_cnt; i++) {
+                ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d", i, point[i].x, point[i].y, point[i].strength);
             }
-        } else if (read_touch_result < 0) {
-            ESP_LOGE(TAG, "Read touch_device point failed");
+        } else if (touch_cnt < 0) {
+            ESP_LOGE(TAG, "Read touch point failed");
         }
 #if TEST_TOUCH_PIN_NUM_INT < 0
         delay(TEST_READ_TOUCH_DELAY_MS);
@@ -84,30 +89,28 @@ static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
 #define CREATE_TOUCH_BUS(name) \
     ({ \
         ESP_LOGI(TAG, "Create touch bus"); \
-        shared_ptr<ESP_PanelBusI2C> touch_bus = make_shared<ESP_PanelBusI2C>( \
-            TEST_TOUCH_PIN_NUM_I2C_SCL, TEST_TOUCH_PIN_NUM_I2C_SDA, \
-            (esp_lcd_panel_io_i2c_config_t)ESP_PANEL_BOARD_TOUCH_I2C_PANEL_IO_CONFIG(name) \
-                ); \
-        TEST_ASSERT_NOT_NULL_MESSAGE(touch_bus, "Create panel bus object failed"); \
-        touch_bus->configI2cFreqHz(TEST_TOUCH_I2C_FREQ_HZ); \
-        TEST_ASSERT_TRUE_MESSAGE(touch_bus->begin(), "Panel bus begin failed"); \
-        touch_bus; \
+        auto bus = make_shared<BusI2C>(TEST_TOUCH_PIN_NUM_I2C_SCL, TEST_TOUCH_PIN_NUM_I2C_SDA, \
+                (BusI2C::Config::ControlPanelFullConfig)ESP_PANEL_TOUCH_I2C_PANEL_IO_CONFIG(name)); \
+        TEST_ASSERT_NOT_NULL_MESSAGE(bus, "Create bus object failed"); \
+        bus->configI2C_FreqHz(TEST_TOUCH_I2C_FREQ_HZ); \
+        TEST_ASSERT_TRUE_MESSAGE(bus->begin(), "Bus begin failed"); \
+        bus; \
     })
-#define CREATE_TOUCH(name, touch_bus) \
+#define CREATE_TOUCH(name, bus) \
     ({ \
         ESP_LOGI(TAG, "Create touch device: " #name); \
-        shared_ptr<ESP_PanelTouch> touch_device = make_shared<ESP_PanelTouch_##name>( \
-            touch_bus, TEST_TOUCH_WIDTH, TEST_TOUCH_HEIGHT, TEST_TOUCH_PIN_NUM_RST, TEST_TOUCH_PIN_NUM_INT \
+        auto touch = make_shared<Touch##name>( \
+            bus, TEST_TOUCH_WIDTH, TEST_TOUCH_HEIGHT, TEST_TOUCH_PIN_NUM_RST, TEST_TOUCH_PIN_NUM_INT \
         ); \
-        TEST_ASSERT_NOT_NULL_MESSAGE(touch_device, "Create TOUCH object failed"); \
-        touch_device; \
+        TEST_ASSERT_NOT_NULL_MESSAGE(touch, "Create TOUCH object failed"); \
+        touch; \
     })
 #define CREATE_TEST_CASE(name) \
     TEST_CASE("Test touch (" #name ") to draw color bar", "[i2c_touch][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBusI2C> touch_bus = CREATE_TOUCH_BUS(name); \
-        shared_ptr<ESP_PanelTouch> touch_device = CREATE_TOUCH(name, touch_bus.get()); \
-        run_test(touch_device); \
+        auto bus = CREATE_TOUCH_BUS(name); \
+        auto touch = CREATE_TOUCH(name, bus.get()); \
+        run_test(touch); \
     }
 
 /**

@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7703
+#include "../esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ST7703
+
 #include "soc/soc_caps.h"
 
 #if SOC_MIPI_DSI_SUPPORTED
@@ -324,4 +325,5 @@ static esp_err_t panel_st7703_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
     return ESP_OK;
 }
 #endif
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7703
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ST7703

@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_backlight_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_PWM_LEDC
+
 #include "esp_panel_utils.h"
 #include "esp_panel_backlight_pwm_ledc.hpp"
 
@@ -12,6 +15,23 @@ namespace esp_panel::drivers {
 void BacklightPWM_LEDC::Config::convertPartialToFull()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    if (std::holds_alternative<LEDC_TimerPartialConfig>(ledc_timer)) {
+#if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+        printLEDC_TimerConfig();
+#endif // ESP_UTILS_LOG_LEVEL_DEBUG
+        auto &config = std::get<LEDC_TimerPartialConfig>(ledc_timer);
+        ledc_timer = ledc_timer_config_t{
+            .speed_mode = LEDC_SPEED_MODE_DEFAULT,
+            .duty_resolution = static_cast<ledc_timer_bit_t>(config.duty_resolution),
+            .timer_num = LEDC_TIMER_NUM_DEFAULT,
+            .freq_hz = static_cast<uint32_t>(config.freq_hz),
+            .clk_cfg = LEDC_AUTO_CLK,
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
+            .deconfigure = false,
+#endif
+        };
+    }
 
     if (std::holds_alternative<LEDC_ChannelPartialConfig>(ledc_channel)) {
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
@@ -39,25 +59,37 @@ void BacklightPWM_LEDC::Config::printLEDC_TimerConfig() const
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_LOGI(
-        "\n\t{Full LEDC timer config}"
-        "\n\t\t-> [speed_mode]: %d"
-        "\n\t\t-> [duty_resolution]: %d"
-        "\n\t\t-> [timer_num]: %d"
-        "\n\t\t-> [freq_hz]: %d"
-        "\n\t\t-> [clk_cfg]: %d"
+    if (std::holds_alternative<LEDC_TimerPartialConfig>(ledc_timer)) {
+        auto &config = std::get<LEDC_TimerPartialConfig>(ledc_timer);
+        ESP_UTILS_LOGI(
+            "\n\t{LEDC timer config}[Partial]"
+            "\n\t\t-> [freq_hz]: %d"
+            "\n\t\t-> [duty_resolution]: %d"
+            , config.freq_hz
+            , config.duty_resolution
+        );
+    } else if (std::holds_alternative<LEDC_TimerFullConfig>(ledc_timer)) {
+        auto &config = std::get<LEDC_TimerFullConfig>(ledc_timer);
+        ESP_UTILS_LOGI(
+            "\n\t{LEDC timer config}[full]"
+            "\n\t\t-> [speed_mode]: %d"
+            "\n\t\t-> [duty_resolution]: %d"
+            "\n\t\t-> [timer_num]: %d"
+            "\n\t\t-> [freq_hz]: %d"
+            "\n\t\t-> [clk_cfg]: %d"
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
-        "\n\t\t-> [deconfigure]: %d"
-#endif // ESP_IDF_VERSION
-        , ledc_timer.speed_mode
-        , ledc_timer.duty_resolution
-        , ledc_timer.timer_num
-        , ledc_timer.freq_hz
-        , ledc_timer.clk_cfg
+            "\n\t\t-> [deconfigure]: %d"
+#endif
+            , config.speed_mode
+            , config.duty_resolution
+            , config.timer_num
+            , config.freq_hz
+            , config.clk_cfg
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
-        , ledc_timer.deconfigure
-#endif // ESP_IDF_VERSION
-    );
+            , config.deconfigure
+#endif
+        );
+    }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
@@ -69,7 +101,7 @@ void BacklightPWM_LEDC::Config::printLEDC_ChannelConfig() const
     if (std::holds_alternative<LEDC_ChannelFullConfig>(ledc_channel)) {
         auto &config = std::get<LEDC_ChannelFullConfig>(ledc_channel);
         ESP_UTILS_LOGI(
-            "\n\t{Full LEDC channel config}"
+            "\n\t{LEDC channel config}[full]"
             "\n\t\t-> [gpio_num]: %d"
             "\n\t\t-> [speed_mode]: %d"
             "\n\t\t-> [channel]: %d"
@@ -91,7 +123,7 @@ void BacklightPWM_LEDC::Config::printLEDC_ChannelConfig() const
     } else {
         auto &config = std::get<LEDC_ChannelPartialConfig>(ledc_channel);
         ESP_UTILS_LOGI(
-            "\n\t{Partial LEDC channel config}"
+            "\n\t{LEDC channel config}[Partial]"
             "\n\t\t-> [io_num]: %d"
             "\n\t\t-> [on_level]: %d"
             , config.io_num
@@ -102,15 +134,6 @@ void BacklightPWM_LEDC::Config::printLEDC_ChannelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-const BacklightPWM_LEDC::Config::LEDC_ChannelFullConfig *BacklightPWM_LEDC::Config::getLEDC_FullChannelConfig() const
-{
-    if (std::holds_alternative<LEDC_ChannelPartialConfig>(ledc_channel)) {
-        return nullptr;
-    }
-
-    return &std::get<LEDC_ChannelFullConfig>(ledc_channel);
-}
-
 BacklightPWM_LEDC::~BacklightPWM_LEDC()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -118,6 +141,20 @@ BacklightPWM_LEDC::~BacklightPWM_LEDC()
     ESP_UTILS_CHECK_FALSE_EXIT(del(), "Delete failed");
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
+bool BacklightPWM_LEDC::configLEDC_FreqHz(int hz)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Should be called before begin()");
+
+    ESP_UTILS_LOGD("Param: hz(%d)", hz);
+    getLEDC_TimerConfig().freq_hz = static_cast<uint32_t>(hz);
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
 bool BacklightPWM_LEDC::begin()
@@ -173,18 +210,17 @@ bool BacklightPWM_LEDC::del()
     return true;
 }
 
-bool BacklightPWM_LEDC::setBrightness(uint8_t percent)
+bool BacklightPWM_LEDC::setBrightness(int percent)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
-    percent = std::clamp(static_cast<int>(percent), 0, 100);
-    ESP_UTILS_LOGD("Setting brightness to %d%%", percent);
+    ESP_UTILS_LOGD("Param: percent(%d)", percent);
 
+    percent = std::clamp(percent, 0, 100);
     auto &channel_config = getLEDC_ChannelConfig();
     auto &timer_config = getLEDC_TimerConfig();
-
     uint32_t duty = ((1ULL << timer_config.duty_resolution) * percent) / 100;
 
     ESP_UTILS_CHECK_ERROR_RETURN(
@@ -195,18 +231,31 @@ bool BacklightPWM_LEDC::setBrightness(uint8_t percent)
         ledc_update_duty(channel_config.speed_mode, channel_config.channel), false, "LEDC update duty failed"
     );
 
+    setBrightnessValue(percent);
+
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 
     return true;
 }
 
-BacklightPWM_LEDC::Config::LEDC_ChannelFullConfig &BacklightPWM_LEDC::getLEDC_ChannelConfig()
+BacklightPWM_LEDC::LEDC_TimerFullConfig &BacklightPWM_LEDC::getLEDC_TimerConfig()
 {
-    if (std::holds_alternative<Config::LEDC_ChannelPartialConfig>(_config.ledc_channel)) {
+    if (std::holds_alternative<LEDC_TimerPartialConfig>(_config.ledc_timer)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::LEDC_ChannelFullConfig>(_config.ledc_channel);
+    return std::get<LEDC_TimerFullConfig>(_config.ledc_timer);
+}
+
+BacklightPWM_LEDC::LEDC_ChannelFullConfig &BacklightPWM_LEDC::getLEDC_ChannelConfig()
+{
+    if (std::holds_alternative<LEDC_ChannelPartialConfig>(_config.ledc_channel)) {
+        _config.convertPartialToFull();
+    }
+
+    return std::get<LEDC_ChannelFullConfig>(_config.ledc_channel);
 }
 
 } // namespace esp_panel::drivers
+
+#endif // ESP_PANEL_DRIVERS_BACKLIGHT_ENABLE_PWM_LEDC

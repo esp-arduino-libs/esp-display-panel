@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "test_app_main.c" "test_i2c_touch.cpp"
+    SRCS "test_app_main.cpp" "test_i2c_touch.cpp"
     PRIV_REQUIRES esp_lcd driver
     WHOLE_ARCHIVE
 )

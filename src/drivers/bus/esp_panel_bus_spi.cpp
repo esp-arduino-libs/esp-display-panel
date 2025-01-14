@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_bus_conf_internal.h"
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_SPI
+
 #include "hal/spi_ll.h"
 #include "esp_panel_utils.h"
 #include "drivers/host/esp_panel_host_spi.hpp"
@@ -13,11 +16,11 @@ namespace esp_panel::drivers {
 
 void BusSPI::Config::convertPartialToFull()
 {
-    if (!skip_init_host && std::holds_alternative<HostPartialConfig>(host)) {
+    if (isHostConfigValid() && std::holds_alternative<HostPartialConfig>(host.value())) {
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
         printHostConfig();
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
-        auto &config = std::get<HostPartialConfig>(host);
+        auto &config = std::get<HostPartialConfig>(host.value());
         host = HostFullConfig{
             .mosi_io_num = config.mosi_io_num,
             .miso_io_num = config.miso_io_num,
@@ -65,16 +68,23 @@ void BusSPI::Config::printHostConfig() const
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    if (std::holds_alternative<HostFullConfig>(host)) {
-        auto &config = std::get<HostFullConfig>(host);
+    if (!isHostConfigValid()) {
+        ESP_UTILS_LOGI("\n\t{Host config}[skipped]");
+        goto end;
+    }
+
+    if (std::holds_alternative<HostFullConfig>(host.value())) {
+        auto &config = std::get<HostFullConfig>(host.value());
         ESP_UTILS_LOGI(
-            "\n\t{Full host config}:"
+            "\n\t{Host config}[full]"
+            "\n\t\t-> [host_id]: %d"
             "\n\t\t-> [mosi_io_num]: %d"
             "\n\t\t-> [miso_io_num]: %d"
             "\n\t\t-> [sclk_io_num]: %d"
             "\n\t\t-> [max_transfer_sz]: %d"
             "\n\t\t-> [flags]: %d"
             "\n\t\t-> [intr_flags]: %d"
+            , host_id
             , config.mosi_io_num
             , config.miso_io_num
             , config.sclk_io_num
@@ -83,18 +93,21 @@ void BusSPI::Config::printHostConfig() const
             , config.intr_flags
         );
     } else {
-        auto &config = std::get<HostPartialConfig>(host);
+        auto &config = std::get<HostPartialConfig>(host.value());
         ESP_UTILS_LOGI(
-            "\n\t{Partial host config}"
+            "\n\t{Host config}[Partial]"
+            "\n\t\t-> [host_id]: %d"
             "\n\t\t-> [mosi_io_num]: %d"
             "\n\t\t-> [miso_io_num]: %d"
             "\n\t\t-> [sclk_io_num]: %d"
+            , host_id
             , config.mosi_io_num
             , config.miso_io_num
             , config.sclk_io_num
         );
     }
 
+end:
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
@@ -106,7 +119,8 @@ void BusSPI::Config::printControlPanelConfig() const
         auto &config = std::get<ControlPanelFullConfig>(control_panel);
         // Here to split the log to avoid the log buffer overflow
         ESP_UTILS_LOGI(
-            "\n\t{Full control panel config}"
+            "\n\t{Control panel config}[full]"
+            "\n\t\t-> [host_id]: %d"
             "\n\t\t-> [cs_gpio_num]: %d"
             "\n\t\t-> [dc_gpio_num]: %d"
             "\n\t\t-> [spi_mode]: %d"
@@ -114,6 +128,7 @@ void BusSPI::Config::printControlPanelConfig() const
             "\n\t\t-> [trans_queue_depth]: %d"
             "\n\t\t-> [lcd_cmd_bits]: %d"
             "\n\t\t-> [lcd_param_bits]: %d"
+            , host_id
             , config.cs_gpio_num
             , config.dc_gpio_num
             , config.spi_mode
@@ -144,13 +159,15 @@ void BusSPI::Config::printControlPanelConfig() const
     } else {
         auto &config = std::get<ControlPanelPartialConfig>(control_panel);
         ESP_UTILS_LOGI(
-            "\n\t{Partial control panel config}"
+            "\n\t{Control panel config}[Partial]"
+            "\n\t\t-> [host_id]: %d"
             "\n\t\t-> [cs_gpio_num]: %d"
             "\n\t\t-> [dc_gpio_num]: %d"
             "\n\t\t-> [spi_mode]: %d"
             "\n\t\t-> [pclk_hz]: %d"
             "\n\t\t-> [lcd_cmd_bits]: %d"
             "\n\t\t-> [lcd_param_bits]: %d"
+            , host_id
             , config.cs_gpio_num
             , config.dc_gpio_num
             , config.spi_mode
@@ -163,24 +180,6 @@ void BusSPI::Config::printControlPanelConfig() const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-const BusSPI::Config::HostFullConfig *BusSPI::Config::getHostFullConfig() const
-{
-    if (std::holds_alternative<HostPartialConfig>(host)) {
-        return nullptr;
-    }
-
-    return &std::get<HostFullConfig>(host);
-}
-
-const BusSPI::Config::ControlPanelFullConfig *BusSPI::Config::getControlPanelFullConfig() const
-{
-    if (std::holds_alternative<ControlPanelPartialConfig>(control_panel)) {
-        return nullptr;
-    }
-
-    return &std::get<ControlPanelFullConfig>(control_panel);
-}
-
 BusSPI::~BusSPI()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -190,64 +189,87 @@ BusSPI::~BusSPI()
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
-void BusSPI::configSPI_Mode(uint8_t mode)
+bool BusSPI::configSPI_HostSkipInit()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
+
+    _config.host = std::nullopt;
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
+}
+
+bool BusSPI::configSPI_Mode(uint8_t mode)
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: mode(%d)", (int)mode);
     getControlPanelFullConfig().spi_mode = mode;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
-void BusSPI::configSPI_FreqHz(uint32_t hz)
+bool BusSPI::configSPI_FreqHz(uint32_t hz)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: hz(%d)", (int)hz);
     getControlPanelFullConfig().pclk_hz = hz;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
-void BusSPI::configSPI_CommandBits(uint32_t num)
+bool BusSPI::configSPI_CommandBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: num(%d)", (int)num);
     getControlPanelFullConfig().lcd_cmd_bits = num;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
-void BusSPI::configSPI_ParamBits(uint32_t num)
+bool BusSPI::configSPI_ParamBits(uint32_t num)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: num(%d)", (int)num);
     getControlPanelFullConfig().lcd_param_bits = num;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
-void BusSPI::configSPI_TransQueueDepth(uint8_t depth)
+bool BusSPI::configSPI_TransQueueDepth(uint8_t depth)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_EXIT(!isOverState(State::INIT), "Should be called before `init()`");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::INIT), false, "Should be called before `init()`");
 
     ESP_UTILS_LOGD("Param: depth(%d)", (int)depth);
     getControlPanelFullConfig().trans_queue_depth = depth;
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+
+    return true;
 }
 
 bool BusSPI::init()
@@ -264,15 +286,11 @@ bool BusSPI::init()
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
     // Get the host instance if not skipped
-    auto &config = getConfig();
-    if (!config.skip_init_host) {
-        auto *host_config = config.getHostFullConfig();
-        ESP_UTILS_CHECK_NULL_RETURN(host_config, false, "Get SPI host(%d) instance failed", config.host_id);
-
-        _host = HostSPI::getInstance(config.host_id, *host_config);
-        ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get SPI host(%d) instance failed", config.host_id);
-
-        ESP_UTILS_LOGD("Get SPI host(%d) instance", config.host_id);
+    if (!isHostSkipInit()) {
+        auto host_id = getConfig().host_id;
+        _host = HostSPI::getInstance(host_id, getHostFullConfig());
+        ESP_UTILS_CHECK_NULL_RETURN(_host, false, "Get SPI host(%d) instance failed", host_id);
+        ESP_UTILS_LOGD("Get SPI host(%d) instance", host_id);
     }
 
     setState(State::INIT);
@@ -294,17 +312,16 @@ bool BusSPI::begin()
     }
 
     // Startup the host if not skipped
-    auto &config = getConfig();
+    auto host_id = getConfig().host_id;
     if (_host != nullptr) {
-        ESP_UTILS_CHECK_FALSE_RETURN(_host->begin(), false, "init host(%d) failed", config.host_id);
-        ESP_UTILS_LOGD("Begin SPI host(%d)", config.host_id);
+        ESP_UTILS_CHECK_FALSE_RETURN(_host->begin(), false, "Begin SPI host(%d) failed", host_id);
+        ESP_UTILS_LOGD("Begin SPI host(%d)", host_id);
     }
 
     // Create the control panel
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_new_panel_io_spi(
-            static_cast<esp_lcd_spi_bus_handle_t>(config.host_id), config.getControlPanelFullConfig(),
-            &control_panel
+            static_cast<esp_lcd_spi_bus_handle_t>(host_id), &getControlPanelFullConfig(), &control_panel
         ), false, "create panel IO failed"
     );
     ESP_UTILS_LOGD("Create control panel @%p", control_panel);
@@ -328,10 +345,9 @@ bool BusSPI::del()
     // Release the host instance if valid
     if (_host != nullptr) {
         _host = nullptr;
-        auto &config = getConfig();
+        auto host_id = getConfig().host_id;
         ESP_UTILS_CHECK_FALSE_RETURN(
-            HostSPI::tryReleaseInstance(config.host_id), false, "Release SPI host(%d) failed",
-            config.host_id
+            HostSPI::tryReleaseInstance(host_id), false, "Release SPI host(%d) failed", host_id
         );
     }
 
@@ -342,22 +358,24 @@ bool BusSPI::del()
     return true;
 }
 
-BusSPI::Config::HostFullConfig &BusSPI::getHostFullConfig()
+BusSPI::HostFullConfig &BusSPI::getHostFullConfig()
 {
-    if (std::holds_alternative<Config::HostPartialConfig>(_config.host)) {
+    if (std::holds_alternative<HostPartialConfig>(_config.host.value())) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::HostFullConfig>(_config.host);
+    return std::get<HostFullConfig>(_config.host.value());
 }
 
-BusSPI::Config::ControlPanelFullConfig &BusSPI::getControlPanelFullConfig()
+BusSPI::ControlPanelFullConfig &BusSPI::getControlPanelFullConfig()
 {
-    if (std::holds_alternative<Config::ControlPanelPartialConfig>(_config.control_panel)) {
+    if (std::holds_alternative<ControlPanelPartialConfig>(_config.control_panel)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::ControlPanelFullConfig>(_config.control_panel);
+    return std::get<ControlPanelFullConfig>(_config.control_panel);
 }
 
 } // namespace esp_panel::drivers
+
+#endif // ESP_PANEL_DRIVERS_BUS_ENABLE_SPI

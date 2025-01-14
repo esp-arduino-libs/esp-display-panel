@@ -10,8 +10,10 @@ dependencies:
     # public: true
   ESP32_IO_Expander:
     override_path: "../ESP32_IO_Expander"
+    public: true
   # espressif/esp-lib-utils:
     # version: ">=0.1.0,<=0.2.0"
     # public: true
   esp-lib-utils:
     override_path: "../esp-lib-utils"
+    public: true

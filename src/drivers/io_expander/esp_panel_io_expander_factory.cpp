@@ -4,16 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "esp_panel_io_expander_conf_internal.h"
+#if ESP_PANEL_DRIVERS_EXPANDER_ENABLE_FACTORY
+
 #include "esp_panel_utils.h"
 #include "esp_io_expander.hpp"
-#include "esp_panel_conf_internal.h"
 #include "esp_panel_io_expander_adapter.hpp"
 #include "esp_panel_io_expander_factory.hpp"
 
 namespace esp_panel::drivers {
 
 #define DEVICE_CREATOR(chip) \
-    [](const IO_Expander::Config &config) { \
+    [](const IO_Expander::Config &config) -> std::shared_ptr<IO_Expander> { \
         std::shared_ptr<IO_Expander> device = nullptr; \
         ESP_UTILS_CHECK_EXCEPTION_RETURN( \
             (device = utils::make_shared<IO_ExpanderAdapter<esp_expander::chip>>( \
@@ -22,15 +24,23 @@ namespace esp_panel::drivers {
         ); \
         return device; \
     }
-#define ITEM_CONTROLLER(chip) \
+#define MAP_ITEM(chip) \
     {#chip, DEVICE_CREATOR(chip)}
 
 const std::unordered_map<std::string, IO_ExpanderFactory::FunctionDeviceConstructor>
 IO_ExpanderFactory::_name_function_map = {
-    ITEM_CONTROLLER(CH422G),
-    ITEM_CONTROLLER(HT8574),
-    ITEM_CONTROLLER(TCA95XX_8BIT),
-    ITEM_CONTROLLER(TCA95XX_16BIT),
+#if ESP_PANEL_DRIVERS_EXPANDER_USE_CH422G
+    MAP_ITEM(CH422G),
+#endif
+#if ESP_PANEL_DRIVERS_EXPANDER_USE_HT8574
+    MAP_ITEM(HT8574),
+#endif
+#if ESP_PANEL_DRIVERS_EXPANDER_USE_TCA95XX_8BIT
+    MAP_ITEM(TCA95XX_8BIT),
+#endif
+#if ESP_PANEL_DRIVERS_EXPANDER_USE_TCA95XX_16BIT
+    MAP_ITEM(TCA95XX_16BIT),
+#endif
 };
 
 std::shared_ptr<IO_Expander> IO_ExpanderFactory::create(std::string name, const IO_Expander::Config &config)
@@ -47,3 +57,5 @@ std::shared_ptr<IO_Expander> IO_ExpanderFactory::create(std::string name, const 
 }
 
 } // namespace esp_panel::drivers
+
+#endif // ESP_PANEL_DRIVERS_EXPANDER_ENABLE_FACTORY

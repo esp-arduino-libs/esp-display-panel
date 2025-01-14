@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include "drivers/bus/esp_panel_bus.hpp"
+#include "esp_panel_touch_conf_internal.h"
 #include "esp_panel_touch.hpp"
 #include "esp_panel_touch_axs15231b.hpp"
 #include "esp_panel_touch_cst816s.hpp"
@@ -40,16 +41,6 @@ public:
      * @return Smart pointer to the created touch device instance, nullptr if creation fails
      */
     using FunctionCreateDevice = std::shared_ptr<Touch> (*)(Bus *bus, const Touch::Config &config);
-
-    /**
-     * @brief Default constructor
-     */
-    TouchFactory() = default;
-
-    /**
-     * @brief Default destructor
-     */
-    ~TouchFactory() = default;
 
     /**
      * @brief Create a touch screen device instance

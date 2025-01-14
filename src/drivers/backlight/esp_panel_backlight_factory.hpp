@@ -3,18 +3,18 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #pragma once
 
 #include <unordered_map>
 #include <memory>
 #include <string>
 #include <variant>
-#include "esp_panel_utils.h"
-#include "esp_panel_types.h"
 #include "esp_panel_backlight.hpp"
 #include "esp_panel_backlight_custom.hpp"
 #include "esp_panel_backlight_pwm_ledc.hpp"
 #include "esp_panel_backlight_switch_gpio.hpp"
+#include "esp_panel_backlight_switch_expander.hpp"
 
 namespace esp_panel::drivers {
 
@@ -33,7 +33,8 @@ public:
     using Config = std::variant <
                    drivers::BacklightCustom::Config,
                    drivers::BacklightPWM_LEDC::Config,
-                   drivers::BacklightSwitchGPIO::Config
+                   drivers::BacklightSwitchGPIO::Config,
+                   drivers::BacklightSwitchExpander::Config
                    >;
 
     /**
@@ -42,16 +43,6 @@ public:
      * Points to functions that create and return a shared pointer to a backlight device
      */
     using FunctionDeviceConstructor = std::shared_ptr<Backlight> (*)(const Config &config);
-
-    /**
-     * @brief Default constructor
-     */
-    BacklightFactory() = default;
-
-    /**
-     * @brief Default destructor
-     */
-    ~BacklightFactory() = default;
 
     /**
      * @brief Create a new backlight device with configuration
@@ -82,11 +73,18 @@ public:
 
 private:
     /**
-     * @brief Map of backlight types to their constructors and type names
+     * @brief Map of bus types to their type names
      *
-     * Maps each backlight type to a pair containing its name string and constructor function
+     * Maps each bus type to its type name string
      */
-    static const std::unordered_map<int, std::pair<std::string, FunctionDeviceConstructor>> _type_constructor_map;
+    static const std::unordered_map<int, std::string> _type_name_map;
+
+    /**
+     * @brief Map of bus types to their constructors and type names
+     *
+     * Maps each bus type to its constructor function
+     */
+    static const std::unordered_map<int, FunctionDeviceConstructor> _type_constructor_map;
 };
 
 } // namespace esp_panel::drivers

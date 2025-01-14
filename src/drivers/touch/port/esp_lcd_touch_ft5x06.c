@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
+#include "../esp_panel_touch_conf_internal.h"
+#if ESP_PANEL_DRIVERS_TOUCH_ENABLE_FT5x06
+
 #include <stdio.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -336,4 +337,5 @@ static esp_err_t touch_ft5x06_i2c_read(esp_lcd_touch_handle_t tp, uint8_t reg, u
     /* Read data */
     return esp_lcd_panel_io_rx_param(tp->io, reg, data, len);
 }
-#endif // ESP_PANEL_CONF_TOUCH_COMPILE_DISABLED || ESP_PANEL_CONF_TOUCH_ENABLE_FT5x06
+
+#endif // ESP_PANEL_DRIVERS_TOUCH_ENABLE_FT5x06

@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST77922
+#include "../esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ST77922
+
 #include "soc/soc_caps.h"
 
 #if SOC_LCD_RGB_SUPPORTED
@@ -56,7 +57,6 @@ static esp_err_t panel_st77922_init(esp_lcd_panel_t *panel);
 static esp_err_t panel_st77922_del(esp_lcd_panel_t *panel);
 static esp_err_t panel_st77922_reset(esp_lcd_panel_t *panel);
 static esp_err_t panel_st77922_mirror(esp_lcd_panel_t *panel, bool mirror_x, bool mirror_y);
-static esp_err_t panel_st77922_swap_xy(esp_lcd_panel_t *panel, bool swap_axes);
 static esp_err_t panel_st77922_disp_on_off(esp_lcd_panel_t *panel, bool off);
 
 esp_err_t esp_lcd_new_panel_st77922_rgb(const esp_lcd_panel_io_handle_t io, const esp_lcd_panel_dev_config_t *panel_dev_config,
@@ -148,14 +148,12 @@ esp_err_t esp_lcd_new_panel_st77922_rgb(const esp_lcd_panel_io_handle_t io, cons
     st77922->del = (*ret_panel)->del;
     st77922->reset = (*ret_panel)->reset;
     st77922->mirror = (*ret_panel)->mirror;
-    st77922->swap_xy = (*ret_panel)->swap_xy;
     st77922->disp_on_off = (*ret_panel)->disp_on_off;
     // Overwrite the functions of RGB panel
     (*ret_panel)->init = panel_st77922_init;
     (*ret_panel)->del = panel_st77922_del;
     (*ret_panel)->reset = panel_st77922_reset;
     (*ret_panel)->mirror = panel_st77922_mirror;
-    (*ret_panel)->swap_xy = panel_st77922_swap_xy;
     (*ret_panel)->disp_on_off = panel_st77922_disp_on_off;
     (*ret_panel)->user_data = st77922;
     ESP_LOGD(TAG, "new st77922 panel @%p", st77922);
@@ -388,12 +386,6 @@ static esp_err_t panel_st77922_mirror(esp_lcd_panel_t *panel, bool mirror_x, boo
     return ESP_OK;
 }
 
-static esp_err_t panel_st77922_swap_xy(esp_lcd_panel_t *panel, bool swap_axes)
-{
-    ESP_LOGW(TAG, "swap_xy is not supported by this panel");
-    return ESP_ERR_NOT_SUPPORTED;
-}
-
 static esp_err_t panel_st77922_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
 {
     st77922_panel_t *st77922 = (st77922_panel_t *)panel->user_data;
@@ -416,4 +408,4 @@ static esp_err_t panel_st77922_disp_on_off(esp_lcd_panel_t *panel, bool on_off)
     return ESP_OK;
 }
 #endif /* SOC_LCD_RGB_SUPPORTED */
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST77922
+#endif // ESP_PANEL_DRIVERS_LCD_COMPILE_UNUSED_DRIVERS || ESP_PANEL_DRIVERS_LCD_USE_ST77922

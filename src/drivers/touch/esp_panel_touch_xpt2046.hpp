@@ -7,6 +7,7 @@
 #pragma once
 
 #include "port/esp_lcd_touch_xpt2046.h"
+#include "esp_panel_touch_conf_internal.h"
 #include "esp_panel_touch.hpp"
 
 namespace esp_panel::drivers {

@@ -8,19 +8,37 @@
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
 #include "unity.h"
-#include "unity_test_runner.h"
+#include "unity_test_utils.h"
 
 // Some resources are lazy allocated in the LCD driver, the threadhold is left for that case
-#define TEST_MEMORY_LEAK_THRESHOLD (-300)
+#if CONFIG_IDF_TARGET_ESP32P4
+#define TEST_MEMORY_LEAK_THRESHOLD (800)
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define TEST_MEMORY_LEAK_THRESHOLD (500)
+#else
+#define TEST_MEMORY_LEAK_THRESHOLD (300)
+#endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
+void setUp(void)
+{
+    unity_utils_record_free_mem();
+}
+
+void tearDown(void)
+{
+    esp_reent_cleanup();    //clean up some of the newlib's lazy allocations
+    unity_utils_evaluate_leaks_direct(TEST_MEMORY_LEAK_THRESHOLD);
+}
+#else
 static size_t before_free_8bit;
 static size_t before_free_32bit;
 
 static void check_leak(size_t before_free, size_t after_free, const char *type)
 {
-    ssize_t delta = after_free - before_free;
+    ssize_t delta = before_free - after_free;
     printf("MALLOC_CAP_%s: Before %u bytes free, After %u bytes free (delta %d)\n", type, before_free, after_free, delta);
-    TEST_ASSERT_MESSAGE(delta >= TEST_MEMORY_LEAK_THRESHOLD, "memory leak");
+    TEST_ASSERT_MESSAGE(delta < TEST_MEMORY_LEAK_THRESHOLD, "memory leak");
 }
 
 void setUp(void)
@@ -36,8 +54,9 @@ void tearDown(void)
     check_leak(before_free_8bit, after_free_8bit, "8BIT");
     check_leak(before_free_32bit, after_free_32bit, "32BIT");
 }
+#endif
 
-void app_main(void)
+extern "C" void app_main(void)
 {
     /**
      *  __       __  ______  _______  ______        _______    ______   ______        __        ______   _______

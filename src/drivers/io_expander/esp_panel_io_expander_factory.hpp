@@ -9,6 +9,8 @@
 #include <memory>
 #include <string>
 #include "esp_panel_io_expander.hpp"
+#include "esp_panel_io_expander_adapter.hpp"
+#include "esp_panel_io_expander_conf_internal.h"
 
 namespace esp_panel::drivers {
 
@@ -24,16 +26,6 @@ public:
      * @return Shared pointer to the created IO expander device
      */
     using FunctionDeviceConstructor = std::shared_ptr<IO_Expander> (*)(const IO_Expander::Config &config);
-
-    /**
-     * @brief Default constructor
-     */
-    IO_ExpanderFactory() = default;
-
-    /**
-     * @brief Default destructor
-     */
-    ~IO_ExpanderFactory() = default;
 
     /**
      * @brief Create a new IO expander device instance

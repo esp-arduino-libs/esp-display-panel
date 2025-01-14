@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_panel_conf_internal.h"
-#if ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7701
+#include "../esp_panel_lcd_conf_internal.h"
+#if ESP_PANEL_DRIVERS_LCD_ENABLE_ST7701
+
 #include "soc/soc_caps.h"
 #include "esp_check.h"
 #include "esp_lcd_types.h"
@@ -43,4 +44,5 @@ esp_err_t esp_lcd_new_panel_st7701(const esp_lcd_panel_io_handle_t io, const esp
 
     return ret;
 }
-#endif // ESP_PANEL_CONF_LCD_COMPILE_DISABLED || ESP_PANEL_CONF_LCD_ENABLE_ST7701
+
+#endif // ESP_PANEL_DRIVERS_LCD_ENABLE_ST7701

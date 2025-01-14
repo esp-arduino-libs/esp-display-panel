@@ -13,7 +13,6 @@
 #include "esp_memory_utils.h"
 #include "driver/spi_master.h"
 #include "esp_panel_utils.h"
-#include "drivers/bus/esp_panel_bus_factory.hpp"
 #include "esp_panel_lcd.hpp"
 
 namespace esp_panel::drivers {
@@ -66,20 +65,16 @@ std::string LCD::BasicBusSpecification::getColorBitsString() const
 // *INDENT-ON*
 }
 
-const LCD::Config::DeviceFullConfig *LCD::Config::getDeviceFullConfig() const
+const LCD::DeviceFullConfig *LCD::Config::getDeviceFullConfig() const
 {
-    if (std::holds_alternative<DevicePartialConfig>(device)) {
-        return nullptr;
-    }
+    ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<DeviceFullConfig>(device), nullptr, "Partial config");
 
     return &std::get<DeviceFullConfig>(device);
 }
 
-const LCD::Config::VendorFullConfig *LCD::Config::getVendorFullConfig() const
+const LCD::VendorFullConfig *LCD::Config::getVendorFullConfig() const
 {
-    if (std::holds_alternative<VendorPartialConfig>(vendor)) {
-        return nullptr;
-    }
+    ESP_UTILS_CHECK_FALSE_RETURN(std::holds_alternative<VendorFullConfig>(vendor), nullptr, "Partial config");
 
     return &std::get<VendorFullConfig>(vendor);
 }
@@ -130,7 +125,7 @@ void LCD::Config::printDeviceConfig() const
     if (std::holds_alternative<DeviceFullConfig>(device)) {
         auto &config = std::get<DeviceFullConfig>(device);
         ESP_UTILS_LOGI(
-            "\n\t{Full device config}"
+            "\n\t{Device config}[full]"
             "\n\t\t-> [reset_gpio_num]: %d"
             "\n\t\t-> [rgb_ele_order]: %d"
             "\n\t\t-> [bits_per_pixel]: %d"
@@ -144,7 +139,7 @@ void LCD::Config::printDeviceConfig() const
     } else {
         auto &config = std::get<DevicePartialConfig>(device);
         ESP_UTILS_LOGI(
-            "\n\t{Partial device config}"
+            "\n\t{Device config}[partial]"
             "\n\t\t-> [reset_gpio_num]: %d"
             "\n\t\t-> [rgb_ele_order]: %d"
             "\n\t\t-> [bits_per_pixel]: %d"
@@ -166,7 +161,7 @@ void LCD::Config::printVendorConfig() const
     if (std::holds_alternative<VendorFullConfig>(vendor)) {
         auto &config = std::get<VendorFullConfig>(vendor);
         ESP_UTILS_LOGI(
-            "\n\t{Full vendor config}"
+            "\n\t{Vendor config}[full]"
             "\n\t\t-> [init_cmds]: %p"
             "\n\t\t-> [init_cmds_size]: %d"
 #if SOC_LCD_RGB_SUPPORTED
@@ -207,7 +202,7 @@ void LCD::Config::printVendorConfig() const
     } else {
         auto &config = std::get<VendorPartialConfig>(vendor);
         ESP_UTILS_LOGI(
-            "\n\t{Partial vendor config}"
+            "\n\t{Vendor config}[partial]"
             "\n\t\t-> [init_cmds]: %p"
             "\n\t\t-> [init_cmds_size]: %d"
             "\n\t\t-> [flags_mirror_by_cmd]: %d"
@@ -231,7 +226,7 @@ bool LCD::configVendorCommands(const esp_panel_lcd_vendor_init_cmd_t init_cmd[],
 #if SOC_LCD_RGB_SUPPORTED
     ESP_UTILS_CHECK_FALSE_RETURN(
         (getBus()->getBasicAttributes().type != ESP_PANEL_BUS_TYPE_RGB) ||
-        static_cast<BusRGB *>(getBus())->getConfig().use_control_panel, false,
+        static_cast<BusRGB *>(getBus())->getConfig().control_panel.has_value(), false,
         "Doesn't support the single \"RGB\" bus"
     );
 #endif // SOC_LCD_RGB_SUPPORTED
@@ -257,7 +252,7 @@ bool LCD::configMirrorByCommand(bool en)
 #if SOC_LCD_RGB_SUPPORTED
     ESP_UTILS_CHECK_FALSE_RETURN(
         (getBus()->getBasicAttributes().type == ESP_PANEL_BUS_TYPE_RGB) &&
-        static_cast<BusRGB *>(getBus())->getConfig().use_control_panel, false,
+        static_cast<BusRGB *>(getBus())->getConfig().control_panel.has_value(), false,
         "Only valid for the \"3-wire SPI + RGB\" bus"
     );
 
@@ -281,7 +276,7 @@ bool LCD::configEnableIO_Multiplex(bool en)
 #if SOC_LCD_RGB_SUPPORTED
     ESP_UTILS_CHECK_FALSE_RETURN(
         (getBus()->getBasicAttributes().type == ESP_PANEL_BUS_TYPE_RGB) &&
-        static_cast<BusRGB *>(getBus())->getConfig().use_control_panel, false,
+        static_cast<BusRGB *>(getBus())->getConfig().control_panel.has_value(), false,
         "Only valid for the \"3-wire SPI + RGB\" bus"
     );
 
@@ -363,11 +358,13 @@ bool LCD::begin()
     switch (bus_type) {
 #if SOC_LCD_RGB_SUPPORTED
     case ESP_PANEL_BUS_TYPE_RGB: {
+        auto rgb_config = getBusRGB_RefreshPanelFullConfig();
+        ESP_UTILS_CHECK_NULL_RETURN(rgb_config, false, "Invalid RGB config");
+
         esp_lcd_rgb_panel_event_callbacks_t rgb_event_cb = {};
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
         rgb_event_cb.on_frame_buf_complete = (esp_lcd_rgb_panel_frame_buf_complete_cb_t)onRefreshFinish;
 #else
-        auto rgb_config = static_cast<BusRGB *>(getBus())->getConfig().getRefreshPanelFullConfig();
         if (rgb_config->bounce_buffer_size_px == 0) {
             // When bounce buffer is disabled, use `on_vsync` callback to notify draw bitmap finish
             rgb_event_cb.on_vsync = (esp_lcd_rgb_panel_vsync_cb_t)onRefreshFinish;
@@ -474,6 +471,19 @@ bool LCD::drawBitmap(uint16_t x_start, uint16_t y_start, uint16_t width, uint16_
         "Param: x_start(%d), y_start(%d), width(%d), height(%d), color_data(@%p)", x_start, y_start, width, height,
         color_data
     );
+    auto x_coord_align = getBasicAttributes().basic_bus_spec.x_coord_align;
+    auto y_coord_align = getBasicAttributes().basic_bus_spec.y_coord_align;
+    if ((x_start & (x_coord_align - 1)) != 0) {
+        ESP_UTILS_LOGW("x_start is not aligned to align(%d)", x_coord_align);
+    } else if ((width & (x_coord_align - 1)) != 0) {
+        ESP_UTILS_LOGW("width is not aligned to align(%d)", x_coord_align);
+    }
+    if ((y_start & (y_coord_align - 1)) != 0) {
+        ESP_UTILS_LOGW("y_start is not aligned to align(%d)", y_coord_align);
+    } else if ((height & (y_coord_align - 1)) != 0) {
+        ESP_UTILS_LOGW("height is not aligned to align(%d)", y_coord_align);
+    }
+
     ESP_UTILS_CHECK_ERROR_RETURN(
         esp_lcd_panel_draw_bitmap(refresh_panel, x_start, y_start, x_start + width, y_start + height, color_data),
         false, "Draw bitmap failed"
@@ -724,18 +734,18 @@ bool LCD::colorBarTest(uint16_t width, uint16_t height)
 
     ESP_UTILS_LOGD("Param: width(%d), height(%d)", width, height);
 
+    auto y_coord_align = getBasicAttributes().basic_bus_spec.y_coord_align;
     int bytes_per_piexl = bits_per_piexl / 8;
-    int row_per_bar = height / bits_per_piexl;
+    // Make sure the height is aligned to the `y_coord_align`
+    int row_per_bar = (height / bits_per_piexl) & ~(y_coord_align - 1);
     int line_count = 0;
     int res_line_count = 0;
 
     /* Malloc memory for a single color bar */
-    std::shared_ptr<uint8_t> single_bar_buf_ptr(
-        static_cast<uint8_t *>(malloc(row_per_bar * width * bytes_per_piexl)), free
-    );
+    auto single_bar_buf_ptr = utils::make_shared<uint8_t[]>(row_per_bar * width * bytes_per_piexl);
     ESP_UTILS_CHECK_NULL_RETURN(single_bar_buf_ptr, false, "Alloc color buffer failed");
 
-    uint8_t *single_bar_buf = single_bar_buf_ptr.get();
+    auto single_bar_buf = single_bar_buf_ptr.get();
     auto bus_type = getBus()->getBasicAttributes().type;
     /* Draw color bar from top left to bottom right, the order is B - G - R */
     for (int j = 0; j < bits_per_piexl; j++) {
@@ -760,11 +770,16 @@ bool LCD::colorBarTest(uint16_t width, uint16_t height)
     res_line_count = height - line_count;
     if (res_line_count > 0) {
         ESP_UTILS_LOGD("Fill the rest lines(%d) with white color", res_line_count);
-        memset(single_bar_buf, 0xff, res_line_count * width * bytes_per_piexl);
-        ESP_UTILS_CHECK_FALSE_RETURN(
-            drawBitmapWaitUntilFinish(0, line_count, width, res_line_count, single_bar_buf), false,
-            "Draw bitmap wait until finish failed"
-        );
+        memset(single_bar_buf, 0xff, row_per_bar * width * bytes_per_piexl);
+
+        for (; res_line_count > 0; res_line_count -= row_per_bar) {
+            ESP_UTILS_CHECK_FALSE_RETURN(
+                drawBitmapWaitUntilFinish(
+                    0, line_count, width, res_line_count > row_per_bar ? row_per_bar : res_line_count, single_bar_buf
+                ), false, "Draw bitmap wait until finish failed"
+            );
+            line_count += row_per_bar;
+        }
     }
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
@@ -804,15 +819,18 @@ int LCD::getFrameColorBits()
     switch (getBus()->getBasicAttributes().type) {
 #if SOC_LCD_RGB_SUPPORTED
     case ESP_PANEL_BUS_TYPE_RGB: {
-        auto rgb_config = static_cast<BusRGB *>(getBus())->getConfig().getRefreshPanelFullConfig();
+        auto rgb_config = getBusRGB_RefreshPanelFullConfig();
+        ESP_UTILS_CHECK_NULL_RETURN(rgb_config, -1, "Invalid RGB config");
+
         bits_per_pixel = rgb_config->bits_per_pixel;
         break;
     }
 #endif // SOC_LCD_RGB_SUPPORTED
 #if SOC_MIPI_DSI_SUPPORTED
     case ESP_PANEL_BUS_TYPE_MIPI_DSI: {
-        auto dpi_config = static_cast<BusDSI *>(getBus())->getConfig().getRefreshPanelFullConfig();
+        auto dpi_config = getBusDSI_RefreshPanelFullConfig();
         ESP_UTILS_CHECK_NULL_RETURN(dpi_config, -1, "Invalid MIPI DPI config");
+
         switch (dpi_config->pixel_format) {
         case LCD_COLOR_PIXEL_FORMAT_RGB565:
             bits_per_pixel = 16;
@@ -871,10 +889,14 @@ void *LCD::getFrameBufferByIndex(uint8_t index)
         break;
 #endif
     default:
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
         ESP_UTILS_CHECK_FALSE_RETURN(
             false, nullptr, "Bus(%d[%s]) is invalid for this function", bus_type,
             BusFactory::getTypeNameString(bus_type).c_str()
         );
+#else
+        ESP_UTILS_CHECK_FALSE_RETURN(false, nullptr, "Bus(%d) is invalid for this function", bus_type);
+#endif
         break;
     }
 
@@ -897,7 +919,11 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
     // Print all bus specifications
     ESP_UTILS_LOGD("Print %s all supported bus specifications", _basic_attributes.name);
     for (const auto &bus_spec : bus_specs) {
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
         bus_spec.second.print(BusFactory::getTypeNameString(bus_spec.first));
+#else
+        bus_spec.second.print(std::to_string(bus_spec.first));
+#endif
     }
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
@@ -905,6 +931,7 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
     auto bus_type = getBus()->getBasicAttributes().type;
     auto bus_specs_it = bus_specs.find(bus_type);
 // *INDENT-OFF*
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
     ESP_UTILS_CHECK_FALSE_RETURN(
         bus_specs_it != bus_specs.end(), false,
         "Bus type(%d[%s]) is not supported for the device(%s: %s)", bus_type,
@@ -914,6 +941,11 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
                                a + ", " + BusFactory::getTypeNameString(b.first);
         }).c_str()
     );
+#else
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        bus_specs_it != bus_specs.end(), false, "Bus type(%d) is not supported for the device", bus_type
+    );
+#endif
 // *INDENT-ON*
     _basic_attributes.basic_bus_spec = bus_specs_it->second;
 
@@ -939,13 +971,12 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
 #if SOC_LCD_RGB_SUPPORTED
     // When using RGB bus, if the bus doesn't support the `display_on_off` function, disable it
     if (bus_type == ESP_PANEL_BUS_TYPE_RGB) {
-        auto rgb_config = static_cast<BusRGB *>(getBus())->getConfig().getRefreshPanelFullConfig();
+        auto rgb_config = getBusRGB_RefreshPanelFullConfig();
         ESP_UTILS_CHECK_NULL_RETURN(rgb_config, false, "Invalid RGB config");
-        auto vendor_config = getConfig().getVendorFullConfig();
-        ESP_UTILS_CHECK_NULL_RETURN(vendor_config, false, "Invalid vendor config");
 
+        auto &vendor_config = getVendorFullConfig();
         if ((rgb_config->disp_gpio_num == -1) && ((getBus()->getControlPanelHandle() == nullptr) ||
-                vendor_config->flags.enable_io_multiplex)) {
+                vendor_config.flags.enable_io_multiplex)) {
             ESP_UTILS_LOGD("Not support `display_on_off` function, disable it");
             bus_spec.functions.reset(static_cast<int>(BasicBusSpecification::FUNC_DISPLAY_ON_OFF));
         }
@@ -966,28 +997,38 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
     /* Retrieve RGB configuration from the bus and register it into the vendor configuration */
     case ESP_PANEL_BUS_TYPE_RGB:
         vendor_config.flags.use_rgb_interface = 1;
-        vendor_config.rgb_config = static_cast<BusRGB *>(getBus())->getConfig().getRefreshPanelFullConfig();
+        vendor_config.rgb_config = getBusRGB_RefreshPanelFullConfig();
+        ESP_UTILS_CHECK_NULL_RETURN(vendor_config.rgb_config, false, "Invalid RGB config");
         break;
 #endif
 #if SOC_MIPI_DSI_SUPPORTED
     /* Retrieve MIPI DPI configuration from the bus and register it into the vendor configuration */
     case ESP_PANEL_BUS_TYPE_MIPI_DSI: {
-        auto dsi_bus = static_cast<BusDSI *>(getBus());
-        auto &dsi_bus_config = dsi_bus->getConfig();
+        auto bus = static_cast<BusDSI *>(getBus());
+        ESP_UTILS_CHECK_FALSE_RETURN(
+            std::holds_alternative<BusDSI::HostFullConfig>(bus->getConfig().host), false,
+            "MIPI-DSI bus configuration is not full"
+        );
+
+        auto &host_config = std::get<BusDSI::HostFullConfig>(bus->getConfig().host);
         vendor_config.flags.use_mipi_interface = 1;
         vendor_config.mipi_config = {
-            .lane_num = dsi_bus_config.getHostFullConfig()->num_data_lanes,
-            .dsi_bus = dsi_bus->getHostHandle(),
-            .dpi_config = dsi_bus_config.getRefreshPanelFullConfig(),
+            .lane_num = host_config.num_data_lanes,
+            .dsi_bus = bus->getHostHandle(),
+            .dpi_config = getBusDSI_RefreshPanelFullConfig(),
         };
         break;
     }
 #endif
     default:
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
         ESP_UTILS_CHECK_FALSE_RETURN(
             false, false, "Bus(%d[%s]) is invalid for this function", bus_type,
             BusFactory::getTypeNameString(bus_type).c_str()
         );
+#else
+        ESP_UTILS_CHECK_FALSE_RETURN(false, false, "Bus(%d) is invalid for this function", bus_type);
+#endif
         break;
     }
 
@@ -998,7 +1039,7 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
     _config.printVendorConfig();
     _config.printDeviceConfig();
-    bus_spec.print("Target");
+    bus_spec.print("Current");
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
@@ -1006,23 +1047,68 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
     return true;
 }
 
-LCD::Config::DeviceFullConfig &LCD::getDeviceFullConfig()
+LCD::DeviceFullConfig &LCD::getDeviceFullConfig()
 {
-    if (std::holds_alternative<Config::DevicePartialConfig>(_config.device)) {
+    if (std::holds_alternative<DevicePartialConfig>(_config.device)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::DeviceFullConfig>(_config.device);
+    return std::get<DeviceFullConfig>(_config.device);
 }
 
-LCD::Config::VendorFullConfig &LCD::getVendorFullConfig()
+LCD::VendorFullConfig &LCD::getVendorFullConfig()
 {
-    if (std::holds_alternative<Config::VendorPartialConfig>(_config.vendor)) {
+    if (std::holds_alternative<VendorPartialConfig>(_config.vendor)) {
         _config.convertPartialToFull();
     }
 
-    return std::get<Config::VendorFullConfig>(_config.vendor);
+    return std::get<VendorFullConfig>(_config.vendor);
 }
+
+#if SOC_LCD_RGB_SUPPORTED
+const BusRGB::RefreshPanelFullConfig *LCD::getBusRGB_RefreshPanelFullConfig()
+{
+    ESP_UTILS_CHECK_NULL_RETURN(getBus(), nullptr, "Invalid bus");
+    auto bus_type = getBus()->getBasicAttributes().type;
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        bus_type == ESP_PANEL_BUS_TYPE_RGB, nullptr, "Invalid bus type(%d[%s])", bus_type,
+        BusFactory::getTypeNameString(bus_type).c_str()
+    );
+#else
+    ESP_UTILS_CHECK_FALSE_RETURN(bus_type == ESP_PANEL_BUS_TYPE_RGB, nullptr, "Invalid bus type(%d)", bus_type);
+#endif
+
+    auto &config = static_cast<BusRGB *>(getBus())->getConfig();
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        std::holds_alternative<BusRGB::RefreshPanelFullConfig>(config.refresh_panel), nullptr, "Config is not full"
+    );
+
+    return &std::get<BusRGB::RefreshPanelFullConfig>(config.refresh_panel);
+}
+#endif
+
+#if SOC_MIPI_DSI_SUPPORTED
+const BusDSI::RefreshPanelFullConfig *LCD::getBusDSI_RefreshPanelFullConfig()
+{
+    ESP_UTILS_CHECK_NULL_RETURN(getBus(), nullptr, "Invalid bus");
+    auto bus_type = getBus()->getBasicAttributes().type;
+#if ESP_PANEL_DRIVERS_BUS_ENABLE_FACTORY
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        bus_type == ESP_PANEL_BUS_TYPE_MIPI_DSI, nullptr, "Invalid bus type(%d[%s])", bus_type,
+        BusFactory::getTypeNameString(bus_type).c_str()
+    );
+#else
+    ESP_UTILS_CHECK_FALSE_RETURN(bus_type == ESP_PANEL_BUS_TYPE_MIPI_DSI, nullptr, "Invalid bus type(%d)", bus_type);
+#endif
+    auto &config = static_cast<BusDSI *>(getBus())->getConfig();
+    ESP_UTILS_CHECK_FALSE_RETURN(
+        std::holds_alternative<BusDSI::RefreshPanelFullConfig>(config.refresh_panel), nullptr, "Config is not full"
+    );
+
+    return &std::get<BusDSI::RefreshPanelFullConfig>(config.refresh_panel);
+}
+#endif
 
 IRAM_ATTR bool LCD::onDrawBitmapFinish(void *panel_io, void *edata, void *user_ctx)
 {

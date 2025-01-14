@@ -10,6 +10,7 @@
 #include <string>
 #include "esp_lcd_types.h"
 #include "esp_lcd_panel_io.h"
+#include "esp_panel_bus_conf_internal.h"
 
 namespace esp_panel::drivers {
 

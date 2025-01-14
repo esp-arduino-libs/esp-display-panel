@@ -14,6 +14,7 @@
 #if SOC_MIPI_DSI_SUPPORTED
 #include "esp_lcd_mipi_dsi.h"
 #endif
+#include "../esp_panel_lcd_conf_internal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,6 +77,24 @@ typedef struct {
 } esp_panel_lcd_vendor_config_t;
 
 typedef esp_panel_lcd_vendor_config_t esp_lcd_panel_vendor_config_t __attribute__((deprecated("Deprecated. Please use `esp_panel_lcd_vendor_config_t` instead.")));
+
+/**
+ * @brief Formatter for single LCD vendor command with 8-bit parameter
+ *
+ * @param[in] delay_ms Delay in milliseconds after this command
+ * @param[in] command  LCD command
+ * @param ...      Array of 8-bit command parameters, should be like `{data0, data1, data2, ...}`
+ */
+#define ESP_PANEL_LCD_CMD_WITH_8BIT_PARAM(delay_ms, command, ...) \
+    {command, (uint8_t []) __VA_ARGS__, sizeof((uint8_t []) __VA_ARGS__), delay_ms}
+
+/**
+ * @brief Formatter for single LCD vendor command with no parameter
+ *
+ * @param[in] delay_ms Delay in milliseconds after this command
+ * @param[in] command  LCD command
+ */
+#define ESP_PANEL_LCD_CMD_WITH_NONE_PARAM(delay_ms, command) {command, (uint8_t []){ 0x00 }, 0, delay_ms}
 
 #ifdef __cplusplus
 }

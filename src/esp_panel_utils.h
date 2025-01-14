@@ -6,6 +6,7 @@
 #pragma once
 
 // Define the log tag for the current library, should be declared before `esp_panel_utils.h`
+#undef ESP_UTILS_LOG_TAG
 #define ESP_UTILS_LOG_TAG "Panel"
 #include "esp_lib_utils.h"
 
@@ -20,15 +21,6 @@ std::shared_ptr<T> make_shared(Args &&... args)
                esp_utils::GeneralMemoryAllocator<T>(), std::forward<Args>(args)...
            );
 }
-
-template <typename Key, typename T>
-using unordered_map = std::unordered_map <
-                      Key, T, std::hash<Key>, std::equal_to<Key>,
-                      esp_utils::GeneralMemoryAllocator<std::pair<const Key, T>>
-                      >;
-
-template <typename Key, typename T>
-using map = std::map<Key, T, std::less<Key>, esp_utils::GeneralMemoryAllocator<std::pair<const Key, T>>>;
 
 template <typename T>
 using vector = std::vector<T, esp_utils::GeneralMemoryAllocator<T>>;

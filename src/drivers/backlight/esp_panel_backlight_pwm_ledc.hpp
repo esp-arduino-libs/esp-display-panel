@@ -8,7 +8,7 @@
 #include <variant>
 #include "driver/ledc.h"
 #include "esp_idf_version.h"
-#include "esp_panel_types.h"
+#include "esp_panel_backlight_conf_internal.h"
 #include "esp_panel_backlight.hpp"
 
 namespace esp_panel::drivers {
@@ -27,33 +27,36 @@ public:
         .type = ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC,
         .name = "PWM(LEDC)",
     };
-    static constexpr ledc_timer_t LEDC_TIMER_NUM_DEFAULT = LEDC_TIMER_0;
     static constexpr int LEDC_TIMER_FREQ_DEFAULT = 5000;
-    static constexpr ledc_timer_bit_t LEDC_TIMER_BIT_DEFAULT = LEDC_TIMER_10_BIT;
+    static constexpr int LEDC_TIMER_BIT_DEFAULT = 10;
+    static constexpr ledc_timer_t LEDC_TIMER_NUM_DEFAULT = LEDC_TIMER_0;
     static constexpr ledc_mode_t LEDC_SPEED_MODE_DEFAULT = LEDC_LOW_SPEED_MODE;
+
+    /**
+     * @brief Partial LEDC timer configuration structure
+     */
+    struct LEDC_TimerPartialConfig {
+        int freq_hz = LEDC_TIMER_FREQ_DEFAULT;
+        int duty_resolution = LEDC_TIMER_BIT_DEFAULT;
+    };
+    using LEDC_TimerFullConfig = ledc_timer_config_t;
+
+    /**
+     * @brief Partial LEDC channel configuration structure
+     */
+    struct LEDC_ChannelPartialConfig {
+        int io_num = -1;    ///< GPIO number, default is `-1`
+        int on_level = 1;   ///< Level when light up, default is `1`
+    };
+    using LEDC_ChannelFullConfig = ledc_channel_config_t;
+
+    using LEDC_TimerConfig = std::variant<LEDC_TimerPartialConfig, LEDC_TimerFullConfig>;
+    using LEDC_ChannelConfig = std::variant<LEDC_ChannelPartialConfig, LEDC_ChannelFullConfig>;
 
     /**
      * @brief The configuration for PWM(LEDC) backlight device
      */
     struct Config {
-        /**
-         * @brief LEDC timer configuration type
-         */
-        using LEDC_TimerFullConfig = ledc_timer_config_t;
-
-        /**
-         * @brief LEDC channel configuration type
-         */
-        using LEDC_ChannelFullConfig = ledc_channel_config_t;
-
-        /**
-         * @brief Partial LEDC channel configuration structure
-         */
-        struct LEDC_ChannelPartialConfig {
-            int io_num = -1;    ///< GPIO number, default is `-1`
-            int on_level = 1;   ///< Level when light up, default is `1`
-        };
-
         /**
          * @brief Convert partial configurations to full configurations
          */
@@ -69,36 +72,8 @@ public:
          */
         void printLEDC_ChannelConfig() const;
 
-        /**
-         * @brief Get the full LEDC timer configuration
-         *
-         * @return Pointer to full LEDC timer configuration
-         */
-        const LEDC_TimerFullConfig *getLEDC_FullTimerConfig() const
-        {
-            return &ledc_timer;
-        }
-
-        /**
-         * @brief Get the full LEDC channel configuration
-         *
-         * @return Pointer to full LEDC channel configuration
-         */
-        const LEDC_ChannelFullConfig *getLEDC_FullChannelConfig() const;
-
-        /*!< LEDC timer configuration */
-        LEDC_TimerFullConfig ledc_timer = {
-            .speed_mode = LEDC_SPEED_MODE_DEFAULT,
-            .duty_resolution = LEDC_TIMER_BIT_DEFAULT,
-            .timer_num = LEDC_TIMER_NUM_DEFAULT,
-            .freq_hz = LEDC_TIMER_FREQ_DEFAULT,
-            .clk_cfg = LEDC_AUTO_CLK,
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
-            .deconfigure = false,
-#endif // ESP_IDF_VERSION
-        };
-        /*!< LEDC channel configuration */
-        std::variant<LEDC_ChannelFullConfig, LEDC_ChannelPartialConfig> ledc_channel = {};
+        LEDC_TimerConfig ledc_timer = LEDC_TimerPartialConfig{};        /*!< LEDC timer configuration */
+        LEDC_ChannelConfig ledc_channel = LEDC_ChannelPartialConfig{};  /*!< LEDC channel configuration */
     };
 
 // *INDENT-OFF*
@@ -111,7 +86,7 @@ public:
     BacklightPWM_LEDC(int io_num, bool on_level):
         Backlight(BASIC_ATTRIBUTES_DEFAULT),
         _config{
-            .ledc_channel = Config::LEDC_ChannelPartialConfig{
+            .ledc_channel = LEDC_ChannelPartialConfig{
                 .io_num = io_num,
                 .on_level = on_level,
             }
@@ -135,6 +110,15 @@ public:
      * @brief Destroy the device
      */
     ~BacklightPWM_LEDC() override;
+
+    /**
+     * @brief Set the LEDC frequency
+     *
+     * @param[in] hz The frequency in Hz
+     *
+     * @return `true` if successful, `false` otherwise
+     */
+    bool configLEDC_FreqHz(int hz);
 
     /**
      * @brief Startup the device
@@ -161,7 +145,7 @@ public:
      *
      * @note This function should be called after `begin()`
      */
-    bool setBrightness(uint8_t percent) override;
+    bool setBrightness(int percent) override;
 
     /**
      * @brief Deprecated constructor
@@ -177,17 +161,14 @@ private:
      *
      * @return Reference to LEDC timer configuration
      */
-    Config::LEDC_TimerFullConfig &getLEDC_TimerConfig()
-    {
-        return _config.ledc_timer;
-    }
+    LEDC_TimerFullConfig &getLEDC_TimerConfig();
 
     /**
      * @brief Get mutable reference to LEDC channel configuration
      *
      * @return Reference to LEDC channel configuration
      */
-    Config::LEDC_ChannelFullConfig &getLEDC_ChannelConfig();
+    LEDC_ChannelFullConfig &getLEDC_ChannelConfig();
 
     Config _config = {};     ///< PWM(LEDC) backlight configuration
 };
