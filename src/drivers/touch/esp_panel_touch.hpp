@@ -99,6 +99,11 @@ public:
      * @brief Basic attributes for touch device configuration
      */
     struct BasicAttributes {
+        /**
+         * @brief Print information for debugging
+         */
+        void print() const;
+
         const char *name = "Unknown";   /*!< Touch controller chip name */
         int max_points_num = 0;         /*!< Maximum number of touch points supported */
         int max_buttons_num = 0;        /*!< Maximum number of touch buttons supported */
@@ -363,7 +368,7 @@ public:
      * @brief Read touch points with timeout
      *
      * @param[out] points Buffer to store touch points
-     * @param[in] num Number of points to read
+     * @param[in] num Number of points to read (-1 means read all points)
      * @param[in] timeout_ms Timeout in milliseconds for interrupt wait
      * @return Number of points read if successful, -1 on failure
      *
@@ -371,7 +376,7 @@ public:
      * @note This combines `readRawData()` and `getPoints()`
      * @note Set timeout_ms to -1 for infinite wait
      */
-    int readPoints(TouchPoint points[], uint8_t num, int timeout_ms);
+    int readPoints(TouchPoint points[], int num, int timeout_ms);
 
     /**
      * @brief Read touch points with timeout
@@ -390,7 +395,7 @@ public:
      * @brief Read touch buttons with timeout
      *
      * @param[out] buttons Buffer to store button states
-     * @param[in] num Number of buttons to read
+     * @param[in] num Number of buttons to read (-1 means read all buttons)
      * @param[in] timeout_ms Timeout in milliseconds for interrupt wait
      * @return Number of buttons read if successful, -1 on failure
      *
@@ -398,7 +403,7 @@ public:
      * @note This combines `readRawData()` and `getButtons()`
      * @note Set timeout_ms to -1 for infinite wait
      */
-    int readButtons(TouchButton buttons[], uint8_t num, int timeout_ms);
+    int readButtons(TouchButton buttons[], int num, int timeout_ms);
 
     /**
      * @brief Read touch buttons with timeout
@@ -543,12 +548,12 @@ public:
      * @brief Read touch points data
      *
      * @param[out] points Array to store touch points
-     * @param[in] num Number of points to read
+     * @param[in] num Number of points to read (-1 means read all points)
      * @return Number of points read
      * @note This function is deprecated, please use `readPoints()` instead
      */
     [[deprecated("Deprecated.")]]
-    int readPoints(TouchPoint points[], uint8_t num)
+    int readPoints(TouchPoint points[], int num)
     {
         return readPoints(points, num, 0);
     }

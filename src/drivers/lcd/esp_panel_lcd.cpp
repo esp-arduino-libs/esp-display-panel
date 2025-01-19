@@ -51,6 +51,17 @@ void LCD::BasicBusSpecification::print(std::string bus_name) const
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 }
 
+void LCD::BasicAttributes::print() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_LOGI("\n\t{Basic attributes}");
+    ESP_UTILS_LOGI("\n\t\t-> [name]: %s", name);
+    basic_bus_spec.print();
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
 std::string LCD::BasicBusSpecification::getColorBitsString() const
 {
 // *INDENT-OFF*
@@ -1037,9 +1048,9 @@ bool LCD::processDeviceOnInit(const BasicBusSpecificationMap &bus_specs)
     device_config.vendor_config = &vendor_config;
 
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    _basic_attributes.print();
     _config.printVendorConfig();
     _config.printDeviceConfig();
-    bus_spec.print("Current");
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();

@@ -48,6 +48,7 @@ bool LCD_ST7701::init()
 
     /* Disable control panel if enable `auto_del_panel_io/enable_io_multiplex` flag */
     if (getConfig().getVendorFullConfig()->flags.auto_del_panel_io) {
+        ESP_UTILS_LOGD("Disable control panel handle");
         getBus()->disableControlPanelHandle();
     }
 

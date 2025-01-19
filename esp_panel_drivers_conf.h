@@ -106,7 +106,7 @@
 /**
  * @brief Touch panel configuration parameters
  */
-#define ESP_PANEL_DRIVERS_TOUCH_MAX_POINTS      (5)     // Maximum number of touch points supported
+#define ESP_PANEL_DRIVERS_TOUCH_MAX_POINTS      (10)    // Maximum number of touch points supported
 #define ESP_PANEL_DRIVERS_TOUCH_MAX_BUTTONS     (5)     // Maximum number of touch buttons supported
 
 /**

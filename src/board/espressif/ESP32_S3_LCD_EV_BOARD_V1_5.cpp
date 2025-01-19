@@ -10,9 +10,7 @@
 #include "board/esp_panel_board_config.hpp"
 #include "board/esp_panel_board.hpp"
 // Replace the following header file if creating a new board configuration
-#if ESP_PANEL_BOARD_DEFAULT_USE_CUSTOM
-#include "esp_panel_board_config_custom.h"
-#endif
+#include "ESP32_S3_LCD_EV_BOARD_V1_5.h"
 
 // *INDENT-OFF*
 #undef _TO_STR
@@ -26,7 +24,7 @@ namespace esp_panel {
 static const esp_panel_lcd_vendor_init_cmd_t lcd_vendor_init_cmds[] = ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD();
 #endif // ESP_PANEL_BOARD_LCD_VENDOR_INIT_CMD
 
-const BoardConfig BOARD_CUSTOM_CONFIG = {
+const BoardConfig BOARD_ESP32_S3_LCD_EV_BOARD_V1_5_CONFIG = {
 
     /* General */
 #ifdef ESP_PANEL_BOARD_WIDTH

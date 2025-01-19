@@ -10,6 +10,23 @@ namespace esp_panel::drivers {
 
 constexpr int THREAD_CHECK_STOP_INTERVAL_MS = 100;
 
+void Touch::BasicAttributes::print() const
+{
+    ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
+
+    ESP_UTILS_LOGI(
+        "\n\t{Basic attributes}"
+        "\n\t\t-> [name]: %s"
+        "\n\t\t-> [max_points_num]: %d"
+        "\n\t\t-> [max_buttons_num]: %d"
+        , name
+        , max_points_num
+        , max_buttons_num
+    );
+
+    ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
+}
+
 void Touch::Config::convertPartialToFull()
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
@@ -57,7 +74,7 @@ void Touch::Config::printDeviceConfig() const
     if (std::holds_alternative<DeviceFullConfig>(device)) {
         auto &config = std::get<DeviceFullConfig>(device);
         ESP_UTILS_LOGI(
-            "\n\t{Full device config}"
+            "\n\t{Device config}[full]"
             "\n\t\t-> [x_max]: %d"
             "\n\t\t-> [y_max]: %d"
             "\n\t\t-> [rst_gpio_num]: %d"
@@ -82,7 +99,7 @@ void Touch::Config::printDeviceConfig() const
     } else {
         auto &config = std::get<DevicePartialConfig>(device);
         ESP_UTILS_LOGI(
-            "\n\t{Partial device config}"
+            "\n\t{Device config}[partial]"
             "\n\t\t-> [x_max]: %d"
             "\n\t\t-> [y_max]: %d"
             "\n\t\t-> [rst_gpio_num]: %d"
@@ -134,6 +151,7 @@ bool Touch::init()
     // Convert the device partial configuration to full configuration
     _config.convertPartialToFull();
 #if ESP_UTILS_CONF_LOG_LEVEL == ESP_UTILS_LOG_LEVEL_DEBUG
+    _basic_attributes.print();
     _config.printDeviceConfig();
 #endif // ESP_UTILS_LOG_LEVEL_DEBUG
 
@@ -255,7 +273,7 @@ bool Touch::readRawData(int points_num, int buttons_num, int timeout_ms)
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
-    ESP_UTILS_LOGD("Param: points_num(%d), timeout_ms(%d)", points_num, timeout_ms);
+    ESP_UTILS_LOGD("Param: points_num(%d), buttons_num(%d), timeout_ms(%d)", points_num, buttons_num, timeout_ms);
 
     // Wait for the interruption if it is enabled, then read the raw data
     if (isInterruptEnabled()  && (timeout_ms != 0)) {
@@ -388,7 +406,7 @@ int Touch::getButtonState(int index)
     return ret_button.second;
 }
 
-int Touch::readPoints(TouchPoint points[], uint8_t num, int timeout_ms)
+int Touch::readPoints(TouchPoint points[], int num, int timeout_ms)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -419,7 +437,7 @@ bool Touch::readPoints(utils::vector<TouchPoint> &points, int timeout_ms)
     return true;
 }
 
-int Touch::readButtons(TouchButton buttons[], uint8_t num, int timeout_ms)
+int Touch::readButtons(TouchButton buttons[], int num, int timeout_ms)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
@@ -500,10 +518,10 @@ bool Touch::readRawDataPoints(int points_num)
     }
     // Limit the max points number
     if (points_num > POINTS_MAX_NUM) {
-        points_num = POINTS_MAX_NUM;
         ESP_UTILS_LOGW(
             "The target points number(%d) out of range, use the max number(%d) instead", points_num, POINTS_MAX_NUM
         );
+        points_num = POINTS_MAX_NUM;
     }
     if (points_num <= 0) {
         ESP_UTILS_LOGD("Ignore to read points");

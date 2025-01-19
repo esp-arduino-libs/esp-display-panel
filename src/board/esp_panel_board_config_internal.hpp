@@ -14,5 +14,6 @@ namespace esp_panel {
  */
 extern const BoardConfig BOARD_CUSTOM_CONFIG;
 extern const BoardConfig BOARD_ESP32_S3_LCD_EV_BOARD_V1_5_CONFIG;
+extern const BoardConfig BOARD_ESP32_4848S040C_I_Y_3_CONFIG;
 
 } // namespace esp_panel

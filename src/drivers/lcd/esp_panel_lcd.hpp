@@ -115,6 +115,11 @@ public:
      * @brief Basic attributes structure for LCD device
      */
     struct BasicAttributes {
+        /**
+         * @brief Print information for debugging
+         */
+        void print() const;
+
         const char *name = "Unknown";           /*!< LCD controller chip name */
         BasicBusSpecification basic_bus_spec;   /*!< Bus interface specifications */
     };

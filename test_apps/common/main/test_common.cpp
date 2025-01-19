@@ -24,7 +24,7 @@
 using namespace std;
 using namespace esp_panel;
 
-static const char *TAG = "test_panel";
+static const char *TAG = "test_board";
 
 #if TEST_LCD_ENABLE_ATTACH_CALLBACK
 IRAM_ATTR static bool onLcdRefreshFinishCallback(void *user_data)

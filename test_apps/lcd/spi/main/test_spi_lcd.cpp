@@ -78,7 +78,7 @@ const esp_panel_lcd_vendor_init_cmd_t lcd_init_cmd[] = {
 
 /* Enable or disable the attachment of a callback function that is called after each bitmap drawing is completed */
 #define TEST_ENABLE_ATTACH_CALLBACK  (1)
-#define TEST_COLOR_BAR_SHOW_TIME_MS  (3000)
+#define TEST_LCD_COLOR_BAR_SHOW_TIME_MS  (3000)
 
 static const char *TAG = "test_spi_lcd";
 
@@ -200,34 +200,33 @@ static void run_test(shared_ptr<LCD> lcd, bool use_config)
     ESP_LOGI(TAG, "Draw color bar from top left to bottom right, the order is B - G - R");
     TEST_ASSERT_TRUE_MESSAGE(lcd->colorBarTest(TEST_LCD_WIDTH, TEST_LCD_HEIGHT), "LCD color bar test failed");
 
-    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_COLOR_BAR_SHOW_TIME_MS);
-    vTaskDelay(pdMS_TO_TICKS(TEST_COLOR_BAR_SHOW_TIME_MS));
+    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_LCD_COLOR_BAR_SHOW_TIME_MS);
+    vTaskDelay(pdMS_TO_TICKS(TEST_LCD_COLOR_BAR_SHOW_TIME_MS));
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus *bus, const LCD::Config &config)
 {
-    ESP_LOGI(TAG, "Initialize LCD with config");
+    ESP_LOGI(TAG, "Create LCD with config");
     return make_shared<T>(bus, config);
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus *bus, std::nullptr_t)
 {
-    ESP_LOGI(TAG, "Initialize LCD with default parameters");
+    ESP_LOGI(TAG, "Create LCD with default parameters");
     return make_shared<T>(bus, TEST_LCD_COLOR_BITS, TEST_LCD_PIN_NUM_RST);
 }
 
-#define _CREATE_LCD(name, bus, config) \
+#define CREATE_LCD(name, bus, config) \
     ({ \
         auto lcd = create_lcd_impl<LCD_##name>(bus, config); \
         TEST_ASSERT_NOT_NULL_MESSAGE(lcd, "Create LCD object failed"); \
         lcd; \
     })
-#define CREATE_LCD(name, bus, config) _CREATE_LCD(name, bus, config)
 
 #define CREATE_TEST_CASE(name) \
-    TEST_CASE("Test LCD (" #name ") to draw color bar", "[spi_lcd][" #name "]") \
+    TEST_CASE("Test LCD (" #name ") to draw color bar", "[lcd][spi][" #name "]") \
     { \
         /* 1. Test with individual parameters */ \
         auto backlight = init_backlight(nullptr); \

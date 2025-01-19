@@ -6,6 +6,7 @@
 /**
  * @file esp_panel_board_custom.h
  * @brief Configuration file for custom ESP development boards
+ * @author Github account (Email)
  *
  * This file contains all the configurations needed for a custom board using ESP Panel.
  * Users can modify these configurations according to their hardware design.
@@ -69,7 +70,7 @@
  * - `ESP_PANEL_BUS_TYPE_RGB` (ESP32-S3 only)
  * - `ESP_PANEL_BUS_TYPE_MIPI_DSI` (ESP32-P4 only)
  */
-#define ESP_PANEL_BOARD_LCD_BUS_TYPE        (ESP_PANEL_BUS_TYPE_RGB)
+#define ESP_PANEL_BOARD_LCD_BUS_TYPE        (ESP_PANEL_BUS_TYPE_SPI)
 
 #if (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI) || \
     (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_QSPI)
@@ -94,7 +95,7 @@
 #if ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
     /**
-     * @brief SPI bus parameters configuration
+     * @brief SPI bus
      */
     /* For general */
     #define ESP_PANEL_BOARD_LCD_SPI_HOST_ID         (1)     // Typically set to 1
@@ -116,7 +117,7 @@
 #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_QSPI
 
     /**
-     * @brief QSPI bus parameters configuration
+     * @brief QSPI bus
      */
     /* For general */
     #define ESP_PANEL_BOARD_LCD_QSPI_HOST_ID        (1)     // Typically set to 1
@@ -139,7 +140,7 @@
 #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
 
     /**
-     * @brief RGB bus parameters configuration
+     * @brief RGB bus
      */
     /**
      * Set to 0 if using simple "RGB" interface which does not contain "3-wire SPI" interface.
@@ -218,7 +219,7 @@
 #elif ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_MIPI_DSI
 
     /**
-     * @brief MIPI DSI bus parameters configuration
+     * @brief MIPI DSI bus
      */
     /* For host */
     #define ESP_PANEL_BOARD_LCD_MIPI_DSI_LANE_NUM           (2)     // ESP32-P4 supports 1 or 2 lanes
@@ -376,7 +377,7 @@
 #if ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_I2C
 
     /**
-     * @brief I2C bus parameters configuration
+     * @brief I2C bus
      */
     /* For general */
     #define ESP_PANEL_BOARD_TOUCH_I2C_HOST_ID           (0)     // Typically set to 0
@@ -399,7 +400,7 @@
 #elif ESP_PANEL_BOARD_TOUCH_BUS_TYPE == ESP_PANEL_BUS_TYPE_SPI
 
     /**
-     * @brief SPI bus parameters configuration
+     * @brief SPI bus
      */
     /* For general */
     #define ESP_PANEL_BOARD_TOUCH_SPI_HOST_ID           (1)     // Typically set to 1
@@ -451,13 +452,15 @@
  * @brief Backlight control type selection
  *
  * Supported types:
- * - `ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO`
- * - `ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC`
- * - `ESP_PANEL_BACKLIGHT_TYPE_CUSTOM`
+ * - `ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO`: Use GPIO switch to control the backlight, only support on/off
+ * - `ESP_PANEL_BACKLIGHT_TYPE_SWITCH_EXPANDER`: Use IO expander to control the backlight, only support on/off
+ * - `ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC`: Use LEDC PWM to control the backlight, support brightness adjustment
+ * - `ESP_PANEL_BACKLIGHT_TYPE_CUSTOM`: Use custom function to control the backlight
  */
 #define ESP_PANEL_BOARD_BACKLIGHT_TYPE          (ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
 #if (ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_SWITCH_GPIO) || \
+    (ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_SWITCH_EXPANDER) || \
     (ESP_PANEL_BOARD_BACKLIGHT_TYPE == ESP_PANEL_BACKLIGHT_TYPE_PWM_LEDC)
 
     /**
@@ -478,6 +481,7 @@
      */
     #define ESP_PANEL_BOARD_BACKLIGHT_CUSTOM_FUNCTION(percent, user_data)  \
         {  \
+            Board *board = static_cast<Board *>(user_data);  \
             return true; \
         }
 

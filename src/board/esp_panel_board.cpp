@@ -173,7 +173,7 @@ bool Board::init()
     // If the IO expander is already configured, it will not be created again
     std::shared_ptr<drivers::IO_Expander> io_expander = nullptr;
     if (_config.flags.use_io_expander && getIO_Expander() == nullptr) {
-        ESP_UTILS_LOGI("Create IO Expander(%s)", _config.io_expander.name.c_str());
+        ESP_UTILS_LOGI("Creating IO Expander(%s)", _config.io_expander.name.c_str());
 
 #if ESP_PANEL_BOARD_USE_DEFAULT && ESP_PANEL_BOARD_USE_EXPANDER
         // If the IO expander is configured by default, it will be created by the default constructor
@@ -405,7 +405,9 @@ bool Board::del()
 
     _backlight = nullptr;
     _lcd_device = nullptr;
+    _lcd_bus = nullptr;
     _touch_device = nullptr;
+    _touch_bus = nullptr;
     _io_expander = nullptr;
 
     setState(State::DEINIT);

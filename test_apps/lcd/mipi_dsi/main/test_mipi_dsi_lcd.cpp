@@ -74,11 +74,11 @@ const esp_panel_lcd_vendor_init_cmd_t lcd_init_cmd[] = {
 /* Enable or disable pattern test */
 #define TEST_ENABLE_PATTERN_TEST        (1)
 /* Enable or disable printing LCD refresh rate */
-#define TEST_ENABLE_PRINT_LCD_FPS       (1)
-#define TEST_PRINT_LCD_FPS_PERIOD_MS    (1000)
+#define TEST_LCD_ENABLE_PRINT_FPS       (1)
+#define TEST_LCD_PRINT_FPS_PERIOD_MS    (1000)
 /* Enable or disable the attachment of a callback function that is called after each bitmap drawing is completed */
 #define TEST_ENABLE_ATTACH_CALLBACK     (1)
-#define TEST_COLOR_BAR_SHOW_TIME_MS     (5000)
+#define TEST_LCD_COLOR_BAR_SHOW_TIME_MS     (5000)
 
 #define delay(ms)                       vTaskDelay(pdMS_TO_TICKS(ms))
 
@@ -185,7 +185,7 @@ IRAM_ATTR static bool onDrawBitmapFinishCallback(void *user_data)
 }
 #endif
 
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
 #define TEST_LCD_FPS_COUNT_MAX  (100)
 #ifndef millis
 #define millis()                (esp_timer_get_time() / 1000)
@@ -195,7 +195,7 @@ DRAM_ATTR int frame_count = 0;
 DRAM_ATTR int fps = 0;
 DRAM_ATTR long start_time = 0;
 
-IRAM_ATTR bool onVsyncEndCallback(void *user_data)
+IRAM_ATTR bool onLCD_VsyncCallback(void *user_data)
 {
     long frame_start_time = *(long *)user_data;
     if (frame_start_time == 0) {
@@ -256,38 +256,38 @@ static void run_test(shared_ptr<LCD> lcd, bool use_config)
         lcd->attachDrawBitmapFinishCallback(onDrawBitmapFinishCallback, nullptr), "Attach callback failed"
     );
 #endif
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
     TEST_ASSERT_TRUE_MESSAGE(
-        lcd->attachRefreshFinishCallback(onVsyncEndCallback, (void *)&start_time), "Attach refresh callback failed"
+        lcd->attachRefreshFinishCallback(onLCD_VsyncCallback, (void *)&start_time), "Attach refresh callback failed"
     );
 #endif
 
     ESP_LOGI(TAG, "Draw color bar from top left to bottom right, the order is B - G - R");
     TEST_ASSERT_TRUE_MESSAGE(lcd->colorBarTest(TEST_LCD_WIDTH, TEST_LCD_HEIGHT), "LCD color bar test failed");
 
-    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_COLOR_BAR_SHOW_TIME_MS);
-#if TEST_ENABLE_PRINT_LCD_FPS
+    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_LCD_COLOR_BAR_SHOW_TIME_MS);
+#if TEST_LCD_ENABLE_PRINT_FPS
     int i = 0;
-    while (i++ < TEST_COLOR_BAR_SHOW_TIME_MS / TEST_PRINT_LCD_FPS_PERIOD_MS) {
+    while (i++ < TEST_LCD_COLOR_BAR_SHOW_TIME_MS / TEST_LCD_PRINT_FPS_PERIOD_MS) {
         ESP_LOGI(TAG, "FPS: %d", fps);
-        vTaskDelay(pdMS_TO_TICKS(TEST_PRINT_LCD_FPS_PERIOD_MS));
+        vTaskDelay(pdMS_TO_TICKS(TEST_LCD_PRINT_FPS_PERIOD_MS));
     }
 #else
-    vTaskDelay(pdMS_TO_TICKS(TEST_COLOR_BAR_SHOW_TIME_MS));
+    vTaskDelay(pdMS_TO_TICKS(TEST_LCD_COLOR_BAR_SHOW_TIME_MS));
 #endif
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus *bus, const LCD::Config &config)
 {
-    ESP_LOGI(TAG, "Initialize LCD with config");
+    ESP_LOGI(TAG, "Create LCD with config");
     return make_shared<T>(bus, config);
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus *bus, std::nullptr_t)
 {
-    ESP_LOGI(TAG, "Initialize LCD with default parameters");
+    ESP_LOGI(TAG, "Create LCD with default parameters");
     return make_shared<T>(bus, TEST_LCD_COLOR_BITS, TEST_LCD_PIN_NUM_RST);
 }
 

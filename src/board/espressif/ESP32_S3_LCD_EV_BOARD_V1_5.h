@@ -96,6 +96,28 @@
 #endif /* ESP_PANEL_BOARD_LCD_BUS_TYPE */
 
 /**
+ * @brief LCD specific flags configuration
+ *
+ * These flags are specific to the "3-wire SPI + RGB" bus.
+ */
+#if (ESP_PANEL_BOARD_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB) && ESP_PANEL_BOARD_LCD_RGB_USE_CONTROL_PANEL
+/**
+ * @brief Enable IO multiplex
+ *
+ * Set to 1 if the 3-wire SPI pins are sharing other pins of the RGB interface to save GPIOs. Then, the control panel
+ * and its pins (except CS signal) will be released after LCD call `init()`. All `*_by_cmd` flags will be invalid.
+ */
+#define ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX       (1) // typically set to 0
+/**
+ * @brief Mirror by command
+ *
+ * Set to 1 if the `mirror()` function will be implemented by LCD command. Otherwise, the function will be implemented by
+ * software. Only valid when `ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX` is 0.
+ */
+#define ESP_PANEL_BOARD_LCD_FLAGS_MIRROR_BY_CMD             (!ESP_PANEL_BOARD_LCD_FLAGS_ENABLE_IO_MULTIPLEX)
+#endif // ESP_PANEL_BOARD_LCD_RGB_USE_CONTROL_PANEL
+
+/**
  * LCD Vendor Initialization Commands.
  *
  * Vendor specific initialization can be different between manufacturers, should consult the LCD supplier for
@@ -205,7 +227,7 @@
 ///////////////////////////// Please update the following macros to configure the backlight ////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // #define ESP_PANEL_BOARD_USE_BACKLIGHT         (0)         // 0/1
-#define ESP_PANEL_BOARD_USE_BACKLIGHT         (1)         // 0/1
+#define ESP_PANEL_BOARD_USE_BACKLIGHT         (0)         // 0/1
 #if ESP_PANEL_BOARD_USE_BACKLIGHT
     /**
      * Backlight control mode. Choose one of the following:

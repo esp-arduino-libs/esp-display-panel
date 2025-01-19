@@ -72,11 +72,11 @@ using namespace esp_panel::drivers;
 // *INDENT-ON*
 
 /* Enable or disable printing LCD refresh rate */
-#define TEST_ENABLE_PRINT_LCD_FPS           (1)
-#define TEST_PRINT_LCD_FPS_PERIOD_MS        (1000)
+#define TEST_LCD_ENABLE_PRINT_FPS           (1)
+#define TEST_LCD_PRINT_FPS_PERIOD_MS        (1000)
 /* Enable or disable the attachment of a callback function that is called after each bitmap drawing is completed */
 #define TEST_ENABLE_ATTACH_CALLBACK         (1)
-#define TEST_COLOR_BAR_SHOW_TIME_MS         (5000)
+#define TEST_LCD_COLOR_BAR_SHOW_TIME_MS     (5000)
 
 static const char *TAG = "test_rgb_lcd";
 
@@ -132,7 +132,7 @@ static shared_ptr<Bus> init_bus(void)
     return bus;
 }
 
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
 #define TEST_LCD_FPS_COUNT_MAX  (100)
 #ifndef millis
 #define millis()                (esp_timer_get_time() / 1000)
@@ -142,7 +142,7 @@ DRAM_ATTR int frame_count = 0;
 DRAM_ATTR int fps = 0;
 DRAM_ATTR long start_time = 0;
 
-IRAM_ATTR bool onVsyncEndCallback(void *user_data)
+IRAM_ATTR bool onLCD_VsyncCallback(void *user_data)
 {
     long frame_start_time = *(long *)user_data;
     if (frame_start_time == 0) {
@@ -160,7 +160,7 @@ IRAM_ATTR bool onVsyncEndCallback(void *user_data)
 
     return false;
 }
-#endif /* TEST_ENABLE_PRINT_LCD_FPS */
+#endif /* TEST_LCD_ENABLE_PRINT_FPS */
 
 static void run_test(shared_ptr<LCD> lcd)
 {
@@ -174,24 +174,24 @@ static void run_test(shared_ptr<LCD> lcd)
     if (lcd->getBasicAttributes().basic_bus_spec.isFunctionValid(LCD::BasicBusSpecification::FUNC_DISPLAY_ON_OFF)) {
         TEST_ASSERT_TRUE_MESSAGE(lcd->setDisplayOnOff(true), "LCD display on failed");
     }
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
     TEST_ASSERT_TRUE_MESSAGE(
-        lcd->attachRefreshFinishCallback(onVsyncEndCallback, (void *)&start_time), "Attach refresh callback failed"
+        lcd->attachRefreshFinishCallback(onLCD_VsyncCallback, (void *)&start_time), "Attach refresh callback failed"
     );
 #endif
 
     ESP_LOGI(TAG, "Draw color bar from top left to bottom right, the order is B - G - R");
     TEST_ASSERT_TRUE_MESSAGE(lcd->colorBarTest(TEST_LCD_WIDTH, TEST_LCD_HEIGHT), "LCD color bar test failed");
 
-    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_COLOR_BAR_SHOW_TIME_MS);
-#if TEST_ENABLE_PRINT_LCD_FPS
+    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_LCD_COLOR_BAR_SHOW_TIME_MS);
+#if TEST_LCD_ENABLE_PRINT_FPS
     int i = 0;
-    while (i++ < TEST_COLOR_BAR_SHOW_TIME_MS / TEST_PRINT_LCD_FPS_PERIOD_MS) {
+    while (i++ < TEST_LCD_COLOR_BAR_SHOW_TIME_MS / TEST_LCD_PRINT_FPS_PERIOD_MS) {
         ESP_LOGI(TAG, "FPS: %d", fps);
-        vTaskDelay(pdMS_TO_TICKS(TEST_PRINT_LCD_FPS_PERIOD_MS));
+        vTaskDelay(pdMS_TO_TICKS(TEST_LCD_PRINT_FPS_PERIOD_MS));
     }
 #else
-    vTaskDelay(pdMS_TO_TICKS(TEST_COLOR_BAR_SHOW_TIME_MS));
+    vTaskDelay(pdMS_TO_TICKS(TEST_LCD_COLOR_BAR_SHOW_TIME_MS));
 #endif
 }
 
@@ -203,7 +203,7 @@ static void run_test(shared_ptr<LCD> lcd)
         lcd; \
     })
 #define CREATE_TEST_CASE(name) \
-    TEST_CASE("Test LCD (" #name ") to draw color bar", "[rgb_lcd][" #name "]") \
+    TEST_CASE("Test LCD (" #name ") to draw color bar", "[lcd][rgb][" #name "]") \
     { \
         auto backlight = init_backlight(); \
         auto bus = init_bus(); \

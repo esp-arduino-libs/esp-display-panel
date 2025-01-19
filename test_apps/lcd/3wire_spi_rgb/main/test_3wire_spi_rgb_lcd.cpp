@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 #include <memory>
+#include <thread>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
@@ -133,9 +134,9 @@ const esp_panel_lcd_vendor_init_cmd_t lcd_init_cmd[] = {
 // *INDENT-ON*
 
 /* Enable or disable printing LCD refresh rate */
-#define TEST_ENABLE_PRINT_LCD_FPS           (1)
-#define TEST_PRINT_LCD_FPS_PERIOD_MS        (1000)
-#define TEST_COLOR_BAR_SHOW_TIME_MS         (5000)
+#define TEST_LCD_ENABLE_PRINT_FPS           (1)
+#define TEST_LCD_PRINT_FPS_PERIOD_MS        (1000)
+#define TEST_LCD_COLOR_BAR_SHOW_TIME_MS     (5000)
 
 static const char *TAG = "test_3wire_spi_rgb_lcd";
 
@@ -264,7 +265,7 @@ static shared_ptr<Bus> init_bus(BusRGB::Config *config)
     return bus;
 }
 
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
 #define TEST_LCD_FPS_COUNT_MAX  (100)
 #ifndef millis
 #define millis()                (esp_timer_get_time() / 1000)
@@ -274,7 +275,7 @@ DRAM_ATTR int frame_count = 0;
 DRAM_ATTR int fps = 0;
 DRAM_ATTR long start_time = 0;
 
-IRAM_ATTR bool onVsyncEndCallback(void *user_data) {
+IRAM_ATTR bool onLCD_VsyncCallback(void *user_data) {
     long frame_start_time = *(long *)user_data;
     if (frame_start_time == 0) {
         (*(long *)user_data) = millis();
@@ -309,36 +310,41 @@ static void run_test(shared_ptr<LCD> lcd, bool use_config) {
     if (lcd->getBasicAttributes().basic_bus_spec.isFunctionValid(LCD::BasicBusSpecification::FUNC_DISPLAY_ON_OFF)) {
         TEST_ASSERT_TRUE_MESSAGE(lcd->setDisplayOnOff(true), "LCD display on failed");
     }
-#if TEST_ENABLE_PRINT_LCD_FPS
+#if TEST_LCD_ENABLE_PRINT_FPS
     TEST_ASSERT_TRUE_MESSAGE(
-        lcd->attachRefreshFinishCallback(onVsyncEndCallback, (void *)&start_time), "Attach refresh callback failed"
+        lcd->attachRefreshFinishCallback(onLCD_VsyncCallback, (void *)&start_time), "Attach refresh callback failed"
     );
 #endif
 
     ESP_LOGI(TAG, "Draw color bar from top left to bottom right, the order is B - G - R");
     TEST_ASSERT_TRUE_MESSAGE(lcd->colorBarTest(TEST_LCD_WIDTH, TEST_LCD_HEIGHT), "LCD color bar test failed");
 
-    ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_COLOR_BAR_SHOW_TIME_MS);
-#if TEST_ENABLE_PRINT_LCD_FPS
-    int i = 0;
-    while (i++ < TEST_COLOR_BAR_SHOW_TIME_MS / TEST_PRINT_LCD_FPS_PERIOD_MS) {
-        ESP_LOGI(TAG, "FPS: %d", fps);
-        vTaskDelay(pdMS_TO_TICKS(TEST_PRINT_LCD_FPS_PERIOD_MS));
-    }
+    std::thread t([&]() {
+#if TEST_LCD_ENABLE_PRINT_FPS
+        ESP_LOGI(TAG, "Wait for %d ms to show the color bar", TEST_LCD_COLOR_BAR_SHOW_TIME_MS);
+        int i = 0;
+        while (i++ < TEST_LCD_COLOR_BAR_SHOW_TIME_MS / TEST_LCD_PRINT_FPS_PERIOD_MS) {
+            ESP_LOGI(TAG, "FPS: %d", fps);
+            vTaskDelay(pdMS_TO_TICKS(TEST_LCD_PRINT_FPS_PERIOD_MS));
+        }
 #else
-    vTaskDelay(pdMS_TO_TICKS(TEST_COLOR_BAR_SHOW_TIME_MS));
+        vTaskDelay(pdMS_TO_TICKS(TEST_LCD_COLOR_BAR_SHOW_TIME_MS));
 #endif
+    });
+
+    // Wait for the color bar to be displayed
+    t.join();
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus * bus, const LCD::Config & config) {
-    ESP_LOGI(TAG, "Initialize LCD with config");
+    ESP_LOGI(TAG, "Create LCD with config");
     return make_shared<T>(bus, config);
 }
 
 template<typename T>
 decltype(auto) create_lcd_impl(Bus * bus, std::nullptr_t) {
-    ESP_LOGI(TAG, "Initialize LCD with default parameters");
+    ESP_LOGI(TAG, "Create LCD with default parameters");
     return make_shared<T>(bus, TEST_LCD_COLOR_BITS, TEST_LCD_PIN_NUM_RST);
 }
 

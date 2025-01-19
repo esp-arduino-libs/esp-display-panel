@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: CC0-1.0
  */
@@ -13,6 +13,7 @@
 #include "esp_display_panel.hpp"
 
 using namespace std;
+using namespace esp_panel::drivers;
 
 /* The following default configurations are for the board 'Espressif: Custom, XPT2046' */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,16 +32,28 @@ using namespace std;
 #define TEST_TOUCH_PIN_NUM_SPI_MOSI     (14)
 #define TEST_TOUCH_PIN_NUM_SPI_MISO     (8)
 #define TEST_TOUCH_PIN_NUM_RST          (-1)
+#define TEST_TOUCH_RST_ACTIVE_LEVEL     (0)
 #define TEST_TOUCH_PIN_NUM_INT          (-1)
 
-#define TEST_READ_TOUCH_DELAY_MS        (30)
-#define TEST_READ_TOUCH_TIME_MS         (3000)
-
-static const char *TAG = "test_spi_touch";
+#define TEST_TOUCH_ENABLE_ATTACH_CALLBACK   (1)
+#define TEST_TOUCH_READ_DELAY_MS        (30)
+#define TEST_TOUCH_READ_TIME_MS         (5000)
 
 #define delay(x)     vTaskDelay(pdMS_TO_TICKS(x))
 
-#if TEST_TOUCH_PIN_NUM_INT >= 0
+static const char *TAG = "test_spi_touch";
+
+static const Touch::Config touch_config = {
+    .device = Touch::DevicePartialConfig{
+        .x_max = TEST_TOUCH_WIDTH,
+        .y_max = TEST_TOUCH_HEIGHT,
+        .rst_gpio_num = TEST_TOUCH_PIN_NUM_RST,
+        .int_gpio_num = TEST_TOUCH_PIN_NUM_INT,
+        .levels_reset = TEST_TOUCH_RST_ACTIVE_LEVEL,
+    },
+};
+
+#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (TEST_TOUCH_PIN_NUM_INT >= 0)
 IRAM_ATTR static bool onTouchInterruptCallback(void *user_data)
 {
     esp_rom_printf("Touch interrupt callback\n");
@@ -49,61 +62,108 @@ IRAM_ATTR static bool onTouchInterruptCallback(void *user_data)
 }
 #endif
 
-static void run_test(shared_ptr<ESP_PanelTouch> touch_device)
+static void run_test(shared_ptr<Touch> touch, bool use_config)
 {
-    touch_device->init();
-    touch_device->begin();
-#if TEST_TOUCH_PIN_NUM_INT >= 0
-    touch_device->attachInterruptCallback(onTouchInterruptCallback, NULL);
+    if (!use_config) {
+        touch->configResetActiveLevel(TEST_TOUCH_RST_ACTIVE_LEVEL);
+    }
+    TEST_ASSERT_TRUE_MESSAGE(touch->init(), "Touch init failed");
+    TEST_ASSERT_TRUE_MESSAGE(touch->begin(), "Touch begin failed");
+#if TEST_TOUCH_ENABLE_ATTACH_CALLBACK && (TEST_TOUCH_PIN_NUM_INT >= 0)
+    TEST_ASSERT_TRUE_MESSAGE(
+        touch->attachInterruptCallback(onTouchInterruptCallback, NULL), "Touch attach interrupt callback failed"
+    );
 #endif
 
-    ESP_LOGI(TAG, "Reading touch_device point...");
+    ESP_LOGI(TAG, "Reading touch point...");
+
+    auto point_ptr = std::make_shared<TouchPoint []>(touch->getBasicAttributes().max_points_num);
+    TEST_ASSERT_NOT_NULL_MESSAGE(point_ptr, "Create point array failed");
 
     uint32_t t = 0;
-    while (t++ < TEST_READ_TOUCH_TIME_MS / TEST_READ_TOUCH_DELAY_MS) {
-        ESP_PanelTouchPoint point[TEST_TOUCH_READ_POINTS_NUM];
-        int read_touch_result = touch_device->readPoints(point, TEST_TOUCH_READ_POINTS_NUM, TEST_READ_TOUCH_DELAY_MS);
-
-        if (read_touch_result > 0) {
-            for (int i = 0; i < read_touch_result; i++) {
-                ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d\n", i, point[i].x, point[i].y, point[i].strength);
+    auto point = point_ptr.get();
+    int touch_cnt = 0;
+    while (t++ < TEST_TOUCH_READ_TIME_MS / TEST_TOUCH_READ_DELAY_MS) {
+        touch_cnt = touch->readPoints(point, -1, TEST_TOUCH_READ_DELAY_MS);
+        if (touch_cnt > 0) {
+            for (int i = 0; i < touch_cnt; i++) {
+                ESP_LOGI(TAG, "Touch point(%d): x %d, y %d, strength %d", i, point[i].x, point[i].y, point[i].strength);
             }
-        } else if (read_touch_result < 0) {
-            ESP_LOGE(TAG, "Read touch_device point failed");
+        } else if (touch_cnt < 0) {
+            ESP_LOGE(TAG, "Read touch point failed");
         }
 #if TEST_TOUCH_PIN_NUM_INT < 0
-        delay(TEST_READ_TOUCH_DELAY_MS);
+        delay(TEST_TOUCH_READ_DELAY_MS);
 #endif
     }
 }
 
-#define CREATE_TOUCH_BUS(name) \
+#define CREATE_BUS_WITH_CONFIG(name, config) \
     ({ \
-        ESP_LOGI(TAG, "Create touch bus"); \
-        shared_ptr<ESP_PanelBusSPI> touch_bus = make_shared<ESP_PanelBusSPI>( \
-                    TEST_TOUCH_PIN_NUM_SPI_SCK, TEST_TOUCH_PIN_NUM_SPI_MOSI, TEST_TOUCH_PIN_NUM_SPI_MISO, \
-                    (esp_lcd_panel_io_spi_config_t)ESP_PANEL_BOARD_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS) \
-                ); \
-        TEST_ASSERT_NOT_NULL_MESSAGE(touch_bus, "Create bus object failed"); \
-        touch_bus->configSpiFreqHz(TEST_TOUCH_SPI_FREQ_HZ); \
-        TEST_ASSERT_TRUE_MESSAGE(touch_bus->begin(), "Bus begin failed"); \
-        touch_bus; \
+        ESP_LOGI(TAG, "Create bus with config"); \
+        auto bus = make_shared<BusSPI>(config); \
+        TEST_ASSERT_NOT_NULL_MESSAGE(bus, "Create bus object failed"); \
+        TEST_ASSERT_TRUE_MESSAGE(bus->begin(), "Bus begin failed"); \
+        bus; \
     })
-#define CREATE_TOUCH(name, touch_bus) \
+
+#define CREATE_BUS(name) \
     ({ \
-        ESP_LOGI(TAG, "Create touch device: " #name); \
-        shared_ptr<ESP_PanelTouch> touch_device = make_shared<ESP_PanelTouch_##name>( \
-            touch_bus, TEST_TOUCH_WIDTH, TEST_TOUCH_HEIGHT, TEST_TOUCH_PIN_NUM_RST, TEST_TOUCH_PIN_NUM_INT \
-        ); \
-        TEST_ASSERT_NOT_NULL_MESSAGE(touch_device, "Create TOUCH object failed"); \
-        touch_device; \
+        ESP_LOGI(TAG, "Create bus with default parameters"); \
+        auto bus = make_shared<BusSPI>( \
+            TEST_TOUCH_PIN_NUM_SPI_SCK, TEST_TOUCH_PIN_NUM_SPI_MOSI, TEST_TOUCH_PIN_NUM_SPI_MISO, \
+            (BusSPI::ControlPanelFullConfig)ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS)); \
+        TEST_ASSERT_NOT_NULL_MESSAGE(bus, "Create bus object failed"); \
+        TEST_ASSERT_TRUE_MESSAGE(bus->configSPI_FreqHz(TEST_TOUCH_SPI_FREQ_HZ), "Bus config SPI frequency failed"); \
+        TEST_ASSERT_TRUE_MESSAGE(bus->begin(), "Bus begin failed"); \
+        bus; \
+    })
+
+template<typename T>
+decltype(auto) create_touch_impl(Bus *bus, const Touch::Config &config)
+{
+    ESP_LOGI(TAG, "Create touch with config");
+    return make_shared<T>(bus, config);
+}
+
+template<typename T>
+decltype(auto) create_touch_impl(Bus *bus, std::nullptr_t)
+{
+    ESP_LOGI(TAG, "Create touch with default parameters");
+    return make_shared<T>(bus, TEST_TOUCH_WIDTH, TEST_TOUCH_HEIGHT, TEST_TOUCH_PIN_NUM_RST, TEST_TOUCH_PIN_NUM_INT);
+}
+
+#define CREATE_TOUCH(name, bus, config) \
+    ({ \
+        auto touch = create_touch_impl<Touch##name>(bus, config); \
+        TEST_ASSERT_NOT_NULL_MESSAGE(touch, "Create touch object failed"); \
+        touch; \
     })
 #define CREATE_TEST_CASE(name) \
-    TEST_CASE("Test touch (" #name ") to draw color bar", "[spi_touch][" #name "]") \
+    TEST_CASE("Test touch (" #name ") to read touch point", "[touch][i2c][" #name "]") \
     { \
-        shared_ptr<ESP_PanelBusSPI> touch_bus = CREATE_TOUCH_BUS(name); \
-        shared_ptr<ESP_PanelTouch> touch_device = CREATE_TOUCH(name, touch_bus.get()); \
-        run_test(touch_device); \
+        /* 1. Test with default parameters */ \
+        auto bus = CREATE_BUS(name); \
+        auto touch = CREATE_TOUCH(name, bus.get(), nullptr); \
+        run_test(touch, false); \
+        bus = nullptr; \
+        touch = nullptr; \
+        /* 2. Test with config */ \
+        BusSPI::Config bus_config = { \
+            .host = BusSPI::HostPartialConfig{ \
+                .mosi_io_num = TEST_TOUCH_PIN_NUM_SPI_MOSI, \
+                .miso_io_num = TEST_TOUCH_PIN_NUM_SPI_MISO, \
+                .sclk_io_num = TEST_TOUCH_PIN_NUM_SPI_SCK, \
+            }, \
+            .control_panel = \
+                (BusSPI::ControlPanelFullConfig)ESP_PANEL_TOUCH_SPI_PANEL_IO_CONFIG(name, TEST_TOUCH_PIN_NUM_SPI_CS), \
+        }; \
+        bus = CREATE_BUS_WITH_CONFIG(name, bus_config); \
+        touch = CREATE_TOUCH(name, bus.get(), touch_config); \
+        run_test(touch, true); \
+        bus = nullptr; \
+        touch = nullptr; \
+        gpio_uninstall_isr_service(); \
     }
 
 /**

@@ -25,7 +25,7 @@ public:
      */
     static constexpr BasicAttributes BASIC_ATTRIBUTES_DEFAULT = {
         .name = "XPT2046",
-        .max_points_num = 10,
+        .max_points_num = 1,
     };
 
     /**
